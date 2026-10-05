@@ -57,7 +57,7 @@ curl -sS http://127.0.0.1:8080/health
 
 `POST /api/v1/sessions` with `{"login":"...","password":"..."}`.
 
-The check matches the desktop (`Resort/login.cpp`): `users.f_username`, `f_state = 1`, and `f_password` equal to MD5 of the password. The hash is computed in the process (UTF-8 bytes, lowercase hex) and compared in constant time. The password is not sent to MariaDB and is not logged. Unknown user, inactive user, and a wrong password all return `401 {"error":"unauthorized"}`.
+The check matches the desktop (`Resort/login.cpp`): `users.f_username`, `f_state = 1`, and `f_password` equal to MD5 of the password. The hash is computed in the process (UTF-8 bytes, lowercase hex) and compared in constant time. After connect the service runs `SET NAMES utf8mb4`. The password is not sent to MariaDB and is not logged. Unknown user, inactive user, and a wrong password all return `401 {"error":"unauthorized"}`.
 
 Argon2id is not applied on login. `f_password` is `varchar(32)`, and the desktop still runs `f_password = MD5(:password)`. Replacing the hash would lock the shift out of the reception program. When that desktop check is gone, add a nullable `users.f_password_argon2` column, fill it on a successful MD5 login, and keep the MD5 column until nothing else reads it. This binary does not link an Argon2 library, so it cannot do that write yet.
 

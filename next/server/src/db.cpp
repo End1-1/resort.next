@@ -1,5 +1,6 @@
 #include "db.h"
 
+#include <QSqlQuery>
 #include <QUuid>
 
 MysqlConnection::MysqlConnection(const DatabaseTarget &target, int connectTimeoutSec)
@@ -21,14 +22,19 @@ MysqlConnection::MysqlConnection(const DatabaseTarget &target, int connectTimeou
     db.setUserName(target.user);
     db.setPassword(target.password);
     const int timeoutSec = connectTimeoutSec > 0 ? connectTimeoutSec : 3;
-    db.setConnectOptions(
-        QStringLiteral("MYSQL_OPT_CONNECT_TIMEOUT=%1;MYSQL_SET_CHARSET_NAME=utf8mb4").arg(timeoutSec));
+    // QMYSQL accepts MYSQL_OPT_CONNECT_TIMEOUT. MYSQL_SET_CHARSET_NAME is not a
+    // connect option on this driver (it warns and is ignored). SET NAMES below
+    // is the charset switch that matches a utf8 MD5() on the server.
+    db.setConnectOptions(QStringLiteral("MYSQL_OPT_CONNECT_TIMEOUT=%1").arg(timeoutSec));
     opened = db.open();
     if (!opened) {
         failure = QStringLiteral("connection_failed");
         // QSqlError::text() can repeat the user name. Drop it.
         db.close();
+        return;
     }
+    QSqlQuery names(db);
+    names.exec(QStringLiteral("SET NAMES utf8mb4"));
 }
 
 MysqlConnection::~MysqlConnection()
