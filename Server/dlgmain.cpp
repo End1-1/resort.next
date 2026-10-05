@@ -201,11 +201,7 @@ void DlgMain::datagramRead()
     DoubleDatabase db;
     db.setDatabase(ui->leHost->text(), ui->leDatabase->text(), ui->leUsername->text(), ui->lePassword->text(), 1);
     if (!db.open(true, false)) {
-        logActivity("Cannot open db in DlgMain::datagramRead," + db.fLastError + QString("%1,%2,%3,%4")
-                    .arg(ui->leHost->text())
-                    .arg(ui->leDatabase->text())
-                    .arg(ui->leUsername->text())
-                    .arg(ui->lePassword->text()));
+        logActivity(QStringLiteral("Cannot open db in DlgMain::datagramRead"));
         return;
     }
     while (fUdpSocket.hasPendingDatagrams()) {
@@ -214,7 +210,6 @@ void DlgMain::datagramRead()
         QHostAddress remoteAddress;
         quint16 remotePort;
         fUdpSocket.readDatagram(datagram.data(), datagram.size(), &remoteAddress, &remotePort);
-        logActivity(datagram);
         QJsonDocument jDoc = QJsonDocument::fromJson(datagram);
         QJsonObject jObj = jDoc.object();
         if (jObj.contains("server")) {
@@ -237,23 +232,22 @@ void DlgMain::datagramRead()
                     d2.insert("f_access", false);
                 }
             }
+            logActivity(QStringLiteral("udp ") + req);
             if (req == "who") {
                 QJsonObject jObjReply;
                 jObjReply["server"] = "me";
                 jObjReply["server_port"] = ui->leServerPort->text();
                 jObjReply["host"] = ui->leHost->text();
                 jObjReply["database"] = ui->leDatabase->text();
-                jObjReply["username"] = ui->leUsername->text();
-                jObjReply["password"] = ui->lePassword->text();
+                // Database user and password stay on this machine. The installer types them.
+                // The audit-log user and password are omitted for the same reason.
                 jObjReply["loghost"] = ui->leLogHost->text();
                 jObjReply["logdb"] = ui->leLogDb->text();
-                jObjReply["loguser"] = ui->leLogUsername->text();
-                jObjReply["logpass"] = ui->leLogPassword->text();
                 jObjReply["idgen"] = (int) ui->rgGenRangom->isChecked();
                 QJsonDocument jDocReply(jObjReply);
                 datagram = jDocReply.toJson();
                 fUdpSocket.writeDatagram(datagram, remoteAddress, remotePort);
-                logActivity(datagram);
+                logActivity(QStringLiteral("udp who reply"));
             }
         } else if (jObj.contains("first_setup")) {
             QString password = jObj["first_setup"].toString();
@@ -388,7 +382,7 @@ void DlgMain::on_btnSave_clicked()
     DoubleDatabase db;
     db.setDatabase(ui->leHost->text(), ui->leDatabase->text(), ui->leUsername->text(), ui->lePassword->text(), 1);
     if (!db.open(true, false)) {
-        logActivity(db.fLastError);
+        logActivity(QStringLiteral("Cannot open db in DlgMain::on_btnSave_clicked"));
         return;
     }
     db.close();

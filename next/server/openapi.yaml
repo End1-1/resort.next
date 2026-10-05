@@ -1,15 +1,31 @@
 openapi: 3.0.3
 info:
   title: Hotel API
-  version: 0.1.0
+  version: 0.2.0
   description: |
-    Phase 2 skeleton of the Qt/C++ service in next/server.
-    The engine choice overrides docs/audit/03 §3.2 (that note suggested Go).
-    Business routes are not implemented. POST /api/v1/sessions is a stub.
+    Qt/C++ service in next/server (Qt 6.10 target; the same sources also build
+    on Qt 6.4). The engine choice overrides docs/audit/03 §3.2 (that note suggested Go).
+
+    POST /api/v1/sessions checks users.f_password as legacy MD5 (32 lowercase hex),
+    the same comparison as Resort/login.cpp (`f_password = MD5(password)` on a
+    utf8 connection) and smarthotel/user.php. The service hashes the UTF-8
+    password with MD5 and does not send the password to MariaDB. It does not
+    replace f_password with Argon2id: that column is varchar(32), and the desktop
+    still requires MD5. A later nullable column can hold Argon2id while MD5
+    remains until the desktop stops reading it. This build does not link Argon2.
+
+    A successful login inserts hotel_api_session (created on first login if the
+    account may CREATE). The response token is 64 hex characters. The database
+    stores SHA-256 of that token, not the token. The row expires after 12 hours
+    (UTC). An empty users_rights list for the group sets commands_allowed to
+    false. Login still succeeds. There is no command route yet; when one is
+    added it must refuse that session.
+
+    GET /health does not require a session. Other business routes are not
+    implemented and return 404.
 
     Planned resources (rack, reservations, stays, folios, end of day, reports)
-    are listed in docs/audit/03-celevaya-arhitektura.md §3.3. They are not
-    served yet. A client that calls them gets 404.
+    are listed in docs/audit/03-celevaya-arhitektura.md §3.3.
 
     Realtime is a WebSocket hint, then an HTTP re-read. It does not replace
     this REST contract. The socket is served only when HOTEL_WS_LISTEN is set,
@@ -29,7 +45,8 @@ paths:
       description: |
         200 when the process is up and either no HOTEL_DSN is set or MariaDB
         answered. 503 when a DSN is set and the probe failed. The body does not
-        contain the DSN or the password.
+        contain the DSN or the password. An empty DSN does not fail /health;
+        POST /api/v1/sessions returns 503 database_not_configured in that case.
       responses:
         '200':
           description: Up. db.state is skipped or up.
@@ -47,7 +64,7 @@ paths:
     get:
       tags: [meta]
       operationId: getApiRoot
-      summary: Contract marker for this skeleton
+      summary: Contract marker
       responses:
         '200':
           description: Service identity. No business data.
@@ -59,13 +76,42 @@ paths:
     post:
       tags: [auth]
       operationId: createSession
-      summary: Login stub
+      summary: Login and create a server-side session
       description: |
-        Not implemented. MD5 is not upgraded in this build, and no session row
-        is written. The route exists so clients can target the future URL.
+        Body is JSON with login (users.f_username) and password (plaintext).
+        Active users only (f_state = 1), same as the desktop login. Unknown
+        user, inactive user, and wrong password are all 401 with the same body.
+        The password, the MD5 hash, and the DSN are not written to the log or
+        the response. HOTEL_DSN empty is 503 database_not_configured.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
       responses:
-        '501':
-          description: Auth is a later phase.
+        '200':
+          description: Session created. The token is shown once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Body is not a JSON object with string login and password.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Login failed. The body does not say which field was wrong.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: |
+            HOTEL_DSN is empty, QMYSQL is missing, MariaDB did not answer, or
+            hotel_api_session could not be created.
           content:
             application/json:
               schema:
@@ -97,7 +143,7 @@ components:
           example: hotel-api
         version:
           type: string
-          example: 0.1.0
+          example: 0.2.0
         db:
           $ref: '#/components/schemas/DatabaseProbe'
     DatabaseProbe:
@@ -124,17 +170,74 @@ components:
           example: v1
         status:
           type: string
-          example: skeleton
+          example: partial
         version:
           type: string
-          example: 0.1.0
+          example: 0.2.0
+    LoginRequest:
+      type: object
+      required: [login, password]
+      additionalProperties: true
+      properties:
+        login:
+          type: string
+          description: users.f_username. Compared with the column collation (usually case-insensitive).
+        password:
+          type: string
+          format: password
+          description: Plaintext. Compared as MD5 of the UTF-8 bytes. Not stored and not logged.
+    Session:
+      type: object
+      required: [token_type, token, expires_at, user, commands_allowed]
+      properties:
+        token_type:
+          type: string
+          enum: [Bearer]
+        token:
+          type: string
+          description: 64 lowercase hex characters. Send it back on later calls. Not stored server-side.
+          example: "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+        expires_at:
+          type: string
+          format: date-time
+          description: UTC, 12 hours after creation.
+        user:
+          $ref: '#/components/schemas/SessionUser'
+        commands_allowed:
+          type: boolean
+          description: |
+            False when the user's group has no users_rights row with f_flag = 1.
+            Login still returns a token. Future command routes must reject it.
+    SessionUser:
+      type: object
+      required: [id, login, name, group]
+      properties:
+        id:
+          type: integer
+        login:
+          type: string
+        name:
+          type: string
+          description: f_firstName and f_lastName, trimmed. Not a secret.
+        group:
+          type: integer
+          nullable: true
     Error:
       type: object
       required: [error]
       properties:
         error:
           type: string
+          enum:
+            - invalid_request
+            - unauthorized
+            - database_not_configured
+            - driver_not_loaded
+            - database_unavailable
+            - session_store_unavailable
+            - not_found
         message:
           type: string
+          description: Present for some errors. Never a password, hash, or DSN.
         path:
           type: string

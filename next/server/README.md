@@ -1,6 +1,6 @@
 # next/server
 
-`hotel-api` is the Qt/C++ HTTP service that will own hotel rules and be the only writer to MariaDB. This directory is a phase 2 skeleton: it binds a port, serves `/health`, and publishes an OpenAPI stub. It does not implement reservations, folios, sessions, or the MD5 to Argon2id cutover.
+`hotel-api` is the Qt/C++ HTTP service that will own hotel rules and be the only writer to MariaDB. This directory binds a port, serves `/health`, and implements `POST /api/v1/sessions` against the existing `users` table. It does not implement reservations or folios. It does not rewrite `users.f_password` to Argon2id.
 
 It is not the old `Server/` tray program (UDP `"who"`). It does not link Qt Widgets and it does not compile `Resort/` sources.
 
@@ -47,11 +47,31 @@ curl -sS http://127.0.0.1:8080/health
 
 | Method and path | Now |
 |-----------------|-----|
-| `GET /health` | Implemented |
-| `GET /api/v1` | Skeleton marker |
-| `POST /api/v1/sessions` | `501 not_implemented`. No password is read or stored |
+| `GET /health` | Implemented. Empty `HOTEL_DSN` is 200 `db.state=skipped`. |
+| `GET /api/v1` | Identity marker (`status=partial`) |
+| `POST /api/v1/sessions` | Login. JSON `login` + `password`. Empty `HOTEL_DSN` is 503 `database_not_configured`. Wrong password is 401. |
 | anything else | `404` JSON |
 | WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Hello frame, no PMS events. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
+
+## Sessions
+
+`POST /api/v1/sessions` with `{"login":"...","password":"..."}`.
+
+The check matches the desktop (`Resort/login.cpp`): `users.f_username`, `f_state = 1`, and `f_password` equal to MD5 of the password. The hash is computed in the process (UTF-8 bytes, lowercase hex) and compared in constant time. After connect the service runs `SET NAMES utf8mb4`. The password is not sent to MariaDB and is not logged. Unknown user, inactive user, and a wrong password all return `401 {"error":"unauthorized"}`.
+
+Argon2id is not applied on login. `f_password` is `varchar(32)`, and the desktop still runs `f_password = MD5(:password)`. Replacing the hash would lock the shift out of the reception program. When that desktop check is gone, add a nullable `users.f_password_argon2` column, fill it on a successful MD5 login, and keep the MD5 column until nothing else reads it. This binary does not link an Argon2 library, so it cannot do that write yet.
+
+A new table `hotel_api_session` holds the session (`next/dbdump/migrations/0001_hotel_api_session.sql`). The process runs the same `CREATE TABLE IF NOT EXISTS` on login. The response token is 64 hex characters. The row stores SHA-256 of the token, the user id, the group, and `f_commands_allowed`. Expiry is 12 hours, stored as UTC. `web_sessions` and `s_user_session` are not used.
+
+`commands_allowed` is false when `users_rights` has no `f_flag = 1` row for the group. Login still returns a token. There is no command route in this build; the next one must reject that session.
+
+`GET /health` stays unauthenticated. No other route checks the bearer token yet.
+
+```bash
+curl -sS -H 'Content-Type: application/json' \
+  -d '{"login":"USER","password":"SECRET"}' \
+  http://127.0.0.1:8080/api/v1/sessions
+```
 
 `SIGINT` and `SIGTERM` stop the process (so systemd can stop it).
 

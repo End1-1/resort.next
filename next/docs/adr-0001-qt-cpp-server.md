@@ -34,12 +34,14 @@ SmartHotel is a thick Qt/C++ client. Operational rules live in widgets and write
 
 ## What this change finishes
 
-This is the phase 0 **layout** (tree, dump policy, `next/.gitignore`) and the phase 2 **skeleton** (process, config, `GET /health`, OpenAPI stub, `POST /api/v1/sessions` returns 501).
+This note started as the phase 0 **layout** (tree, dump policy, `next/.gitignore`) and the phase 2 **skeleton** (process, config, `GET /health`, OpenAPI).
 
-Not in this change, on purpose:
+`POST /api/v1/sessions` now checks legacy MD5 in `users.f_password`, inserts `hotel_api_session`, and returns a bearer token. It does not replace the hash with Argon2id, because the desktop still compares MD5 and the column is `varchar(32)`. `commands_allowed` is false when the group has no enabled `users_rights` row. No command route consumes that flag yet.
 
-- rotating the MariaDB password or scrubbing secrets already in git (audit phase 0 tasks)
-- MD5 to Argon2id, session rows, or permission checks (the rest of phase 2)
+Not done, on purpose:
+
+- rotating the MariaDB password (the owner does that on the servers; git history still has the old values until an explicit history rewrite)
+- Argon2id verification or an in-place hash upgrade
 - switching the reception desktop off direct SQL
 - a web client
 

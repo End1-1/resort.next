@@ -1,6 +1,7 @@
 #include "httpserver.h"
 
 #include "healthcheck.h"
+#include "sessions.h"
 #include "version.h"
 
 #include <QJsonDocument>
@@ -42,9 +43,20 @@ QByteArray notFoundPayload(const QHttpServerRequest &request)
 
 QHttpServerResponse::StatusCode toStatus(int httpStatus)
 {
-    if (httpStatus == 503)
+    switch (httpStatus) {
+    case 400:
+        return QHttpServerResponse::StatusCode::BadRequest;
+    case 401:
+        return QHttpServerResponse::StatusCode::Unauthorized;
+    case 404:
+        return QHttpServerResponse::StatusCode::NotFound;
+    case 501:
+        return QHttpServerResponse::StatusCode::NotImplemented;
+    case 503:
         return QHttpServerResponse::StatusCode::ServiceUnavailable;
-    return QHttpServerResponse::StatusCode::Ok;
+    default:
+        return QHttpServerResponse::StatusCode::Ok;
+    }
 }
 
 } // namespace
@@ -61,18 +73,18 @@ HttpApi::HttpApi(AppConfig config)
         QJsonObject body;
         body.insert(QStringLiteral("service"), QStringLiteral("hotel-api"));
         body.insert(QStringLiteral("api"), QStringLiteral("v1"));
-        body.insert(QStringLiteral("status"), QStringLiteral("skeleton"));
+        body.insert(QStringLiteral("status"), QStringLiteral("partial"));
         body.insert(QStringLiteral("version"), QStringLiteral(HOTEL_API_VERSION));
         return jsonResponse(body, QHttpServerResponse::StatusCode::Ok);
     });
 
-    m_server.route(QStringLiteral("/api/v1/sessions"), QHttpServerRequest::Method::Post, []() {
-        QJsonObject body;
-        body.insert(QStringLiteral("error"), QStringLiteral("not_implemented"));
-        body.insert(QStringLiteral("message"),
-                    QStringLiteral("session auth is a later phase; this build does not check or store passwords"));
-        return jsonResponse(body, QHttpServerResponse::StatusCode::NotImplemented);
-    });
+    m_server.route(QStringLiteral("/api/v1/sessions"),
+                   QHttpServerRequest::Method::Post,
+                   [this](const QHttpServerRequest &request) {
+                       const SessionResult result =
+                           createSession(m_config.database, m_config.dbConnectTimeoutSec, request.body());
+                       return jsonResponse(result.body, toStatus(result.httpStatus));
+                   });
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
     // 6.8 replaced HeaderList with QHttpHeaders, and the responder argument is an lvalue.

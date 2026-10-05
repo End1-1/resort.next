@@ -1,6 +1,8 @@
 #include "apiclient.h"
 
 #include <QEventLoop>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
@@ -11,9 +13,9 @@ ApiClient::ApiClient(QString baseUrl, QObject *parent)
 {
 }
 
-ApiClient::HealthResult ApiClient::getHealth(int timeoutMs)
+ApiClient::CallResult ApiClient::request(const QString &path, const QByteArray &body, int timeoutMs)
 {
-    HealthResult result;
+    CallResult result;
     const QUrl base(m_baseUrl.trimmed());
     const QString scheme = base.scheme().toLower();
     if (!base.isValid() || (scheme != QLatin1String("http") && scheme != QLatin1String("https")) || base.host().isEmpty()) {
@@ -25,16 +27,21 @@ ApiClient::HealthResult ApiClient::getHealth(int timeoutMs)
         return result;
     }
 
-    QUrl health(base);
-    health.setPath(QStringLiteral("/health"));
-    health.setQuery(QString());
-    health.setFragment(QString());
+    QUrl url(base);
+    url.setPath(path);
+    url.setQuery(QString());
+    url.setFragment(QString());
 
-    QNetworkRequest request(health);
+    QNetworkRequest request(url);
     request.setTransferTimeout(timeoutMs);
-    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("hotel-desktop-stub/0.1"));
-
-    QNetworkReply *reply = m_nam.get(request);
+    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("hotel-desktop-stub/0.2"));
+    QNetworkReply *reply = nullptr;
+    if (body.isNull()) {
+        reply = m_nam.get(request);
+    } else {
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
+        reply = m_nam.post(request, body);
+    }
     QEventLoop loop;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     loop.exec();
@@ -49,4 +56,18 @@ ApiClient::HealthResult ApiClient::getHealth(int timeoutMs)
     }
     reply->deleteLater();
     return result;
+}
+
+ApiClient::CallResult ApiClient::getHealth(int timeoutMs)
+{
+    return request(QStringLiteral("/health"), QByteArray(), timeoutMs);
+}
+
+ApiClient::CallResult ApiClient::postSession(const QString &login, const QString &password, int timeoutMs)
+{
+    QJsonObject body;
+    body.insert(QStringLiteral("login"), login);
+    body.insert(QStringLiteral("password"), password);
+    const QByteArray payload = QJsonDocument(body).toJson(QJsonDocument::Compact);
+    return request(QStringLiteral("/api/v1/sessions"), payload, timeoutMs);
 }

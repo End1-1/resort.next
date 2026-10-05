@@ -10,3 +10,23 @@ Tester/bin
 setup/**/*.dll
 setup/setup_resort_*.exe
 setup/staging/
+
+# IDE metadata and local secret files
+.idea/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Screenshots that are not application assets
+cards/*.jpeg
+cards/*.jpg
+cards/*.png
+
+# Database dumps. Tracked DDL stays in DB/db.sql and next/dbdump/migrations/.
+*.sql.gz
+*.sql.bz2
+*.sql.xz
+*.dump
+*.bak
