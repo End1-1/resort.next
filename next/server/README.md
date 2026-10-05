@@ -1,6 +1,6 @@
 # next/server
 
-`hotel-api` is the Qt/C++ HTTP service that will own hotel rules and be the only writer to MariaDB. This directory binds a port, serves `/health`, and implements `POST /api/v1/sessions` against the existing `users` table. It does not implement reservations or folios. It does not rewrite `users.f_password` to Argon2id.
+`hotel-api` is the Qt/C++ HTTP service that will own hotel rules and be the only writer to MariaDB. This directory binds a port, serves `/health`, and implements `POST /api/v1/sessions` against `nx_user` / `nx_session`. It does not implement reservations or folios. Those tables exist in `next/dbdump/migrations/0002_nx_core.sql`; no folio route is registered.
 
 It is not the old `Server/` tray program (UDP `"who"`). It does not link Qt Widgets and it does not compile `Resort/` sources.
 
@@ -55,17 +55,28 @@ curl -sS http://127.0.0.1:8080/health
 
 ## Sessions
 
+Apply the schema before login. The process does not create tables.
+
+```bash
+mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
+  < next/dbdump/migrations/0002_nx_core.sql
+```
+
+Then seed one `nx_user` from `next/dbdump/seed/nx_user.example.sql` (placeholders only; do not commit a real hash). `0001_hotel_api_session.sql` is not used.
+
 `POST /api/v1/sessions` with `{"login":"...","password":"..."}`.
 
-The check matches the desktop (`Resort/login.cpp`): `users.f_username`, `f_state = 1`, and `f_password` equal to MD5 of the password. The hash is computed in the process (UTF-8 bytes, lowercase hex) and compared in constant time. After connect the service runs `SET NAMES utf8mb4`. The password is not sent to MariaDB and is not logged. Unknown user, inactive user, and a wrong password all return `401 {"error":"unauthorized"}`.
+The row comes from `nx_user`: `login` (unique), `state = 'active'`, `password_scheme = 'md5'`, and `password_hash` equal to MD5 of the UTF-8 password (lowercase hex, compared in constant time). That is the same byte string the desktop still computes for `users.f_password`, but the API does not read `users`. After connect the service runs `SET NAMES utf8mb4`. The password is not sent to MariaDB and is not logged. Unknown user, disabled user, a non-`md5` scheme, and a wrong password all return `401 {"error":"unauthorized"}`. The hash is not rewritten.
 
-Argon2id is not applied on login. `f_password` is `varchar(32)`, and the desktop still runs `f_password = MD5(:password)`. Replacing the hash would lock the shift out of the reception program. When that desktop check is gone, add a nullable `users.f_password_argon2` column, fill it on a successful MD5 login, and keep the MD5 column until nothing else reads it. This binary does not link an Argon2 library, so it cannot do that write yet.
+If `nx_user` or `nx_session` is missing, the response is `503` with `error` `session_store_unavailable`.
 
-A new table `hotel_api_session` holds the session (`next/dbdump/migrations/0001_hotel_api_session.sql`). The process runs the same `CREATE TABLE IF NOT EXISTS` on login. The response token is 64 hex characters. The row stores SHA-256 of the token, the user id, the group, and `f_commands_allowed`. Expiry is 12 hours, stored as UTC. `web_sessions` and `s_user_session` are not used.
+A row in `nx_session` holds the session. The response token is 64 hex characters. The row stores SHA-256 of the token, the user id, the role id, and `commands_allowed`. Expiry is 12 hours, stored as UTC. `web_sessions`, `s_user_session`, and `hotel_api_session` are not used.
 
-`commands_allowed` is false when `users_rights` has no `f_flag = 1` row for the group. Login still returns a token. There is no command route in this build; the next one must reject that session.
+`commands_allowed` is false when the role is null or `nx_role_permission` has no row for it. Login still returns a token. There is no command route in this build; the next one must reject that session.
 
-`GET /health` stays unauthenticated. No other route checks the bearer token yet.
+The JSON user object includes `role_id` (`nx_role.id`, or null). `group` is the same value.
+
+`GET /health` stays unauthenticated. No other route checks the bearer token yet. Folio and reservation routes are not registered.
 
 ```bash
 curl -sS -H 'Content-Type: application/json' \

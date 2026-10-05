@@ -36,7 +36,7 @@ SmartHotel is a thick Qt/C++ client. Operational rules live in widgets and write
 
 This note started as the phase 0 **layout** (tree, dump policy, `next/.gitignore`) and the phase 2 **skeleton** (process, config, `GET /health`, OpenAPI).
 
-`POST /api/v1/sessions` now checks legacy MD5 in `users.f_password`, inserts `hotel_api_session`, and returns a bearer token. It does not replace the hash with Argon2id, because the desktop still compares MD5 and the column is `varchar(32)`. `commands_allowed` is false when the group has no enabled `users_rights` row. No command route consumes that flag yet.
+`POST /api/v1/sessions` reads `nx_user` and inserts `nx_session` ([nx-schema.md](nx-schema.md)). The password check is MD5 only when `nx_user.password_scheme` is `md5`. The service does not read `users` and does not rewrite the hash. `commands_allowed` is false when the role has no `nx_role_permission` row. No command route consumes that flag yet. `hotel_api_session` from the first session migration is unused.
 
 Not done, on purpose:
 
@@ -51,5 +51,5 @@ Not done, on purpose:
 
 - Audit text that says "Go", "static binary", or "`backend/`" is historical for the engine choice. Follow this ADR for the engine and the path. Follow the audit for phases, API shape, and the order of moving money.
 - The desktop strangler starts in `next/desktopapp` (`hotel-desktop-stub` calls `GET /health`). `Resort/` keeps its SQL until a later phase turns a module over behind a flag.
-- Schema files, when they appear, go in `next/dbdump/migrations/` as DDL. A production dump does not.
+- Schema files go in `next/dbdump/migrations/` as DDL. The core store is `0002_nx_core.sql`. A production dump does not.
 - Hiring and deployment follow Qt 6, not a Go toolchain. The widget-coupling warning from §3.2 is a review rule for every later PR: no `QWidget` in `next/server`.

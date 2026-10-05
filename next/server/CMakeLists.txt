@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # CMake only. Do not add a qmake .pro for this service.
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    project(hotel-api VERSION 0.2.0 LANGUAGES CXX)
+    project(hotel-api VERSION 0.3.0 LANGUAGES CXX)
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
@@ -40,7 +40,7 @@ endif()
 
 add_executable(hotel-api ${HOTEL_API_SOURCES})
 
-target_compile_definitions(hotel-api PRIVATE HOTEL_API_VERSION="0.2.0")
+target_compile_definitions(hotel-api PRIVATE HOTEL_API_VERSION="0.3.0")
 
 target_link_libraries(hotel-api PRIVATE
     Qt6::Core

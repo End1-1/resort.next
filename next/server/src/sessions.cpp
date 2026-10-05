@@ -7,6 +7,7 @@
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QRandomGenerator>
+#include <QSqlError>
 #include <QSqlQuery>
 #include <QVariant>
 #include <QtGlobal>
@@ -19,22 +20,8 @@ constexpr int kSessionTtlSeconds = 12 * 60 * 60;
 constexpr int kMaxBodyBytes = 8192;
 constexpr int kMaxPasswordChars = 1024;
 
-// Keep in sync with next/dbdump/migrations/0001_hotel_api_session.sql.
-const char kCreateSessionTable[] = R"SQL(
-CREATE TABLE IF NOT EXISTS `hotel_api_session` (
-  `f_id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `f_token_hash` char(64) NOT NULL,
-  `f_user` int(11) NOT NULL,
-  `f_group` int(11) DEFAULT NULL,
-  `f_commands_allowed` tinyint(1) NOT NULL DEFAULT 0,
-  `f_created_at` datetime NOT NULL,
-  `f_expires_at` datetime NOT NULL,
-  `f_revoked_at` datetime DEFAULT NULL,
-  PRIMARY KEY (`f_id`),
-  UNIQUE KEY `uq_hotel_api_session_token` (`f_token_hash`),
-  KEY `ix_hotel_api_session_user` (`f_user`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-)SQL";
+const char kSchemaMessage[] =
+    "nx_user and nx_session are required; apply next/dbdump/migrations/0002_nx_core.sql";
 
 QJsonObject errorBody(const char *code, const char *message)
 {
@@ -92,17 +79,19 @@ QByteArray randomToken()
     return raw.toHex();
 }
 
-bool ensureSessionTable(QSqlDatabase &database)
+bool missingTable(const QSqlError &error)
 {
-    QSqlQuery query(database);
-    return query.exec(QString::fromLatin1(kCreateSessionTable));
+    return error.nativeErrorCode() == QLatin1String("1146");
 }
 
 struct MatchedUser {
     bool found = false;
-    int id = 0;
-    bool groupNull = true;
-    int group = 0;
+    bool failed = false;
+    bool schemaMissing = false;
+    qint64 id = 0;
+    bool roleNull = true;
+    qint64 roleId = 0;
+    QString login;
     QString firstName;
     QString lastName;
 };
@@ -113,53 +102,61 @@ MatchedUser findUser(QSqlDatabase &database, const QString &login, const QByteAr
     QSqlQuery query(database);
     query.setForwardOnly(true);
     if (!query.prepare(QStringLiteral(
-            "SELECT f_id, f_group, f_firstName, f_lastName, f_password "
-            "FROM users "
-            "WHERE f_username = :login AND f_state = 1 AND CHAR_LENGTH(f_username) > 0 "
-            "ORDER BY f_id"))) {
-        matched.id = -1;
+            "SELECT id, role_id, login, first_name, last_name, password_hash, password_scheme "
+            "FROM nx_user "
+            "WHERE login = :login AND state = 'active' AND CHAR_LENGTH(login) > 0"))) {
+        matched.failed = true;
+        matched.schemaMissing = missingTable(query.lastError());
         return matched;
     }
     query.bindValue(QStringLiteral(":login"), login);
     if (!query.exec()) {
-        matched.id = -1;
+        matched.failed = true;
+        matched.schemaMissing = missingTable(query.lastError());
         return matched;
     }
 
     const QByteArray dummy = QByteArrayLiteral("00000000000000000000000000000000");
-    while (query.next()) {
-        const QByteArray stored = query.value(4).toString().trimmed().toLower().toLatin1();
-        const QByteArray expect = isMd5Hex(stored) ? stored : dummy;
-        const bool same = constantTimeEqual(passwordMd5, expect);
-        if (!matched.found && same && isMd5Hex(stored)) {
-            matched.found = true;
-            matched.id = query.value(0).toInt();
-            matched.groupNull = query.value(1).isNull();
-            matched.group = query.value(1).toInt();
-            matched.firstName = query.value(2).toString();
-            matched.lastName = query.value(3).toString();
-        }
+    if (!query.next()) {
+        constantTimeEqual(passwordMd5, dummy);
+        return matched;
+    }
+
+    const QByteArray stored = query.value(5).toString().trimmed().toLower().toLatin1();
+    const QString scheme = query.value(6).toString().trimmed().toLower();
+    const bool md5 = scheme == QLatin1String("md5") && isMd5Hex(stored);
+    const bool same = constantTimeEqual(passwordMd5, md5 ? stored : dummy);
+    if (same && md5) {
+        matched.found = true;
+        matched.id = query.value(0).toLongLong();
+        matched.roleNull = query.value(1).isNull();
+        matched.roleId = query.value(1).toLongLong();
+        matched.login = query.value(2).toString();
+        matched.firstName = query.value(3).toString();
+        matched.lastName = query.value(4).toString();
     }
     return matched;
 }
 
-bool commandsAllowed(QSqlDatabase &database, const MatchedUser &user, bool *ok)
+bool commandsAllowed(QSqlDatabase &database, const MatchedUser &user, bool *ok, bool *schemaMissing)
 {
     *ok = true;
-    if (!user.found || user.groupNull)
+    *schemaMissing = false;
+    if (!user.found || user.roleNull)
         return false;
 
     QSqlQuery query(database);
     query.setForwardOnly(true);
     if (!query.prepare(QStringLiteral(
-            "SELECT COUNT(DISTINCT f_right) FROM users_rights "
-            "WHERE f_group = :user_group AND f_flag = 1 AND f_right IS NOT NULL"))) {
+            "SELECT COUNT(*) FROM nx_role_permission WHERE role_id = :role_id"))) {
         *ok = false;
+        *schemaMissing = missingTable(query.lastError());
         return false;
     }
-    query.bindValue(QStringLiteral(":user_group"), user.group);
+    query.bindValue(QStringLiteral(":role_id"), user.roleId);
     if (!query.exec() || !query.next()) {
         *ok = false;
+        *schemaMissing = missingTable(query.lastError());
         return false;
     }
     return query.value(0).toInt() > 0;
@@ -210,13 +207,12 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
         return fail(503, "database_unavailable", "MariaDB did not accept the connection");
     }
 
-    if (!ensureSessionTable(connection.db)) {
-        qWarning("session login failed: session_store_unavailable");
-        return fail(503, "session_store_unavailable", "could not create hotel_api_session");
-    }
-
     const MatchedUser user = findUser(connection.db, login, passwordMd5);
-    if (user.id < 0) {
+    if (user.failed) {
+        if (user.schemaMissing) {
+            qWarning("session login failed: session_store_unavailable");
+            return fail(503, "session_store_unavailable", kSchemaMessage);
+        }
         qWarning("session login failed: database_unavailable");
         return fail(503, "database_unavailable", "MariaDB did not accept the query");
     }
@@ -226,8 +222,13 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
     }
 
     bool rightsOk = false;
-    const bool allowed = commandsAllowed(connection.db, user, &rightsOk);
+    bool rightsSchemaMissing = false;
+    const bool allowed = commandsAllowed(connection.db, user, &rightsOk, &rightsSchemaMissing);
     if (!rightsOk) {
+        if (rightsSchemaMissing) {
+            qWarning("session login failed: session_store_unavailable");
+            return fail(503, "session_store_unavailable", kSchemaMessage);
+        }
         qWarning("session login failed: database_unavailable");
         return fail(503, "database_unavailable", "MariaDB did not accept the query");
     }
@@ -235,8 +236,8 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
     {
         QSqlQuery cleanup(connection.db);
         cleanup.prepare(QStringLiteral(
-            "DELETE FROM hotel_api_session "
-            "WHERE f_user = :user AND (f_expires_at <= UTC_TIMESTAMP() OR f_revoked_at IS NOT NULL)"));
+            "DELETE FROM nx_session "
+            "WHERE user_id = :user AND (expires_at <= UTC_TIMESTAMP() OR revoked_at IS NOT NULL)"));
         cleanup.bindValue(QStringLiteral(":user"), user.id);
         cleanup.exec();
     }
@@ -248,43 +249,51 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
 
     QByteArray token;
     bool inserted = false;
+    bool insertSchemaMissing = false;
     for (int attempt = 0; attempt < 2 && !inserted; ++attempt) {
         token = randomToken();
         const QByteArray tokenHash =
             QCryptographicHash::hash(token, QCryptographicHash::Sha256).toHex();
         QSqlQuery insert(connection.db);
         if (!insert.prepare(QStringLiteral(
-                "INSERT INTO hotel_api_session "
-                "(f_token_hash, f_user, f_group, f_commands_allowed, f_created_at, f_expires_at) "
-                "VALUES (:hash, :user, :user_group, :allowed, :created, :expires)"))) {
-            qWarning("session login failed: session_store_unavailable");
-            return fail(503, "session_store_unavailable", "could not store the session");
+                "INSERT INTO nx_session "
+                "(token_hash, user_id, role_id, commands_allowed, created_at, expires_at) "
+                "VALUES (:hash, :user, :role_id, :allowed, :created, :expires)"))) {
+            insertSchemaMissing = missingTable(insert.lastError());
+            break;
         }
         insert.bindValue(QStringLiteral(":hash"), QString::fromLatin1(tokenHash));
         insert.bindValue(QStringLiteral(":user"), user.id);
-        if (user.groupNull)
-            insert.bindValue(QStringLiteral(":user_group"), QVariant());
+        if (user.roleNull)
+            insert.bindValue(QStringLiteral(":role_id"), QVariant());
         else
-            insert.bindValue(QStringLiteral(":user_group"), user.group);
+            insert.bindValue(QStringLiteral(":role_id"), user.roleId);
         insert.bindValue(QStringLiteral(":allowed"), allowed ? 1 : 0);
         insert.bindValue(QStringLiteral(":created"), createdText);
         insert.bindValue(QStringLiteral(":expires"), expiresText);
         inserted = insert.exec();
+        if (!inserted)
+            insertSchemaMissing = missingTable(insert.lastError());
     }
     if (!inserted) {
         qWarning("session login failed: session_store_unavailable");
+        if (insertSchemaMissing)
+            return fail(503, "session_store_unavailable", kSchemaMessage);
         return fail(503, "session_store_unavailable", "could not store the session");
     }
 
     QJsonObject userJson;
-    userJson.insert(QStringLiteral("id"), user.id);
-    userJson.insert(QStringLiteral("login"), login);
+    userJson.insert(QStringLiteral("id"), QJsonValue(user.id));
+    userJson.insert(QStringLiteral("login"), user.login);
     const QString name = (user.firstName + QLatin1Char(' ') + user.lastName).trimmed();
     userJson.insert(QStringLiteral("name"), name);
-    if (user.groupNull)
+    if (user.roleNull) {
+        userJson.insert(QStringLiteral("role_id"), QJsonValue::Null);
         userJson.insert(QStringLiteral("group"), QJsonValue::Null);
-    else
-        userJson.insert(QStringLiteral("group"), user.group);
+    } else {
+        userJson.insert(QStringLiteral("role_id"), QJsonValue(user.roleId));
+        userJson.insert(QStringLiteral("group"), QJsonValue(user.roleId));
+    }
 
     QJsonObject bodyOut;
     bodyOut.insert(QStringLiteral("token_type"), QStringLiteral("Bearer"));
@@ -293,7 +302,9 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
     bodyOut.insert(QStringLiteral("user"), userJson);
     bodyOut.insert(QStringLiteral("commands_allowed"), allowed);
 
-    qInfo("session created user=%d commands_allowed=%d", user.id, allowed ? 1 : 0);
+    qInfo("session created user=%lld commands_allowed=%d",
+          static_cast<long long>(user.id),
+          allowed ? 1 : 0);
 
     SessionResult result;
     result.httpStatus = 200;

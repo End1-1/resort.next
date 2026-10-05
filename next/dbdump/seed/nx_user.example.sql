@@ -1,0 +1,65 @@
+-- Hand-run seed for POST /api/v1/sessions. Not a migration.
+-- Do not add this file to a loop over next/dbdump/migrations/*.sql.
+-- Do not commit a filled-in copy: no real login, no real MD5, no production hash.
+--
+-- hotel-api does not read the legacy `users` table. After a row exists in
+-- nx_user, that row is the login. password_scheme must be 'md5'. password_hash
+-- is 32 lowercase hex characters of MD5(UTF-8 password), the same bytes the
+-- desktop hashes. Compute the hex on the server, for example:
+--
+--   printf '%s' 'CHOOSE-A-PASSWORD' | md5sum
+--
+-- commands_allowed is true only when the user's role has at least one
+-- nx_role_permission row. Login still returns a token when the list is empty.
+--
+-- Apply 0002_nx_core.sql first. Then uncomment the block below, replace every
+-- CHANGE_ME token, and run this file with the mariadb client.
+--
+-- INSERT INTO nx_property (code, name, timezone_name, currency_code, created_at)
+-- VALUES ('demo', 'Demo property', 'UTC', 'AMD', UTC_TIMESTAMP());
+-- SET @property_id = LAST_INSERT_ID();
+--
+-- INSERT INTO nx_permission (code, name) VALUES ('desk', 'Front desk');
+-- SET @permission_id = LAST_INSERT_ID();
+--
+-- INSERT INTO nx_role (property_id, code, name)
+-- VALUES (@property_id, 'reception', 'Reception');
+-- SET @role_id = LAST_INSERT_ID();
+--
+-- INSERT INTO nx_role_permission (role_id, permission_id)
+-- VALUES (@role_id, @permission_id);
+--
+-- INSERT INTO nx_user (
+--   property_id, role_id, login, first_name, last_name,
+--   password_hash, password_scheme, state, created_at
+-- ) VALUES (
+--   @property_id, @role_id, 'CHANGE_ME_LOGIN', 'Front', 'Desk',
+--   'CHANGE_ME_32_LOWERCASE_HEX', 'md5', 'active', UTC_TIMESTAMP()
+-- );
+--
+-- Optional one-time copy from legacy users (run on the server, never commit).
+-- Resolve duplicate f_username values first: nx_user.login is UNIQUE.
+-- Run once. A later re-run would push the old MD5 back over a hash you changed.
+-- The API still will not read `users` after this.
+--
+-- INSERT INTO nx_property (code, name, timezone_name, currency_code, created_at)
+-- SELECT 'legacy', 'Legacy property', 'Asia/Yerevan', 'AMD', UTC_TIMESTAMP()
+-- FROM DUAL
+-- WHERE NOT EXISTS (SELECT 1 FROM nx_property WHERE code = 'legacy');
+--
+-- INSERT INTO nx_user (
+--   property_id, role_id, login, first_name, last_name,
+--   password_hash, password_scheme, state, legacy_id, created_at
+-- )
+-- SELECT p.id, NULL, u.f_username,
+--        IFNULL(u.f_firstName, ''), IFNULL(u.f_lastName, ''),
+--        LOWER(u.f_password), 'md5', 'active', u.f_id, UTC_TIMESTAMP()
+-- FROM users u
+-- JOIN nx_property p ON p.code = 'legacy'
+-- WHERE u.f_state = 1
+--   AND CHAR_LENGTH(u.f_username) > 0
+--   AND CHAR_LENGTH(u.f_password) = 32;
+--
+-- Roles are not copied. f_group was a number without a unique (group, right) key.
+-- Insert nx_role / nx_permission / nx_role_permission by hand for each desk that
+-- should get commands_allowed = true.
