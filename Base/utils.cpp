@@ -1,0 +1,528 @@
+#include "utils.h"
+#include <windows.h>
+#include <QHeaderView>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QMessageBox>
+#include <QProcess>
+#include <cstdarg>
+
+QMap<int, QString> l1;
+QMap<int, QString> l2;
+QMap<int, QString> l3;
+QSettings __s("SmartHotel", "SmartHotel");
+
+namespace Utils {
+
+static bool parseVersionFirst3(const QString &v, int &a, int &b, int &c)
+{
+    // Accept both "1.8.24.946" and "1,8,24,946" (and minor whitespace noise)
+    QString s = v;
+    s = s.trimmed();
+    s.replace(',', '.');
+    const QStringList parts = s.split('.', Qt::SkipEmptyParts);
+    if (parts.size() < 3) {
+        return false;
+    }
+    bool ok1 = false, ok2 = false, ok3 = false;
+    a = parts.at(0).trimmed().toInt(&ok1);
+    b = parts.at(1).trimmed().toInt(&ok2);
+    c = parts.at(2).trimmed().toInt(&ok3);
+    return ok1 && ok2 && ok3;
+}
+
+void tableAppendRowData(QTableWidget *tw, const QList<QVariant> &data, int role)
+{
+    int rowCount = tw->rowCount();
+    tw->setRowCount(rowCount + 1);
+    for (int i = 0; i < tw->columnCount(); i++)
+        tw->setItem(rowCount, i, new C5TableWidgetItem());
+    Utils::tableSetRowData(tw, rowCount, data, false, role);
+}
+
+int tableGetCurrentRowData(QTableWidget *tw, QList<QVariant> &data)
+{
+    QModelIndexList rowList = tw->selectionModel()->selectedRows();
+    if (rowList.count() == 0)
+        return -1;
+    int row = rowList.at(0).row();
+    for (int i = 0; i < tw->columnCount(); i++)
+        data.append(tw->item(row, i)->data(Qt::EditRole));
+    return row;
+}
+
+QString getVersionString(QString fName)
+{
+// first of all, GetFileVersionInfoSize
+    DWORD dwHandle;
+    DWORD dwLen = GetFileVersionInfoSize(fName.toStdWString().c_str(), &dwHandle);
+
+    // GetFileVersionInfo
+    BYTE *lpData = new BYTE[dwLen];
+    if(!GetFileVersionInfo(fName.toStdWString().c_str(), dwHandle, dwLen, lpData)) {
+        delete[] lpData;
+        return "";
+    }
+
+    // VerQueryValue
+    VS_FIXEDFILEINFO *lpBuffer = nullptr;
+    UINT uLen;
+    if(VerQueryValue(lpData, QString("\\").toStdWString().c_str(), (LPVOID*)&lpBuffer, &uLen)) {
+        return
+            QString::number((lpBuffer->dwFileVersionMS >> 16) & 0xffff) + "." +
+            QString::number((lpBuffer->dwFileVersionMS) & 0xffff ) + "." +
+            QString::number((lpBuffer->dwFileVersionLS >> 16 ) & 0xffff ) + "." +
+            QString::number((lpBuffer->dwFileVersionLS) & 0xffff );
+    }
+    return "";
+}
+
+bool versionEqualFirst3(const QString &v1, const QString &v2)
+{
+    int a1 = 0, b1 = 0, c1 = 0;
+    int a2 = 0, b2 = 0, c2 = 0;
+    const bool p1 = parseVersionFirst3(v1, a1, b1, c1);
+    const bool p2 = parseVersionFirst3(v2, a2, b2, c2);
+    if (!p1 || !p2) {
+        // Keep legacy behavior if version format is unexpected
+        return v1 == v2;
+    }
+    return a1 == a2 && b1 == b2 && c1 == c2;
+}
+
+QString setupVersionTag(const QString &version)
+{
+    QString v = version.trimmed();
+    v.replace(QLatin1Char(','), QLatin1Char('_'));
+    v.replace(QLatin1Char('.'), QLatin1Char('_'));
+    v.remove(QLatin1Char(' '));
+    return v;
+}
+
+QString setupDownloadUrl(const QString &version)
+{
+    const QString tag = setupVersionTag(version);
+    if(tag.isEmpty()) {
+        return QString();
+    }
+    return QStringLiteral("https://www.picasso.am/files/resort/setup_resort_%1.exe").arg(tag);
+}
+
+bool startProgramUpdater(const QString &targetVersion, QWidget *parent, bool askConfirm)
+{
+    const QString verTag = setupVersionTag(targetVersion);
+    const QString downloadUrl = setupDownloadUrl(targetVersion);
+    if(verTag.isEmpty() || downloadUrl.isEmpty()) {
+        return false;
+    }
+
+    const QString appDir = QCoreApplication::applicationDirPath();
+    const QString updaterPath = QDir(appDir).filePath(QStringLiteral("Updater.exe"));
+    if(!QFile::exists(updaterPath)) {
+        QMessageBox::critical(parent, QObject::tr("Update"),
+                              QObject::tr("Updater.exe not found:\n%1").arg(updaterPath));
+        return false;
+    }
+
+    if(askConfirm) {
+        const auto answer = QMessageBox::question(
+                                parent,
+                                QObject::tr("Update"),
+                                QObject::tr(
+                                    "To install the update, SmartHotel must be closed.\n\n"
+                                    "Close the program and start the updater now?"),
+                                QMessageBox::Yes | QMessageBox::No,
+                                QMessageBox::Yes);
+        if(answer != QMessageBox::Yes) {
+            return false;
+        }
+    }
+
+    // Pass the exact same URL as the manual download link — do not rebuild it in Updater.
+    const QStringList args = {
+        QStringLiteral("--app=resort"),
+        QStringLiteral("--version=%1").arg(verTag),
+        QStringLiteral("--url=%1").arg(downloadUrl),
+    };
+    if(!QProcess::startDetached(updaterPath, args, appDir)) {
+        QMessageBox::critical(parent, QObject::tr("Update"),
+                              QObject::tr("Cannot start Updater.exe"));
+        return false;
+    }
+    return true;
+}
+
+void setupTableFullColumnWidth(QTableWidget *tw, int colWidth, int elements)
+{
+    tw->setColumnCount(0);
+    tw->setRowCount(0);
+    int colCount = (tw->width() - 20) / colWidth;
+    if (colCount == 0) {
+        if (elements == 0) {
+            return;
+        } else {
+            colCount = 1;
+        }
+    }
+    int delta = tw->width() - (colCount * colWidth) - 15;
+    colWidth += delta / colCount;
+    tw->horizontalHeader()->setDefaultSectionSize(colWidth);
+    tw->setColumnCount(colCount);
+
+    int rowCount = elements / colCount;
+    if (elements % colCount > 0) {
+        rowCount++;
+    }
+    tw->setRowCount(rowCount);
+}
+
+QString hostName()
+{
+    QString name = qgetenv("USER");
+    if (name.isEmpty())
+        name = qgetenv("USERNAME");
+    return name;
+}
+
+void fillTableWithData(QTableWidget *tw, QList<QList<QVariant> > &data, bool append)
+{
+    int start = 0;
+    if (append) {
+        start = tw->rowCount();
+        tw->setRowCount(tw->rowCount() + data.count());
+    } else {
+        tw->setRowCount(data.count());
+    }
+    for (int i = start, rowCount = tw->rowCount(); i < rowCount; i++) {
+        const QList<QVariant> &rowData = data.at(i - start);
+        for (int j = 0, colCount = tw->columnCount(); j < colCount; j++) {
+            C5TableWidgetItem *item = new C5TableWidgetItem();
+            item->setData(Qt::EditRole, j < rowData.size() ? rowData.at(j) : QVariant());
+            tw->setItem(i, j, item);
+        }
+    }
+}
+
+void tableRowDown(QTableWidget *tw)
+{
+    int row = tw->currentRow();
+    bool stop = false;
+    do {
+        row ++;
+        if (row >= tw->rowCount() - 1) {
+            row = tw->rowCount() - 1;
+            stop = true;
+        }
+        if (tw->isRowHidden(row)) {
+            continue;
+        }
+        tw->selectRow(row);
+        stop = true;
+    } while (!stop);
+}
+
+void tableRowUp(QTableWidget *tw)
+{
+    int row = tw->currentRow();
+    bool stop = false;
+    do {
+        row --;
+        if (row <= 0) {
+            row = 0;
+            stop = true;
+        }
+        if (tw->isRowHidden(row)) {
+            continue;
+        }
+        tw->selectRow(row);
+        stop = true;
+    } while (!stop);
+}
+
+void tableSetColumnWidths(QTableWidget *tw, int count, ...)
+{
+    tw->setColumnCount(count);
+    va_list vl;
+    va_start(vl, count);
+    for (int i = 0; i < count; i++) {
+        tw->setColumnWidth(i, va_arg(vl, int));
+    }
+    va_end(vl);
+#ifdef QT_DEBUG
+    int w = 0;
+    va_start(vl, count);
+    for (int i = 0; i < count; i++) {
+        w += va_arg(vl, int);
+    }
+    va_end(vl);
+#endif
+}
+
+double countVATAmount(double amount, int mode)
+{
+    double vat = 0;
+    switch (mode) {
+    case VAT_INCLUDED: {
+        vat = amount - (amount / ((def_vat / 100) + 1));
+        break;
+    }
+    case VAT_WITHOUT: {
+        vat = amount * (def_vat / 100);
+        break;
+    }
+    case VAT_NOVAT:
+        break;
+    }
+    return vat;
+}
+
+void tableAppendRowData(QTableWidget *tw, const QList<QVariant> &data)
+{
+    int row = tw->rowCount();
+    tw->setRowCount(row + 1);
+    for (int i = 0; i < data.count(); i++) {
+        tw->setItem(row, i, new C5TableWidgetItem(data[i].toString()));
+    }
+}
+
+void tableSetRowDataWithOffcet(QTableWidget *tw, int row, const QList<QVariant> &data, bool createItem, int role, int colOffcet)
+{
+    for (int i = 0; i < data.count(); i++) {
+        if (createItem) {
+            tw->setItem(row, i + colOffcet, new C5TableWidgetItem());
+        }
+        tw->item(row, i + colOffcet)->setData(role, data[i]);
+    }
+}
+
+void initNumbersWords() {
+    l1[0] = "ZERO";
+    l1[1] = "ONE";
+    l1[2] = "TWO";
+    l1[3] = "THREE";
+    l1[4] = "FOUR";
+    l1[5] = "FIVE";
+    l1[6] = "SIX";
+    l1[7] = "SEVEN";
+    l1[8] = "EIGHT";
+    l1[9] = "NINE";
+    l1[10] = "TEN";
+    l1[11] = "ELEVEN";
+    l1[12] = "TWELVE";
+    l1[13] = "THIRTEEN";
+    l1[14] = "FOURTEEN";
+    l1[15] = "FIFTEEN";
+    l1[16] = "SIXTEEN";
+    l1[17] = "SEVENTEEN";
+    l1[18] = "EIGHTEEN";
+    l1[19] = "NINETEEN";
+    l2[2] = "TWENTY";
+    l2[3] = "THIRTY";
+    l2[4] = "FORTY";
+    l2[5] = "FIFTY";
+    l2[6] = "SIXTY";
+    l2[7] = "SEVENTY";
+    l2[8] = "EIGHTY";
+    l2[9] = "NINETY";
+    l3[0] = "HUNDRED";
+    l3[1] = "THOUSAND";
+    l3[2] = "MILLION";
+    l3[3] = "BILLION";
+}
+
+QString numberToWordEn_l1(int num)
+{
+    return l1[num];
+}
+
+QString numberToWordEn_l2(int num) {
+    int div = (num - (num % 10)) / 10;
+    int mod = num % 10;
+    QString result = l2[div];
+    if (mod > 0) {
+        result += "-" + l1[mod];
+    }
+    return result;
+}
+
+QString numberToWordEn_l3(int num) {
+    QString result;
+    int h = (num - (num % 100)) / 100;
+    result = l1[h] + " " + l3[0];
+    int t = num % (h * 100);
+    if (t > 0) {
+        if (t < 20) {
+            result += " " + numberToWordEn_l1(t);
+        } else {
+            result += " " + numberToWordEn_l2(t);
+        }
+    }
+    return result;
+}
+
+QString numberToWords(int num)
+{
+   QString sign;
+   if (num < 0) {
+       sign = QObject::tr("MINUS ");
+       num *= -1;
+   }
+   if (num < 20) {
+       return sign + numberToWordEn_l1(num);
+   }
+   if (num < 100) {
+       return sign + numberToWordEn_l2(num);
+   }
+   if (num < 1000) {
+       return sign + numberToWordEn_l3(num);
+   }
+   if (num > 999999999) {
+       int h = num / 1000000000;
+       QString result = numberToWords(h) + " BILLION";
+       h = num / 1000;
+       if (h > 0) {
+           result += " " + numberToWords(h);
+       }
+       return sign + result;
+   }
+   if (num > 999999) {
+       int h = num / 1000000;
+       QString result = numberToWords(h) + " MILLION";
+       h = num - (h * 1000000);
+       if (h > 0) {
+           result += " " + numberToWords(h);
+       }
+       return sign + result;
+   }
+   int h = num / 1000;
+   QString result = numberToWords(h) + " THOUSAND";
+   h = num % 1000;
+   if (h > 0) {
+       result += " " + numberToWords(h);
+   }
+   return sign + result;
+}
+
+QString stringListToString(const QStringList &lst)
+{
+    bool first = true;
+    QString result;
+    for (QStringList::const_iterator it = lst.begin(); it != lst.end(); it++) {
+        if (first) {
+            first = false;
+        } else {
+            result += ",";
+        }
+        result += *it;
+    }
+    return result;
+}
+
+QString intListToString(const QList<int> &lst)
+{
+    QStringList l;
+    foreach (int v, lst) {
+        l << QString::number(v);
+    }
+    return stringListToString(l);
+}
+
+QString separateForQuote(const QString &text)
+{
+    QStringList l = text.split(",");
+    QString result;
+    for (int i = 0; i < l.count(); i++) {
+        if (i > 0) {
+            result += ",";
+        }
+        result += "'" + l.at(i) + "'";
+    }
+    return result;
+}
+
+void dateEditPrev(EDateEdit *d1, EDateEdit *d2)
+{
+    if (d1) {
+        d1->setDate(d1->date().addDays(-1));
+    }
+    if (d2) {
+        d2->setDate(d2->date().addDays(-1));
+    }
+}
+
+void dateEditNext(EDateEdit *d1, EDateEdit *d2)
+{
+    if (d1) {
+        d1->setDate(d1->date().addDays(1));
+    }
+    if (d2) {
+        d2->setDate(d2->date().addDays(1));
+    }
+}
+
+}
+
+bool isDoubleEqual(double v1, double v2, int prec)
+{
+    v1 *= prec;
+    v2 *= prec;
+    return static_cast<int>(v1) == static_cast<int>(v2);
+}
+
+bool isDoubleLess(double v1, double v2, int prec)
+{
+    v1 *= prec;
+    v2 *= prec;
+    return static_cast<int>(v1) < static_cast<int>(v2);
+}
+
+bool isDoubleGreat(double v1, double v2, int prec)
+{
+    v1 *= prec;
+    v2 *= prec;
+    return static_cast<int>(v1) > static_cast<int>(v2);
+}
+
+bool isDoubleNotEqual(double v1, double v2, int prec)
+{
+    v1 *= prec;
+    v2 *= prec;
+    return static_cast<int>(v1) != static_cast<int>(v2);
+}
+
+#include "doubledatabase.h"
+
+int reservationVersion(DoubleDatabase &dd, const QString &id)
+{
+    if (id.isEmpty()) {
+        return 0;
+    }
+    dd[":f_id"] = id;
+    dd.exec("select coalesce(f_version, 0) from f_reservation where f_id=:f_id");
+    if (dd.nextRow()) {
+        return dd.getInt(0);
+    }
+    return -1;
+}
+
+bool reservationVersionMatches(DoubleDatabase &dd, const QString &id, int loadedVersion)
+{
+    if (id.isEmpty()) {
+        return true;
+    }
+    return reservationVersion(dd, id) == loadedVersion;
+}
+
+bool updateReservation(DoubleDatabase &dd, const QString &id, int &loadedVersion)
+{
+    dd[":f_version"] = loadedVersion + 1;
+    if (!dd.update("f_reservation", where_id(ap(id)) + QString(" and coalesce(f_version, 0)=%1").arg(loadedVersion))) {
+        return false;
+    }
+    if (dd.affectedRows() == 0) {
+        return false;
+    }
+    loadedVersion++;
+    return true;
+}
