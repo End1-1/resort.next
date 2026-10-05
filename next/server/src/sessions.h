@@ -10,6 +10,6 @@ struct SessionResult {
     QJsonObject body;
 };
 
-// POST /api/v1/sessions. Verifies users.f_password as legacy MD5.
-// Does not write the hash back (the desktop still compares MD5).
+// POST /api/v1/sessions. Verifies nx_user.password_hash when password_scheme is md5.
+// Does not read the legacy users table and does not write the hash back.
 SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec, const QByteArray &body);
