@@ -10,6 +10,8 @@ Build system is CMake. There is no qmake `.pro`.
 
 Qt 6.4 or newer, modules **Core, Network, Sql, HttpServer, WebSockets**, plus a C++17 compiler and CMake 3.21+. The MariaDB/MySQL driver plugin (`QMYSQL`) is needed only when `HOTEL_DSN` is set. The binary still runs without it; `/health` then reports `driver_not_loaded`.
 
+The HTTP calls in `src/httpserver.cpp` follow the Qt 6.4 API (`setHeader`, `afterRequest`, `QHttpServer::listen`) and, from Qt 6.8 on (including 6.10), `QHttpHeaders`, `addAfterRequestHandler`, and `QTcpServer` plus `bind`. Both paths are in the same file.
+
 Ubuntu 24.04 packages used to configure and build this tree:
 
 ```bash
