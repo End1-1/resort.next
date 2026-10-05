@@ -1,5 +1,7 @@
 #include "qsockettextthread.h"
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QTcpSocket>
 #include <QNetworkProxy>
 
@@ -16,18 +18,34 @@ QSocketTextThread::~QSocketTextThread()
 
 void QSocketTextThread::run()
 {
-    QString ip = "10.1.0.2";
+    const QString ip = qEnvironmentVariable("HOTEL_TEST_SERVER");
+    const QString database = qEnvironmentVariable("HOTEL_TEST_DB_NAME");
+    const QString user = qEnvironmentVariable("HOTEL_TEST_DB_USER");
+    const QString password = qEnvironmentVariable("HOTEL_TEST_DB_PASSWORD");
+    if (ip.isEmpty() || database.isEmpty() || user.isEmpty())
+        return;
+
+    auto payload = [&](const char *command, const QString &userName) {
+        QJsonObject db;
+        db.insert(QStringLiteral("database"), database);
+        db.insert(QStringLiteral("user"), userName);
+        db.insert(QStringLiteral("password"), password);
+        QJsonObject commandObject;
+        commandObject.insert(QStringLiteral("command"), QLatin1String(command));
+        QJsonObject root;
+        root.insert(QStringLiteral("db"), db);
+        root.insert(QStringLiteral("command"), commandObject);
+        return QJsonDocument(root).toJson(QJsonDocument::Compact);
+    };
+
     QTcpSocket fSocket;
     fSocket.connectToHost(ip, 1250);
     if (fSocket.waitForConnected()) {
-        QString data = QString("{\"db\" : {\"database\" : \"%1\", \"user\" : \"%2\", \"password\" : \"password\"}, "
-                               "\"command\" : {\"command\": \"identify\"}}")
-                .arg("resort")
-                .arg("Test main");
-        int size = data.toUtf8().length();
+        const QByteArray data = payload("identify", QStringLiteral("Test main"));
+        int size = data.size();
         QByteArray dataToSend;
         dataToSend.append(reinterpret_cast<const char*>(&size), sizeof(size));
-        dataToSend.append(data.toUtf8(), data.toUtf8().length());
+        dataToSend.append(data);
         fSocket.write(dataToSend, dataToSend.length());
         fSocket.flush();
     } else {
@@ -37,14 +55,11 @@ void QSocketTextThread::run()
     fSocketDraft.setProxy(QNetworkProxy::NoProxy);
     fSocketDraft.connectToHost(ip, 1250);
     if (fSocketDraft.waitForConnected()) {
-        QString data = QString("{\"db\" : {\"database\" : \"%1\", \"user\" : \"%2\", \"password\" : \"password\"}, "
-                               "\"command\" : {\"command\": \"draft\"}}")
-                .arg("resort")
-                .arg("Test draft");
-        int size = data.toUtf8().length();
+        const QByteArray data = payload("draft", QStringLiteral("Test draft"));
+        int size = data.size();
         QByteArray dataToSend;
         dataToSend.append(reinterpret_cast<const char*>(&size), sizeof(size));
-        dataToSend.append(data.toUtf8(), data.toUtf8().length());
+        dataToSend.append(data);
         fSocketDraft.write(dataToSend, dataToSend.length());
         fSocketDraft.flush();
         fSocket.waitForReadyRead(20000);

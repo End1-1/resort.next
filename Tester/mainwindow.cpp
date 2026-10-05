@@ -56,11 +56,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    AppConfig::fServerAddress = "10.1.0.2";
-    __dd1Host = "10.1.0.2";
-    __dd1Database = "resort";
-    __dd1Username = "root";
-    __dd1Password = "root5";
+    AppConfig::fServerAddress = qEnvironmentVariable("HOTEL_TEST_SERVER");
+    __dd1Host = qEnvironmentVariable("HOTEL_TEST_DB_HOST");
+    __dd1Database = qEnvironmentVariable("HOTEL_TEST_DB_NAME");
+    __dd1Username = qEnvironmentVariable("HOTEL_TEST_DB_USER");
+    __dd1Password = qEnvironmentVariable("HOTEL_TEST_DB_PASSWORD");
 }
 
 MainWindow::~MainWindow()

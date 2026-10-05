@@ -2,6 +2,8 @@
 #include "ui_dlgtracking.h"
 #include "cacherights.h"
 
+#include <QtGlobal>
+
 DlgTracking::DlgTracking(QWidget *parent) :
     BaseExtendedDialog(parent),
     ui(new Ui::DlgTracking)
@@ -109,14 +111,25 @@ void DlgTracking::on_chOld_clicked(bool checked)
                         "order by f_date, f_time";
         fDD.exec(query);
         Utils::fillTableWithData(ui->tblData, fDD.fDbRows);
-        DoubleDatabase db;
-        db.setDatabase("10.1.0.33", "testb", "root", "rootjan2018");
-        db.open();
-        db[":f_windowId"] = fWindow;
-        db.exec(query);
-        db.close();
-        for (int i = 0; i < db.rowCount(); i++) {
-            Utils::tableAppendRowData(ui->tblData, db.fDbRows.at(i), Qt::DisplayRole);
+        const QString archiveHost = qEnvironmentVariable("HOTEL_TRACKING_ARCHIVE_HOST");
+        const QString archiveDb = qEnvironmentVariable("HOTEL_TRACKING_ARCHIVE_DATABASE");
+        const QString archiveUser = qEnvironmentVariable("HOTEL_TRACKING_ARCHIVE_USER");
+        const QString archivePassword = qEnvironmentVariable("HOTEL_TRACKING_ARCHIVE_PASSWORD");
+        if (archiveHost.isEmpty() || archiveDb.isEmpty() || archiveUser.isEmpty()) {
+            message_error(tr("Archive tracking database is not configured"));
+        } else {
+            DoubleDatabase db;
+            db.setDatabase(archiveHost, archiveDb, archiveUser, archivePassword);
+            if (!db.open()) {
+                message_error(tr("Archive tracking database connection failed"));
+            } else {
+                db[":f_windowId"] = fWindow;
+                db.exec(query);
+                db.close();
+                for (int i = 0; i < db.rowCount(); i++) {
+                    Utils::tableAppendRowData(ui->tblData, db.fDbRows.at(i), Qt::DisplayRole);
+                }
+            }
         }
     } else {
         QString query = "select f_comp, f_date, f_time, f_user, "
