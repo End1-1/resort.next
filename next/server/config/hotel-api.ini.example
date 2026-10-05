@@ -1,0 +1,10 @@
+# Copy outside the repository and point HOTEL_CONFIG at the copy.
+# Environment variables override these keys. Do not put a production password here.
+
+listen=127.0.0.1:8080
+
+# mysql://USER:PASSWORD@HOST:3306/DATABASE
+dsn=
+
+# Leave empty to keep the WebSocket listener off.
+ws_listen=
