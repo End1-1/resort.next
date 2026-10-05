@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: Hotel API
+  version: 0.1.0
+  description: |
+    Phase 2 skeleton of the Qt/C++ service in next/server.
+    The engine choice overrides docs/audit/03 §3.2 (that note suggested Go).
+    Business routes are not implemented. POST /api/v1/sessions is a stub.
+
+    Planned resources (rack, reservations, stays, folios, end of day, reports)
+    are listed in docs/audit/03-celevaya-arhitektura.md §3.3. They are not
+    served yet. A client that calls them gets 404.
+
+    Realtime is a WebSocket hint, then an HTTP re-read. It does not replace
+    this REST contract. The socket is served only when HOTEL_WS_LISTEN is set,
+    on that address, path /api/v1/ws.
+servers:
+  - url: http://127.0.0.1:8080
+    description: Default loopback bind (HOTEL_LISTEN).
+tags:
+  - name: meta
+  - name: auth
+paths:
+  /health:
+    get:
+      tags: [meta]
+      operationId: getHealth
+      summary: Process and optional database probe
+      description: |
+        200 when the process is up and either no HOTEL_DSN is set or MariaDB
+        answered. 503 when a DSN is set and the probe failed. The body does not
+        contain the DSN or the password.
+      responses:
+        '200':
+          description: Up. db.state is skipped or up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: DSN is set and the database probe failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+  /api/v1:
+    get:
+      tags: [meta]
+      operationId: getApiRoot
+      summary: Contract marker for this skeleton
+      responses:
+        '200':
+          description: Service identity. No business data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiRoot'
+  /api/v1/sessions:
+    post:
+      tags: [auth]
+      operationId: createSession
+      summary: Login stub
+      description: |
+        Not implemented. MD5 is not upgraded in this build, and no session row
+        is written. The route exists so clients can target the future URL.
+      responses:
+        '501':
+          description: Auth is a later phase.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/ws:
+    get:
+      tags: [meta]
+      operationId: realtimeSocket
+      summary: WebSocket hint channel (not HTTP)
+      description: |
+        Not an HTTP GET. Clients open a WebSocket to ws://<HOTEL_WS_LISTEN>/api/v1/ws.
+        The first text frame is a hello object with events=not_implemented.
+        PMS events are not published yet. Any other path on that listener is closed.
+      x-websocket: true
+      responses:
+        '101':
+          description: Switching Protocols when the WebSocket listener is enabled.
+components:
+  schemas:
+    Health:
+      type: object
+      required: [status, service, version, db]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        service:
+          type: string
+          example: hotel-api
+        version:
+          type: string
+          example: 0.1.0
+        db:
+          $ref: '#/components/schemas/DatabaseProbe'
+    DatabaseProbe:
+      type: object
+      required: [configured, state]
+      properties:
+        configured:
+          type: boolean
+        state:
+          type: string
+          enum: [skipped, up, down]
+        error:
+          type: string
+          description: Present when state=down. A short code, never a DSN.
+          enum: [driver_not_loaded, connection_failed]
+    ApiRoot:
+      type: object
+      required: [service, api, status, version]
+      properties:
+        service:
+          type: string
+        api:
+          type: string
+          example: v1
+        status:
+          type: string
+          example: skeleton
+        version:
+          type: string
+          example: 0.1.0
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string

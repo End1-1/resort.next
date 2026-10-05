@@ -1,0 +1,18 @@
+# Local build trees
+build/
+cmake-build-*/
+
+# Secrets and machine-local config. Tracked examples use the .example suffix.
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Full database dumps. Hand-written DDL may live in dbdump/migrations/.
+dbdump/*.sql
+dbdump/*.sql.gz
+dbdump/*.dump
+dbdump/*.bak
+dbdump/*.zip
+dbdump/*.7z

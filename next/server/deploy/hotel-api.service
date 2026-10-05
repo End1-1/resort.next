@@ -1,0 +1,16 @@
+[Unit]
+Description=Hotel API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hotel-api
+Group=hotel-api
+EnvironmentFile=-/etc/hotel-api/hotel-api.env
+ExecStart=/usr/local/bin/hotel-api
+Restart=on-failure
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
