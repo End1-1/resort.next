@@ -1,9 +1,12 @@
 # next/docs
 
-Notes for the migration into `next/`. The audit stays the plan:
+Notes for the migration into `next/`. The audit stays the plan.
+
+A new agent starts at [HANDOFF.md](HANDOFF.md) (Russian). It is the self-contained handoff: owner decisions, what is already merged, what is in flight, and the next backlog.
 
 | Document | What it decides |
 |----------|-----------------|
+| [HANDOFF.md](HANDOFF.md) | Handoff for a new agent. Russian. |
 | [docs/audit/README.md](../../docs/audit/README.md) | How to read the audit |
 | [docs/audit/03-celevaya-arhitektura.md](../../docs/audit/03-celevaya-arhitektura.md) | Target shape: one writer, REST `/api/v1`, sessions, WebSocket hints |
 | [docs/audit/05-dorozhnaya-karta.md](../../docs/audit/05-dorozhnaya-karta.md) | Phases 0 through 10 |
