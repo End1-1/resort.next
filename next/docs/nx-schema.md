@@ -31,7 +31,9 @@ mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
 
 Строки пользователей миграция не вставляет. Шаблон ручного сида, без настоящих секретов: [`next/dbdump/seed/nx_user.example.sql`](../dbdump/seed/nx_user.example.sql). Там же комментарий, как один раз скопировать активные логины из `users`, если это нужно на сервере. Дубликаты `f_username` надо разобрать до копирования: на `nx_user.login` стоит `UNIQUE`.
 
-`commands_allowed` истинен, когда у роли есть хотя бы одна строка `nx_role_permission`. Пустой список прав вход не запрещает: токен выдаётся, командного маршрута в этом билде нет.
+`commands_allowed` истинен, когда у роли есть хотя бы одна строка `nx_role_permission`. Пустой список прав вход не запрещает: токен выдаётся. Чтение и `DELETE /api/v1/sessions` этот флаг не требуют. Изменяющий маршрут (кроме выхода) отвечает `403` `commands_not_allowed`.
+
+`DELETE /api/v1/sessions` пишет `nx_session.revoked_at` (UTC). Истёкшая или отозванная строка больше не принимается. Отключённый `nx_user.state` даёт `401` `user_disabled`, даже если срок строки ещё не вышел.
 
 В ответе `user.role_id` — это `nx_role.id` (или null). Поле `user.group` повторяет то же число, чтобы клиент 0.2 по-прежнему видел ключ.
 

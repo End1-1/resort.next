@@ -36,8 +36,9 @@
     <message>
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
-        <location filename="../src/apiclient.cpp" line="219"/>
-        <location filename="../src/apiclient.cpp" line="240"/>
+        <location filename="../src/apiclient.cpp" line="245"/>
+        <location filename="../src/apiclient.cpp" line="282"/>
+        <location filename="../src/apiclient.cpp" line="303"/>
         <source>Server unavailable.</source>
         <translation>Сервер недоступен.</translation>
     </message>
@@ -67,72 +68,72 @@
         <translation>недоступна (down, connection_failed)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="175"/>
+        <location filename="../src/apiclient.cpp" line="201"/>
         <source>Incorrect login or password.</source>
         <translation>Неверный логин или пароль.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="177"/>
+        <location filename="../src/apiclient.cpp" line="203"/>
         <source>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</source>
         <translation>База не настроена (database_not_configured). Вход невозможен, пока на сервере не задано подключение к MariaDB.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="182"/>
+        <location filename="../src/apiclient.cpp" line="208"/>
         <source>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</source>
         <translation>Хранилище сессий недоступно (session_store_unavailable). На сервере нет таблиц nx_user и nx_session или сессия не записалась.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="187"/>
+        <location filename="../src/apiclient.cpp" line="213"/>
         <source>The database driver is not loaded on the server (driver_not_loaded).</source>
         <translation>Драйвер базы данных не загружен на сервере (driver_not_loaded).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="191"/>
+        <location filename="../src/apiclient.cpp" line="217"/>
         <source>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</source>
         <translation>Отказ в доступе к базе на сервере (access_denied). Учётная запись MariaDB не принята для этого хоста.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="196"/>
+        <location filename="../src/apiclient.cpp" line="222"/>
         <source>The database was not found on the server (unknown_database).</source>
         <translation>База на сервере не найдена (unknown_database).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="199"/>
+        <location filename="../src/apiclient.cpp" line="225"/>
         <source>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</source>
         <translation>Сервер не подключился к MariaDB (cannot_connect). Проверьте, что служба слушает порт.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="204"/>
+        <location filename="../src/apiclient.cpp" line="230"/>
         <source>The database connection failed (connection_failed).</source>
         <translation>Соединение с базой не установлено (connection_failed).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="207"/>
+        <location filename="../src/apiclient.cpp" line="233"/>
         <source>The database is unavailable (database_unavailable).</source>
         <translation>База данных недоступна (database_unavailable).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="209"/>
+        <location filename="../src/apiclient.cpp" line="235"/>
         <source>Invalid request to the server.</source>
         <translation>Некорректный запрос к серверу.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="211"/>
+        <location filename="../src/apiclient.cpp" line="237"/>
         <source>The server did not find the sign-in address.</source>
         <translation>Сервер не нашёл адрес входа.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="213"/>
+        <location filename="../src/apiclient.cpp" line="239"/>
         <source>The server is temporarily unavailable (503).</source>
         <translation>Сервер временно недоступен (503).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="216"/>
+        <location filename="../src/apiclient.cpp" line="242"/>
         <source>Sign-in failed, HTTP %1.</source>
         <translation>Ошибка входа, HTTP %1.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="217"/>
+        <location filename="../src/apiclient.cpp" line="243"/>
         <source>Sign-in failed, HTTP %1 (%2).</source>
         <translation>Ошибка входа, HTTP %1 (%2).</translation>
     </message>
@@ -162,37 +163,67 @@
         <translation>недоступна (down, %1)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="246"/>
+        <location filename="../src/apiclient.cpp" line="251"/>
+        <source>Your session has expired. Sign in again.</source>
+        <translation>Срок сессии истёк. Войдите снова.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="253"/>
+        <source>This account is disabled. Sign in again.</source>
+        <translation>Учётная запись отключена. Войдите снова.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="255"/>
+        <source>Signed out on this computer. The server did not confirm logout.</source>
+        <translation>На этом компьютере сеанс завершён. Сервер не подтвердил выход.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="259"/>
+        <source>You do not have permission to change data.</source>
+        <translation>Нет права изменять данные.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="260"/>
+        <source>Sign in again. The session is no longer valid.</source>
+        <translation>Войдите снова. Сессия больше не действует.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="280"/>
+        <source>Request failed, HTTP %1 (%2).</source>
+        <translation>Запрос не выполнен, HTTP %1 (%2).</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="309"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Сервер ответил HTTP %1, состояние базы неизвестно.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="249"/>
+        <location filename="../src/apiclient.cpp" line="312"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Сервер ответил неожиданным телом.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="252"/>
+        <location filename="../src/apiclient.cpp" line="315"/>
         <source>Server</source>
         <translation>Сервер</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="256"/>
+        <location filename="../src/apiclient.cpp" line="319"/>
         <source>responded</source>
         <translation>ответил</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="258"/>
+        <location filename="../src/apiclient.cpp" line="321"/>
         <source>unknown</source>
         <translation>неизвестно</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="259"/>
+        <location filename="../src/apiclient.cpp" line="322"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1: работает (%2). База: %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="261"/>
+        <location filename="../src/apiclient.cpp" line="324"/>
         <source>. Version %1</source>
         <translation>. Версия %1</translation>
     </message>
@@ -218,17 +249,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="71"/>
+        <location filename="../src/appcontroller.cpp" line="139"/>
         <source>Could not remember the login. %1</source>
         <translation>Не удалось запомнить логин. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="83"/>
+        <location filename="../src/appcontroller.cpp" line="151"/>
         <source>Could not save the language. %1</source>
         <translation>Не удалось сохранить язык. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="105"/>
+        <location filename="../src/appcontroller.cpp" line="184"/>
         <source>The server address changed. Sign in again.</source>
         <translation>Адрес сервера изменён. Войдите снова.</translation>
     </message>
@@ -365,62 +396,62 @@
     <name>LoginWindow</name>
     <message>
         <location filename="../src/loginwindow.cpp" line="118"/>
-        <location filename="../src/loginwindow.cpp" line="230"/>
+        <location filename="../src/loginwindow.cpp" line="240"/>
         <source>Server: %1</source>
         <translation>Сервер: %1</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="160"/>
-        <location filename="../src/loginwindow.cpp" line="241"/>
+        <location filename="../src/loginwindow.cpp" line="170"/>
+        <location filename="../src/loginwindow.cpp" line="251"/>
         <source>Enter your login and password.</source>
         <translation>Введите логин и пароль.</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="168"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="178"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Signing in…</source>
         <translation>Вход…</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="179"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="189"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Sign in</source>
         <comment>button</comment>
         <translation>Войти</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="219"/>
+        <location filename="../src/loginwindow.cpp" line="229"/>
         <source>Sign in</source>
         <comment>window title</comment>
         <translation>Вход</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="220"/>
+        <location filename="../src/loginwindow.cpp" line="230"/>
         <source>Hotel</source>
         <translation>Отель</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="221"/>
+        <location filename="../src/loginwindow.cpp" line="231"/>
         <source>Login</source>
         <translation>Логин</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="222"/>
+        <location filename="../src/loginwindow.cpp" line="232"/>
         <source>Password</source>
         <translation>Пароль</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="223"/>
+        <location filename="../src/loginwindow.cpp" line="233"/>
         <source>The login is remembered; the password is not.</source>
         <translation>Логин запоминается, пароль — нет.</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="225"/>
+        <location filename="../src/loginwindow.cpp" line="235"/>
         <source>Connection settings</source>
         <translation>Настройки подключения</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="226"/>
+        <location filename="../src/loginwindow.cpp" line="236"/>
         <source>Language</source>
         <translation>Язык</translation>
     </message>

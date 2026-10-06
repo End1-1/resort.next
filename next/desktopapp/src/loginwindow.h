@@ -20,6 +20,8 @@ public:
     void setConnectionStatus(const QString &text);
     void setLastLogin(const QString &login);
     void setError(const QString &text);
+    // code is passed to sessionEndedMessage and retranslated with the window.
+    void setSessionEnded(const QString &code);
     void prepareForShow();
 
 signals:
@@ -44,12 +46,14 @@ private:
         None,
         NeedCredentials,
         Server,
-        External
+        External,
+        SessionEnded
     };
 
     ApiClient *m_api = nullptr;
     QString m_baseUrl;
     QString m_externalError;
+    QString m_sessionEndedCode;
     ApiError m_lastError;
     Notice m_notice = Notice::None;
     bool m_busy = false;

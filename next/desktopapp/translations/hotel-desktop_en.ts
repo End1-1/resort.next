@@ -36,8 +36,9 @@
     <message>
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
-        <location filename="../src/apiclient.cpp" line="219"/>
-        <location filename="../src/apiclient.cpp" line="240"/>
+        <location filename="../src/apiclient.cpp" line="245"/>
+        <location filename="../src/apiclient.cpp" line="282"/>
+        <location filename="../src/apiclient.cpp" line="303"/>
         <source>Server unavailable.</source>
         <translation>Server unavailable.</translation>
     </message>
@@ -67,72 +68,72 @@
         <translation>unavailable (down, connection_failed)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="175"/>
+        <location filename="../src/apiclient.cpp" line="201"/>
         <source>Incorrect login or password.</source>
         <translation>Incorrect login or password.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="177"/>
+        <location filename="../src/apiclient.cpp" line="203"/>
         <source>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</source>
         <translation>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="182"/>
+        <location filename="../src/apiclient.cpp" line="208"/>
         <source>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</source>
         <translation>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="187"/>
+        <location filename="../src/apiclient.cpp" line="213"/>
         <source>The database driver is not loaded on the server (driver_not_loaded).</source>
         <translation>The database driver is not loaded on the server (driver_not_loaded).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="191"/>
+        <location filename="../src/apiclient.cpp" line="217"/>
         <source>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</source>
         <translation>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="196"/>
+        <location filename="../src/apiclient.cpp" line="222"/>
         <source>The database was not found on the server (unknown_database).</source>
         <translation>The database was not found on the server (unknown_database).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="199"/>
+        <location filename="../src/apiclient.cpp" line="225"/>
         <source>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</source>
         <translation>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="204"/>
+        <location filename="../src/apiclient.cpp" line="230"/>
         <source>The database connection failed (connection_failed).</source>
         <translation>The database connection failed (connection_failed).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="207"/>
+        <location filename="../src/apiclient.cpp" line="233"/>
         <source>The database is unavailable (database_unavailable).</source>
         <translation>The database is unavailable (database_unavailable).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="209"/>
+        <location filename="../src/apiclient.cpp" line="235"/>
         <source>Invalid request to the server.</source>
         <translation>Invalid request to the server.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="211"/>
+        <location filename="../src/apiclient.cpp" line="237"/>
         <source>The server did not find the sign-in address.</source>
         <translation>The server did not find the sign-in address.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="213"/>
+        <location filename="../src/apiclient.cpp" line="239"/>
         <source>The server is temporarily unavailable (503).</source>
         <translation>The server is temporarily unavailable (503).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="216"/>
+        <location filename="../src/apiclient.cpp" line="242"/>
         <source>Sign-in failed, HTTP %1.</source>
         <translation>Sign-in failed, HTTP %1.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="217"/>
+        <location filename="../src/apiclient.cpp" line="243"/>
         <source>Sign-in failed, HTTP %1 (%2).</source>
         <translation>Sign-in failed, HTTP %1 (%2).</translation>
     </message>
@@ -162,37 +163,67 @@
         <translation>unavailable (down, %1)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="246"/>
+        <location filename="../src/apiclient.cpp" line="251"/>
+        <source>Your session has expired. Sign in again.</source>
+        <translation>Your session has expired. Sign in again.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="253"/>
+        <source>This account is disabled. Sign in again.</source>
+        <translation>This account is disabled. Sign in again.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="255"/>
+        <source>Signed out on this computer. The server did not confirm logout.</source>
+        <translation>Signed out on this computer. The server did not confirm logout.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="259"/>
+        <source>You do not have permission to change data.</source>
+        <translation>You do not have permission to change data.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="260"/>
+        <source>Sign in again. The session is no longer valid.</source>
+        <translation>Sign in again. The session is no longer valid.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="280"/>
+        <source>Request failed, HTTP %1 (%2).</source>
+        <translation>Request failed, HTTP %1 (%2).</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="309"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Server replied HTTP %1; the database state is unknown.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="249"/>
+        <location filename="../src/apiclient.cpp" line="312"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Server replied with an unexpected body.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="252"/>
+        <location filename="../src/apiclient.cpp" line="315"/>
         <source>Server</source>
         <translation>Server</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="256"/>
+        <location filename="../src/apiclient.cpp" line="319"/>
         <source>responded</source>
         <translation>responded</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="258"/>
+        <location filename="../src/apiclient.cpp" line="321"/>
         <source>unknown</source>
         <translation>unknown</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="259"/>
+        <location filename="../src/apiclient.cpp" line="322"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1: running (%2). Database: %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="261"/>
+        <location filename="../src/apiclient.cpp" line="324"/>
         <source>. Version %1</source>
         <translation>. Version %1</translation>
     </message>
@@ -218,17 +249,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="71"/>
+        <location filename="../src/appcontroller.cpp" line="139"/>
         <source>Could not remember the login. %1</source>
         <translation>Could not remember the login. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="83"/>
+        <location filename="../src/appcontroller.cpp" line="151"/>
         <source>Could not save the language. %1</source>
         <translation>Could not save the language. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="105"/>
+        <location filename="../src/appcontroller.cpp" line="184"/>
         <source>The server address changed. Sign in again.</source>
         <translation>The server address changed. Sign in again.</translation>
     </message>
@@ -365,62 +396,62 @@
     <name>LoginWindow</name>
     <message>
         <location filename="../src/loginwindow.cpp" line="118"/>
-        <location filename="../src/loginwindow.cpp" line="230"/>
+        <location filename="../src/loginwindow.cpp" line="240"/>
         <source>Server: %1</source>
         <translation>Server: %1</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="160"/>
-        <location filename="../src/loginwindow.cpp" line="241"/>
+        <location filename="../src/loginwindow.cpp" line="170"/>
+        <location filename="../src/loginwindow.cpp" line="251"/>
         <source>Enter your login and password.</source>
         <translation>Enter your login and password.</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="168"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="178"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Signing in…</source>
         <translation>Signing in…</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="179"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="189"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Sign in</source>
         <comment>button</comment>
         <translation>Sign in</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="219"/>
+        <location filename="../src/loginwindow.cpp" line="229"/>
         <source>Sign in</source>
         <comment>window title</comment>
         <translation>Sign in</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="220"/>
+        <location filename="../src/loginwindow.cpp" line="230"/>
         <source>Hotel</source>
         <translation>Hotel</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="221"/>
+        <location filename="../src/loginwindow.cpp" line="231"/>
         <source>Login</source>
         <translation>Login</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="222"/>
+        <location filename="../src/loginwindow.cpp" line="232"/>
         <source>Password</source>
         <translation>Password</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="223"/>
+        <location filename="../src/loginwindow.cpp" line="233"/>
         <source>The login is remembered; the password is not.</source>
         <translation>The login is remembered; the password is not.</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="225"/>
+        <location filename="../src/loginwindow.cpp" line="235"/>
         <source>Connection settings</source>
         <translation>Connection settings</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="226"/>
+        <location filename="../src/loginwindow.cpp" line="236"/>
         <source>Language</source>
         <translation>Language</translation>
     </message>

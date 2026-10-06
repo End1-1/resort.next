@@ -10,7 +10,7 @@ Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake
 
 | Piece | Role |
 |-------|------|
-| `src/apiclient.*`, `src/urlutil.*` | Base URL, in-memory bearer token, async `GET /health` and `POST /api/v1/sessions`. Server error codes are mapped to the UI language here. No widgets. |
+| `src/apiclient.*`, `src/urlutil.*` | Base URL, in-memory bearer token, async `GET /health`, `POST /api/v1/sessions`, and authenticated `GET` / `POST` / `PATCH` / `DELETE`. `Authorization: Bearer` is sent when a token is set. A 401 on those calls is `sessionRejected`. Server error codes are mapped to the UI language here. No widgets. |
 | `src/uilanguage.*`, `translations/` | Armenian, English, and Russian (`hy` / `en` / `ru`). |
 | `src/appconfig.*` | Per-user INI. Never stores a password or a token. |
 | `src/connectiondialog.*` | Address, WebSocket, «Проверить соединение». |
@@ -136,15 +136,19 @@ Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedde
 
 1. **Вход.** Логин, пароль, «Войти», «Настройки подключения». Логин запоминается, пароль нет. Сеть не блокирует интерфейс (`QNetworkAccessManager`, таймаут около 8 секунд на вход и 5 секунд на `/health`). Строка состояния — последний `/health` и WebSocket.
 2. **После входа.** Имя, логин, `role_id`, `commands_allowed`, адрес сервера, живое состояние (опрос `/health` раз в 15 секунд; если WebSocket задан — ещё кадр hello). Центр пустой: «шахматка, бронирования». Токен только в памяти процесса, на экран не выводится.
-3. **Сессия → Выход.** Токен стирается из памяти, снова окно входа. Метода logout в `hotel-api` пока нет: строка `nx_session` живёт до срока (12 часов) или пока её не уберут на сервере. Закрытие окна завершает процесс и тоже теряет токен.
-4. Смена адреса сервера в настройках, пока сеанс открыт, тоже стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
+3. **Сессия → Выход.** Клиент вызывает `DELETE /api/v1/sessions` с `Authorization: Bearer` и только потом стирает токен из памяти. Сервер ставит `nx_session.revoked_at`. Если сервер не ответил, окно входа всё равно открывается и пишет, что выход на сервере не подтверждён. Закрытие окна завершает процесс и тоже теряет токен (строка на сервере при этом остаётся до срока, если выход не вызывали).
+4. Смена адреса сервера в настройках, пока сеанс открыт, сначала шлёт тот же `DELETE` на старый адрес, затем стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
+5. После входа клиент читает `GET /api/v1/sessions/current`. Ответ `401` (`unauthorized`, `session_expired`, `user_disabled`) возвращает на вход с фразой на языке окна, а не с текстом «неверный пароль».
 
 Сообщения входа (код с сервера, фраза на языке окна):
 
 | Ответ | Код | Смысл |
 |-------|-----|--------|
 | сеть, таймаут, хост не найден, отказ | — | сервер недоступен или время ожидания вышло |
-| 401 | `unauthorized` | неверный логин или пароль |
+| 401 | `unauthorized` | на форме входа: неверный логин или пароль. В уже открытом сеансе: сессия больше не действует, снова вход |
+| 401 | `session_expired` | срок сессии истёк, снова вход |
+| 401 | `user_disabled` | учётная запись отключена, снова вход |
+| 403 | `commands_not_allowed` | нет права изменять данные |
 | 503 | `database_not_configured` | база не настроена |
 | 503 | `session_store_unavailable` | хранилище сессий недоступно |
 | 503 | `driver_not_loaded` | драйвер базы не загружен |

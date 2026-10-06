@@ -1,5 +1,6 @@
 #include "apiclient.h"
 #include "appconfig.h"
+#include "appcontroller.h"
 #include "connectiondialog.h"
 #include "healthmonitor.h"
 #include "uilanguage.h"
@@ -10,6 +11,8 @@
 #include <QAction>
 #include <QApplication>
 #include <QDir>
+#include <QHash>
+#include <QHostAddress>
 #include <QFile>
 #include <QFileInfo>
 #include <QFont>
@@ -23,6 +26,8 @@
 #include <QPushButton>
 #include <QRawFont>
 #include <QSignalSpy>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
@@ -39,6 +44,137 @@ bool writeText(const QString &path, const QByteArray &body)
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
         return false;
     return file.write(body) == body.size();
+}
+
+// Speaks just enough HTTP/1.1 for the desktop session tests. No Q_OBJECT.
+class FakeHotelApi : public QObject {
+public:
+    explicit FakeHotelApi(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+        QObject::connect(&m_server, &QTcpServer::newConnection, this, [this]() {
+            while (m_server.hasPendingConnections()) {
+                QTcpSocket *socket = m_server.nextPendingConnection();
+                QObject::connect(socket, &QTcpSocket::readyRead, this, [this, socket]() { onReady(socket); });
+                QObject::connect(socket, &QTcpSocket::disconnected, this, [socket]() { socket->deleteLater(); });
+            }
+        });
+    }
+
+    bool listen()
+    {
+        return m_server.listen(QHostAddress::LocalHost, 0);
+    }
+
+    quint16 port() const
+    {
+        return m_server.serverPort();
+    }
+
+    bool expireCurrent = false;
+    int currentGets = 0;
+    int sessionDeletes = 0;
+    QByteArray lastDeleteAuthorization;
+
+private:
+    void onReady(QTcpSocket *socket)
+    {
+        m_buffers[socket] += socket->readAll();
+        const QByteArray raw = m_buffers.value(socket);
+        const int split = raw.indexOf("\r\n\r\n");
+        if (split < 0)
+            return;
+
+        const QByteArray head = raw.left(split);
+        QByteArray requestLine;
+        QByteArray authorization;
+        int length = 0;
+        const QList<QByteArray> lines = head.split('\n');
+        for (QByteArray line : lines) {
+            line = line.trimmed();
+            if (requestLine.isEmpty())
+                requestLine = line;
+            const QByteArray lower = line.toLower();
+            if (lower.startsWith("content-length:"))
+                length = line.mid(int(sizeof("content-length:") - 1)).trimmed().toInt();
+            if (lower.startsWith("authorization:"))
+                authorization = line.mid(int(sizeof("authorization:") - 1)).trimmed();
+        }
+        if (raw.size() < split + 4 + length)
+            return;
+        m_buffers.remove(socket);
+
+        const QList<QByteArray> parts = requestLine.split(' ');
+        const QByteArray method = parts.value(0);
+        QByteArray path = parts.value(1);
+        const int query = path.indexOf('?');
+        if (query >= 0)
+            path = path.left(query);
+
+        int status = 200;
+        QByteArray reason = "OK";
+        QByteArray body;
+        if (method == "GET" && path == "/health") {
+            body = QByteArrayLiteral(
+                "{\"status\":\"ok\",\"service\":\"hotel-api\",\"version\":\"0.4.0\",\"db\":{\"configured\":false,\"state\":\"skipped\"}}");
+        } else if (method == "POST" && path == "/api/v1/sessions") {
+            body = QByteArrayLiteral(
+                "{\"token_type\":\"Bearer\",\"token\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\","
+                "\"expires_at\":\"2099-01-01T00:00:00Z\",\"commands_allowed\":true,"
+                "\"user\":{\"id\":1,\"login\":\"ivan\",\"name\":\"Ivan\",\"role_id\":1,\"group\":1}}");
+        } else if (method == "GET" && path == "/api/v1/sessions/current") {
+            ++currentGets;
+            if (expireCurrent) {
+                status = 401;
+                reason = "Unauthorized";
+                body = QByteArrayLiteral("{\"error\":\"session_expired\"}");
+            } else {
+                body = QByteArrayLiteral(
+                    "{\"token_type\":\"Bearer\",\"expires_at\":\"2099-01-01T00:00:00Z\",\"commands_allowed\":true,"
+                    "\"user\":{\"id\":1,\"login\":\"ivan\",\"name\":\"Ivan\",\"role_id\":1,\"group\":1}}");
+            }
+        } else if (method == "DELETE" && path == "/api/v1/sessions") {
+            ++sessionDeletes;
+            lastDeleteAuthorization = authorization;
+            body = QByteArrayLiteral("{\"revoked\":true}");
+        } else {
+            status = 404;
+            reason = "Not Found";
+            body = QByteArrayLiteral("{\"error\":\"not_found\"}");
+        }
+
+        const QByteArray payload = "HTTP/1.1 " + QByteArray::number(status) + " " + reason
+            + "\r\nContent-Type: application/json\r\nContent-Length: " + QByteArray::number(body.size())
+            + "\r\nConnection: close\r\n\r\n" + body;
+        socket->write(payload);
+        socket->flush();
+        socket->disconnectFromHost();
+    }
+
+    QTcpServer m_server;
+    QHash<QTcpSocket *, QByteArray> m_buffers;
+};
+
+LoginWindow *visibleLogin()
+{
+    const QWidgetList widgets = QApplication::topLevelWidgets();
+    for (QWidget *widget : widgets) {
+        auto *login = qobject_cast<LoginWindow *>(widget);
+        if (login && login->isVisible())
+            return login;
+    }
+    return nullptr;
+}
+
+MainWindow *visibleMain()
+{
+    const QWidgetList widgets = QApplication::topLevelWidgets();
+    for (QWidget *widget : widgets) {
+        auto *window = qobject_cast<MainWindow *>(widget);
+        if (window && window->isVisible())
+            return window;
+    }
+    return nullptr;
 }
 
 } // namespace
@@ -63,6 +199,9 @@ private slots:
     void unreachableServerMessage();
     void loginShowsDatabaseNotConfigured();
     void mapsDatabaseConnectCodes();
+    void sessionEndedPhrases();
+    void expiredSessionReturnsToLogin();
+    void logoutSendsBearerAndReturnsToLogin();
 };
 
 void LoginSmoke::initTestCase()
@@ -580,6 +719,83 @@ void LoginSmoke::mapsDatabaseConnectCodes()
     QVERIFY(summary.contains(QStringLiteral("access_denied")));
     QVERIFY(!summary.contains(QStringLiteral("password")));
     HotelLocale::applyCode(QStringLiteral("en"));
+}
+
+void LoginSmoke::sessionEndedPhrases()
+{
+    HotelLocale::applyCode(QStringLiteral("en"));
+    const QString english = sessionEndedMessage(QStringLiteral("session_expired"));
+    QVERIFY(english.contains(QStringLiteral("expired")));
+    QVERIFY(sessionEndedMessage(QStringLiteral("user_disabled")).contains(QStringLiteral("disabled")));
+    QVERIFY(sessionEndedMessage(QStringLiteral("unauthorized")).contains(QStringLiteral("Sign in again")));
+    QVERIFY(apiErrorMessage(403, QStringLiteral("commands_not_allowed")).contains(QStringLiteral("permission")));
+
+    HotelLocale::applyCode(QStringLiteral("ru"));
+    const QString russian = sessionEndedMessage(QStringLiteral("session_expired"));
+    QVERIFY2(russian.contains(QStringLiteral("истёк")), qPrintable(russian));
+    QVERIFY(sessionEndedMessage(QStringLiteral("user_disabled")).contains(QStringLiteral("отключена")));
+    QVERIFY(sessionEndedMessage(QStringLiteral("logout_unconfirmed")).contains(QStringLiteral("не подтвердил")));
+
+    HotelLocale::applyCode(QStringLiteral("hy"));
+    const QString armenian = sessionEndedMessage(QStringLiteral("session_expired"));
+    QVERIFY2(armenian != english, qPrintable(armenian));
+    QVERIFY(armenian.contains(QStringLiteral("Սեսիա")));
+    HotelLocale::applyCode(QStringLiteral("en"));
+}
+
+void LoginSmoke::expiredSessionReturnsToLogin()
+{
+    HotelLocale::applyCode(QStringLiteral("en"));
+    FakeHotelApi api;
+    QVERIFY(api.listen());
+    const QByteArray ini = "base_url=http://127.0.0.1:" + QByteArray::number(api.port())
+        + "\nlanguage=en\nwebsocket_url=\n";
+    QVERIFY(writeText(AppConfig::userFilePath(), ini));
+    api.expireCurrent = true;
+
+    AppController controller;
+    controller.start();
+    QTRY_VERIFY(visibleLogin() != nullptr);
+    visibleLogin()->findChild<QLineEdit *>(QStringLiteral("loginEdit"))->setText(QStringLiteral("ivan"));
+    visibleLogin()->findChild<QLineEdit *>(QStringLiteral("passwordEdit"))->setText(QStringLiteral("secret"));
+    QVERIFY(QMetaObject::invokeMethod(visibleLogin(), "submit"));
+
+    QTRY_VERIFY_WITH_TIMEOUT(visibleLogin()
+                                 && visibleLogin()->findChild<QLabel *>(QStringLiteral("errorLabel"))->text().contains(
+                                     QStringLiteral("expired")),
+                             8000);
+    QVERIFY(visibleMain() == nullptr);
+    QVERIFY2(api.currentGets >= 1, "desktop did not call GET /api/v1/sessions/current");
+}
+
+void LoginSmoke::logoutSendsBearerAndReturnsToLogin()
+{
+    HotelLocale::applyCode(QStringLiteral("en"));
+    FakeHotelApi api;
+    QVERIFY(api.listen());
+    const QByteArray ini = "base_url=http://127.0.0.1:" + QByteArray::number(api.port())
+        + "\nlanguage=en\nwebsocket_url=\n";
+    QVERIFY(writeText(AppConfig::userFilePath(), ini));
+
+    AppController controller;
+    controller.start();
+    QTRY_VERIFY(visibleLogin() != nullptr);
+    visibleLogin()->findChild<QLineEdit *>(QStringLiteral("loginEdit"))->setText(QStringLiteral("ivan"));
+    visibleLogin()->findChild<QLineEdit *>(QStringLiteral("passwordEdit"))->setText(QStringLiteral("secret"));
+    QVERIFY(QMetaObject::invokeMethod(visibleLogin(), "submit"));
+
+    QTRY_VERIFY_WITH_TIMEOUT(visibleMain() != nullptr, 8000);
+    QTRY_VERIFY_WITH_TIMEOUT(api.currentGets >= 1, 8000);
+    QVERIFY(visibleLogin() == nullptr);
+
+    auto *logout = visibleMain()->findChild<QAction *>(QStringLiteral("logoutAction"));
+    QVERIFY(logout);
+    logout->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(api.sessionDeletes == 1, 8000);
+    QVERIFY2(api.lastDeleteAuthorization.startsWith("Bearer "), qPrintable(QString::fromUtf8(api.lastDeleteAuthorization)));
+    QVERIFY(api.lastDeleteAuthorization.contains("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+    QTRY_VERIFY(visibleLogin() != nullptr);
+    QVERIFY(visibleMain() == nullptr);
 }
 
 int main(int argc, char **argv)

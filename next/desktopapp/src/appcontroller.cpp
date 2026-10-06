@@ -4,7 +4,9 @@
 #include "uilanguage.h"
 
 #include <QCoreApplication>
+#include <QJsonObject>
 #include <QLatin1String>
+#include <QUrlQuery>
 
 AppController::AppController(QObject *parent)
     : QObject(parent)
@@ -21,6 +23,8 @@ AppController::AppController(QObject *parent)
     connect(&m_login, &LoginWindow::languageRequested, this, &AppController::onLanguage);
     connect(&m_main, &MainWindow::languageRequested, this, &AppController::onLanguage);
     connect(&m_monitor, &HealthMonitor::statusChanged, this, &AppController::refreshStatus);
+    connect(&m_api, &ApiClient::responseFinished, this, &AppController::onApiResponse);
+    connect(&m_api, &ApiClient::sessionRejected, this, &AppController::onSessionRejected);
 }
 
 void AppController::start()
@@ -44,23 +48,87 @@ void AppController::start()
 
 void AppController::onLogin(const UserSnapshot &user)
 {
+    m_leaving = false;
+    m_logoutId = 0;
     m_main.showSession(user, m_api.baseUrl());
     refreshStatus();
     m_main.show();
     m_main.raise();
     m_main.activateWindow();
     m_login.hide();
+    m_api.request(HttpVerb::Get,
+                  QStringLiteral("/api/v1/sessions/current"),
+                  QUrlQuery(),
+                  QByteArray(),
+                  true);
 }
 
-void AppController::onLogout()
+void AppController::returnToLogin(const QString &sessionCode)
 {
-    // No DELETE /api/v1/sessions yet. The nx_session row stays until it expires.
     m_api.clearToken();
+    m_logoutId = 0;
+    m_leaving = false;
     m_login.prepareForShow();
+    if (!sessionCode.isEmpty())
+        m_login.setSessionEnded(sessionCode);
     m_login.show();
     m_login.raise();
     m_login.activateWindow();
     m_main.hide();
+}
+
+void AppController::onLogout()
+{
+    if (m_leaving)
+        return;
+    m_leaving = true;
+    if (!m_api.hasToken()) {
+        returnToLogin(QString());
+        return;
+    }
+    m_logoutId = m_api.request(HttpVerb::Delete,
+                               QStringLiteral("/api/v1/sessions"),
+                               QUrlQuery(),
+                               QByteArray(),
+                               true,
+                               5000);
+}
+
+void AppController::onApiResponse(const ApiResponse &response)
+{
+    if (!response.current)
+        return;
+    if (response.path == QLatin1String("/api/v1/sessions/current") && response.ok && response.json.isObject()) {
+        const QJsonObject object = response.json.object();
+        const QJsonObject user = object.value(QStringLiteral("user")).toObject();
+        UserSnapshot snap;
+        snap.id = user.value(QStringLiteral("id")).toInteger();
+        snap.login = user.value(QStringLiteral("login")).toString();
+        snap.name = user.value(QStringLiteral("name")).toString();
+        const QJsonValue role = user.value(QStringLiteral("role_id"));
+        snap.rolePresent = !role.isNull() && !role.isUndefined();
+        if (snap.rolePresent)
+            snap.roleId = role.toInteger();
+        snap.commandsAllowed = object.value(QStringLiteral("commands_allowed")).toBool();
+        snap.expiresAt = object.value(QStringLiteral("expires_at")).toString();
+        if (!m_leaving && m_main.isVisible())
+            m_main.showSession(snap, m_api.baseUrl());
+        return;
+    }
+    if (m_logoutId == 0 || response.id != m_logoutId)
+        return;
+    if (response.ok || response.error.httpStatus == 401)
+        returnToLogin(QString());
+    else
+        returnToLogin(QStringLiteral("logout_unconfirmed"));
+}
+
+void AppController::onSessionRejected(const QString &code)
+{
+    if (m_leaving)
+        return;
+    m_leaving = true;
+    returnToLogin(code);
 }
 
 void AppController::onRememberLogin(const QString &login)
@@ -93,6 +161,15 @@ void AppController::editSettings()
     const DesktopConfig updated = dialog.settings();
     const bool baseChanged = updated.baseUrl != m_api.baseUrl();
     const bool signedIn = m_main.isVisible();
+    if (baseChanged && signedIn && m_api.hasToken()) {
+        m_leaving = true;
+        m_api.request(HttpVerb::Delete,
+                      QStringLiteral("/api/v1/sessions"),
+                      QUrlQuery(),
+                      QByteArray(),
+                      true,
+                      3000);
+    }
     m_config = updated;
     m_api.setBaseUrl(m_config.baseUrl);
     m_login.setServerAddress(m_config.baseUrl);
@@ -101,6 +178,8 @@ void AppController::editSettings()
     m_monitor.refreshNow();
     if (baseChanged && signedIn) {
         m_api.clearToken();
+        m_leaving = false;
+        m_logoutId = 0;
         m_login.prepareForShow();
         m_login.setError(tr("The server address changed. Sign in again."));
         m_login.show();

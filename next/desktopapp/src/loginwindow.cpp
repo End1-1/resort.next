@@ -133,7 +133,16 @@ void LoginWindow::setError(const QString &text)
 {
     m_notice = text.isEmpty() ? Notice::None : Notice::External;
     m_externalError = text;
+    m_sessionEndedCode.clear();
     m_errorLabel->setText(text);
+}
+
+void LoginWindow::setSessionEnded(const QString &code)
+{
+    m_notice = Notice::SessionEnded;
+    m_sessionEndedCode = code;
+    m_externalError.clear();
+    showStoredError();
 }
 
 void LoginWindow::prepareForShow()
@@ -141,6 +150,7 @@ void LoginWindow::prepareForShow()
     m_passwordEdit->clear();
     m_notice = Notice::None;
     m_externalError.clear();
+    m_sessionEndedCode.clear();
     m_errorLabel->clear();
     m_busy = false;
     m_loginButton->setEnabled(true);
@@ -250,6 +260,9 @@ void LoginWindow::showStoredError()
         break;
     case Notice::External:
         m_errorLabel->setText(m_externalError);
+        break;
+    case Notice::SessionEnded:
+        m_errorLabel->setText(sessionEndedMessage(m_sessionEndedCode));
         break;
     }
 }

@@ -36,8 +36,9 @@
     <message>
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
-        <location filename="../src/apiclient.cpp" line="219"/>
-        <location filename="../src/apiclient.cpp" line="240"/>
+        <location filename="../src/apiclient.cpp" line="245"/>
+        <location filename="../src/apiclient.cpp" line="282"/>
+        <location filename="../src/apiclient.cpp" line="303"/>
         <source>Server unavailable.</source>
         <translation>Սերվերն անհասանելի է։</translation>
     </message>
@@ -67,72 +68,72 @@
         <translation>անհասանելի է (down, connection_failed)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="175"/>
+        <location filename="../src/apiclient.cpp" line="201"/>
         <source>Incorrect login or password.</source>
         <translation>Սխալ մուտքանուն կամ գաղտնաբառ։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="177"/>
+        <location filename="../src/apiclient.cpp" line="203"/>
         <source>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</source>
         <translation>Բազան կարգավորված չէ (database_not_configured)։ Մուտքն անհնար է, քանի դեռ սերվերում MariaDB-ի կապը նշված չէ։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="182"/>
+        <location filename="../src/apiclient.cpp" line="208"/>
         <source>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</source>
         <translation>Սեսիաների պահոցն անհասանելի է (session_store_unavailable)։ Սերվերում չկան nx_user և nx_session աղյուսակները, կամ սեսիան չգրանցվեց։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="187"/>
+        <location filename="../src/apiclient.cpp" line="213"/>
         <source>The database driver is not loaded on the server (driver_not_loaded).</source>
         <translation>Բազայի դրայվերը սերվերում բեռնված չէ (driver_not_loaded)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="191"/>
+        <location filename="../src/apiclient.cpp" line="217"/>
         <source>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</source>
         <translation>Սերվերը մերժեց բազայի մուտքը (access_denied)։ MariaDB-ի հաշիվն այս հոսթից չի ընդունվել։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="196"/>
+        <location filename="../src/apiclient.cpp" line="222"/>
         <source>The database was not found on the server (unknown_database).</source>
         <translation>Բազան սերվերում չի գտնվել (unknown_database)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="199"/>
+        <location filename="../src/apiclient.cpp" line="225"/>
         <source>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</source>
         <translation>Սերվերը չկապվեց MariaDB-ի հետ (cannot_connect)։ Ստուգեք, որ ծառայությունը լսում է պորտը։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="204"/>
+        <location filename="../src/apiclient.cpp" line="230"/>
         <source>The database connection failed (connection_failed).</source>
         <translation>Բազայի հետ կապը չհաստատվեց (connection_failed)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="207"/>
+        <location filename="../src/apiclient.cpp" line="233"/>
         <source>The database is unavailable (database_unavailable).</source>
         <translation>Բազան անհասանելի է (database_unavailable)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="209"/>
+        <location filename="../src/apiclient.cpp" line="235"/>
         <source>Invalid request to the server.</source>
         <translation>Սխալ հարցում սերվերին։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="211"/>
+        <location filename="../src/apiclient.cpp" line="237"/>
         <source>The server did not find the sign-in address.</source>
         <translation>Սերվերը չգտավ մուտքի հասցեն։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="213"/>
+        <location filename="../src/apiclient.cpp" line="239"/>
         <source>The server is temporarily unavailable (503).</source>
         <translation>Սերվերը ժամանակավորապես անհասանելի է (503)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="216"/>
+        <location filename="../src/apiclient.cpp" line="242"/>
         <source>Sign-in failed, HTTP %1.</source>
         <translation>Մուտքը չհաջողվեց, HTTP %1։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="217"/>
+        <location filename="../src/apiclient.cpp" line="243"/>
         <source>Sign-in failed, HTTP %1 (%2).</source>
         <translation>Մուտքը չհաջողվեց, HTTP %1 (%2)։</translation>
     </message>
@@ -162,37 +163,67 @@
         <translation>անհասանելի է (down, %1)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="246"/>
+        <location filename="../src/apiclient.cpp" line="251"/>
+        <source>Your session has expired. Sign in again.</source>
+        <translation>Սեսիայի ժամկետն ավարտվել է։ Մտեք նորից։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="253"/>
+        <source>This account is disabled. Sign in again.</source>
+        <translation>Այս հաշիվն անջատված է։ Մտեք նորից։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="255"/>
+        <source>Signed out on this computer. The server did not confirm logout.</source>
+        <translation>Այս համակարգչում ելքը կատարված է։ Սերվերը ելքը չհաստատեց։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="259"/>
+        <source>You do not have permission to change data.</source>
+        <translation>Տվյալները փոխելու իրավունք չկա։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="260"/>
+        <source>Sign in again. The session is no longer valid.</source>
+        <translation>Մտեք նորից։ Սեսիան այլևս վավեր չէ։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="280"/>
+        <source>Request failed, HTTP %1 (%2).</source>
+        <translation>Հարցումը չկատարվեց, HTTP %1 (%2)։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="309"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Սերվերը պատասխանեց HTTP %1, բազայի վիճակն անհայտ է։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="249"/>
+        <location filename="../src/apiclient.cpp" line="312"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Սերվերը պատասխանեց անսպասելի տվյալներով։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="252"/>
+        <location filename="../src/apiclient.cpp" line="315"/>
         <source>Server</source>
         <translation>Սերվեր</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="256"/>
+        <location filename="../src/apiclient.cpp" line="319"/>
         <source>responded</source>
         <translation>պատասխանեց</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="258"/>
+        <location filename="../src/apiclient.cpp" line="321"/>
         <source>unknown</source>
         <translation>անհայտ</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="259"/>
+        <location filename="../src/apiclient.cpp" line="322"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1՝ աշխատում է (%2)։ Բազա՝ %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="261"/>
+        <location filename="../src/apiclient.cpp" line="324"/>
         <source>. Version %1</source>
         <translation>։ Տարբերակ %1</translation>
     </message>
@@ -218,17 +249,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="71"/>
+        <location filename="../src/appcontroller.cpp" line="139"/>
         <source>Could not remember the login. %1</source>
         <translation>Չհաջողվեց հիշել մուտքանունը։ %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="83"/>
+        <location filename="../src/appcontroller.cpp" line="151"/>
         <source>Could not save the language. %1</source>
         <translation>Չհաջողվեց պահպանել լեզուն։ %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="105"/>
+        <location filename="../src/appcontroller.cpp" line="184"/>
         <source>The server address changed. Sign in again.</source>
         <translation>Սերվերի հասցեն փոխվել է։ Մուտք գործեք նորից։</translation>
     </message>
@@ -365,62 +396,62 @@
     <name>LoginWindow</name>
     <message>
         <location filename="../src/loginwindow.cpp" line="118"/>
-        <location filename="../src/loginwindow.cpp" line="230"/>
+        <location filename="../src/loginwindow.cpp" line="240"/>
         <source>Server: %1</source>
         <translation>Սերվեր՝ %1</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="160"/>
-        <location filename="../src/loginwindow.cpp" line="241"/>
+        <location filename="../src/loginwindow.cpp" line="170"/>
+        <location filename="../src/loginwindow.cpp" line="251"/>
         <source>Enter your login and password.</source>
         <translation>Մուտքագրեք մուտքանունը և գաղտնաբառը։</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="168"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="178"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Signing in…</source>
         <translation>Մուտք…</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="179"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="189"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Sign in</source>
         <comment>button</comment>
         <translation>Մուտք գործել</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="219"/>
+        <location filename="../src/loginwindow.cpp" line="229"/>
         <source>Sign in</source>
         <comment>window title</comment>
         <translation>Մուտք</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="220"/>
+        <location filename="../src/loginwindow.cpp" line="230"/>
         <source>Hotel</source>
         <translation>Հյուրանոց</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="221"/>
+        <location filename="../src/loginwindow.cpp" line="231"/>
         <source>Login</source>
         <translation>Մուտքանուն</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="222"/>
+        <location filename="../src/loginwindow.cpp" line="232"/>
         <source>Password</source>
         <translation>Գաղտնաբառ</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="223"/>
+        <location filename="../src/loginwindow.cpp" line="233"/>
         <source>The login is remembered; the password is not.</source>
         <translation>Մուտքանունը հիշվում է, գաղտնաբառը՝ ոչ։</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="225"/>
+        <location filename="../src/loginwindow.cpp" line="235"/>
         <source>Connection settings</source>
         <translation>Կապի կարգավորումներ</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="226"/>
+        <location filename="../src/loginwindow.cpp" line="236"/>
         <source>Language</source>
         <translation>Լեզու</translation>
     </message>

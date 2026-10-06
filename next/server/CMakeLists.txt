@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # CMake only. Do not add a qmake .pro for this service.
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    project(hotel-api VERSION 0.3.0 LANGUAGES CXX)
+    project(hotel-api VERSION 0.4.0 LANGUAGES CXX)
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
@@ -28,6 +28,8 @@ set(HOTEL_API_SOURCES
     src/httpserver.h
     src/sessions.cpp
     src/sessions.h
+    src/auth.cpp
+    src/auth.h
     src/realtimehub.cpp
     src/realtimehub.h
     src/runner.cpp
@@ -44,7 +46,7 @@ endif()
 
 add_executable(hotel-api ${HOTEL_API_SOURCES})
 
-target_compile_definitions(hotel-api PRIVATE HOTEL_API_VERSION="0.3.0")
+target_compile_definitions(hotel-api PRIVATE HOTEL_API_VERSION="0.4.0")
 
 target_link_libraries(hotel-api PRIVATE
     Qt6::Core
@@ -109,8 +111,30 @@ endif()
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     enable_testing()
 endif()
+add_executable(hotel-api-auth-test
+    src/auth.cpp
+    src/auth.h
+    src/db.cpp
+    src/db.h
+    src/dberror.cpp
+    src/dberror.h
+    tests/test_auth.cpp
+)
+target_include_directories(hotel-api-auth-test PRIVATE src)
+target_link_libraries(hotel-api-auth-test PRIVATE Qt6::Core Qt6::Network Qt6::Sql Qt6::Test)
+target_compile_definitions(hotel-api-auth-test PRIVATE
+    "HOTEL_MIGRATION_0002=\"${CMAKE_CURRENT_SOURCE_DIR}/../dbdump/migrations/0002_nx_core.sql\""
+)
+if(MSVC)
+    target_compile_options(hotel-api-auth-test PRIVATE /W4 /utf-8)
+else()
+    target_compile_options(hotel-api-auth-test PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_dependencies(hotel-api-auth-test hotel-api)
+
 add_test(NAME hotel-api-config-test COMMAND hotel-api-config-test)
 add_test(NAME hotel-api-dberror-test COMMAND hotel-api-dberror-test)
+add_test(NAME hotel-api-auth-test COMMAND hotel-api-auth-test)
 
 include(GNUInstallDirs)
 install(TARGETS hotel-api RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

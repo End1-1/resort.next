@@ -1,5 +1,6 @@
 #include "httpserver.h"
 
+#include "auth.h"
 #include "config.h"
 #include "healthcheck.h"
 #include "sessions.h"
@@ -49,15 +50,34 @@ QHttpServerResponse::StatusCode toStatus(int httpStatus)
         return QHttpServerResponse::StatusCode::BadRequest;
     case 401:
         return QHttpServerResponse::StatusCode::Unauthorized;
+    case 403:
+        return QHttpServerResponse::StatusCode::Forbidden;
     case 404:
         return QHttpServerResponse::StatusCode::NotFound;
+    case 409:
+        return QHttpServerResponse::StatusCode::Conflict;
+    case 422:
+        return QHttpServerResponse::StatusCode::UnprocessableEntity;
     case 501:
         return QHttpServerResponse::StatusCode::NotImplemented;
     case 503:
         return QHttpServerResponse::StatusCode::ServiceUnavailable;
     default:
+        if (httpStatus >= 400)
+            return QHttpServerResponse::StatusCode::InternalServerError;
         return QHttpServerResponse::StatusCode::Ok;
     }
+}
+
+// Qt 6.4 stores headers as a list and exposes value(). Qt 6.8+ returns QHttpHeaders.
+QByteArray authorizationHeader(const QHttpServerRequest &request)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    const auto view = request.headers().value(QByteArrayLiteral("authorization"));
+    return QByteArray(view.data(), static_cast<qsizetype>(view.size()));
+#else
+    return request.value(QByteArrayLiteral("authorization"));
+#endif
 }
 
 } // namespace
@@ -70,14 +90,21 @@ HttpApi::HttpApi(AppConfig config)
         return jsonResponse(report.body, toStatus(report.httpStatus));
     });
 
-    m_server.route(QStringLiteral("/api/v1"), QHttpServerRequest::Method::Get, []() {
-        QJsonObject body;
-        body.insert(QStringLiteral("service"), QStringLiteral("hotel-api"));
-        body.insert(QStringLiteral("api"), QStringLiteral("v1"));
-        body.insert(QStringLiteral("status"), QStringLiteral("partial"));
-        body.insert(QStringLiteral("version"), QStringLiteral(HOTEL_API_VERSION));
-        return jsonResponse(body, QHttpServerResponse::StatusCode::Ok);
-    });
+    m_server.route(QStringLiteral("/api/v1"), QHttpServerRequest::Method::Get,
+                   [this](const QHttpServerRequest &request) {
+                       const AuthOutcome auth = authenticate(m_config.database,
+                                                             m_config.dbConnectTimeoutSec,
+                                                             authorizationHeader(request),
+                                                             RouteAccess::Session);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       QJsonObject body;
+                       body.insert(QStringLiteral("service"), QStringLiteral("hotel-api"));
+                       body.insert(QStringLiteral("api"), QStringLiteral("v1"));
+                       body.insert(QStringLiteral("status"), QStringLiteral("partial"));
+                       body.insert(QStringLiteral("version"), QStringLiteral(HOTEL_API_VERSION));
+                       return jsonResponse(body, QHttpServerResponse::StatusCode::Ok);
+                   });
 
     m_server.route(QStringLiteral("/api/v1/sessions"),
                    QHttpServerRequest::Method::Post,
@@ -85,6 +112,35 @@ HttpApi::HttpApi(AppConfig config)
                        const SessionResult result =
                            createSession(m_config.database, m_config.dbConnectTimeoutSec, request.body());
                        return jsonResponse(result.body, toStatus(result.httpStatus));
+                   });
+
+    // Logout is a session route, not a command: a user with commands_allowed
+    // false must still be able to revoke the row.
+    m_server.route(QStringLiteral("/api/v1/sessions"),
+                   QHttpServerRequest::Method::Delete,
+                   [this](const QHttpServerRequest &request) {
+                       const AuthOutcome auth = authenticate(m_config.database,
+                                                             m_config.dbConnectTimeoutSec,
+                                                             authorizationHeader(request),
+                                                             RouteAccess::Session);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       const ApiResult revoked = revokeSession(m_config.database,
+                                                               m_config.dbConnectTimeoutSec,
+                                                               auth.principal.sessionId);
+                       return jsonResponse(revoked.body, toStatus(revoked.httpStatus));
+                   });
+
+    m_server.route(QStringLiteral("/api/v1/sessions/current"),
+                   QHttpServerRequest::Method::Get,
+                   [this](const QHttpServerRequest &request) {
+                       const AuthOutcome auth = authenticate(m_config.database,
+                                                             m_config.dbConnectTimeoutSec,
+                                                             authorizationHeader(request),
+                                                             RouteAccess::Session);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       return jsonResponse(currentSessionBody(auth.principal), QHttpServerResponse::StatusCode::Ok);
                    });
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)

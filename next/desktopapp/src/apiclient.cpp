@@ -167,6 +167,32 @@ QString databasePhrase(const HealthStatus &status)
     return QString();
 }
 
+ApiResponse parseApiReply(QNetworkReply *reply)
+{
+    ApiResponse response;
+    response.rawBody = reply->readAll();
+    response.httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    response.error.httpStatus = response.httpStatus;
+    if (reply->error() != QNetworkReply::NoError && response.httpStatus == 0) {
+        response.error = transportError(reply);
+        response.error.httpStatus = 0;
+        return response;
+    }
+    QJsonParseError parseError;
+    response.json = QJsonDocument::fromJson(response.rawBody, &parseError);
+    if (response.json.isObject())
+        response.error.code = response.json.object().value(QStringLiteral("error")).toString();
+    if (response.httpStatus >= 200 && response.httpStatus < 300) {
+        response.ok = true;
+        return response;
+    }
+    response.error.userMessage = apiErrorMessage(response.httpStatus, response.error.code);
+    response.error.technical = response.error.code.isEmpty()
+                                   ? QStringLiteral("HTTP %1").arg(response.httpStatus)
+                                   : response.error.code;
+    return response;
+}
+
 } // namespace
 
 QString loginErrorMessage(int httpStatus, const QString &code)
@@ -215,6 +241,43 @@ QString loginErrorMessage(int httpStatus, const QString &code)
         if (code.isEmpty())
             return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1.").arg(httpStatus);
         return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1 (%2).").arg(httpStatus).arg(code);
+    }
+    return QCoreApplication::translate("ApiClient", "Server unavailable.");
+}
+
+QString sessionEndedMessage(const QString &code)
+{
+    if (code == QLatin1String("session_expired"))
+        return QCoreApplication::translate("ApiClient", "Your session has expired. Sign in again.");
+    if (code == QLatin1String("user_disabled"))
+        return QCoreApplication::translate("ApiClient", "This account is disabled. Sign in again.");
+    if (code == QLatin1String("logout_unconfirmed")) {
+        return QCoreApplication::translate(
+            "ApiClient", "Signed out on this computer. The server did not confirm logout.");
+    }
+    if (code == QLatin1String("commands_not_allowed"))
+        return QCoreApplication::translate("ApiClient", "You do not have permission to change data.");
+    return QCoreApplication::translate("ApiClient", "Sign in again. The session is no longer valid.");
+}
+
+QString apiErrorMessage(int httpStatus, const QString &code)
+{
+    if (httpStatus == 401 || code == QLatin1String("unauthorized") || code == QLatin1String("session_expired")
+        || code == QLatin1String("user_disabled")) {
+        return sessionEndedMessage(code);
+    }
+    if (httpStatus == 403 || code == QLatin1String("commands_not_allowed"))
+        return sessionEndedMessage(QStringLiteral("commands_not_allowed"));
+    if (code == QLatin1String("database_not_configured") || code == QLatin1String("session_store_unavailable")
+        || code == QLatin1String("driver_not_loaded") || code == QLatin1String("access_denied")
+        || code == QLatin1String("unknown_database") || code == QLatin1String("cannot_connect")
+        || code == QLatin1String("connection_failed") || code == QLatin1String("database_unavailable")
+        || code == QLatin1String("invalid_request") || code == QLatin1String("not_found")) {
+        return loginErrorMessage(httpStatus, code);
+    }
+    if (httpStatus != 0) {
+        const QString shown = code.isEmpty() ? QString::number(httpStatus) : code;
+        return QCoreApplication::translate("ApiClient", "Request failed, HTTP %1 (%2).").arg(httpStatus).arg(shown);
     }
     return QCoreApplication::translate("ApiClient", "Server unavailable.");
 }
@@ -281,6 +344,7 @@ ApiClient::ApiClient(QObject *parent)
 {
     qRegisterMetaType<HealthStatus>();
     qRegisterMetaType<SessionResult>();
+    qRegisterMetaType<ApiResponse>();
 }
 
 void ApiClient::setBaseUrl(const QString &baseUrl)
@@ -291,6 +355,7 @@ void ApiClient::setBaseUrl(const QString &baseUrl)
     m_baseUrl = trimmed;
     ++m_healthGen;
     ++m_loginGen;
+    ++m_requestGen;
 }
 
 QString ApiClient::baseUrl() const
@@ -316,8 +381,10 @@ bool ApiClient::hasToken() const
     return !m_token.isEmpty();
 }
 
-QNetworkReply *ApiClient::send(const QString &path,
-                               const QByteArray &jsonBody,
+QNetworkReply *ApiClient::send(HttpVerb verb,
+                               const QString &path,
+                               const QUrlQuery &query,
+                               const QByteArray &body,
                                int timeoutMs,
                                bool withAuth,
                                QString *userMessage,
@@ -334,7 +401,7 @@ QNetworkReply *ApiClient::send(const QString &path,
 
     QUrl url(parsed.url);
     url.setPath(path);
-    url.setQuery(QString());
+    url.setQuery(query);
     url.setFragment(QString());
 
     QNetworkRequest request(url);
@@ -345,10 +412,14 @@ QNetworkReply *ApiClient::send(const QString &path,
     if (withAuth && !m_token.isEmpty())
         request.setRawHeader("Authorization", QByteArrayLiteral("Bearer ") + m_token.toUtf8());
 
-    if (jsonBody.isNull())
+    if (verb == HttpVerb::Get)
         return m_nam->get(request);
+    if (verb == HttpVerb::Delete)
+        return m_nam->sendCustomRequest(request, QByteArrayLiteral("DELETE"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
-    return m_nam->post(request, jsonBody);
+    if (verb == HttpVerb::Patch)
+        return m_nam->sendCustomRequest(request, QByteArrayLiteral("PATCH"), body);
+    return m_nam->post(request, body);
 }
 
 void ApiClient::finishHealth(quint64 generation, const HealthStatus &status)
@@ -370,7 +441,8 @@ void ApiClient::requestHealth(int timeoutMs)
     const quint64 generation = ++m_healthGen;
     QString userMessage;
     QString technical;
-    QNetworkReply *reply = send(QStringLiteral("/health"), QByteArray(), timeoutMs, false, &userMessage, &technical);
+    QNetworkReply *reply = send(HttpVerb::Get, QStringLiteral("/health"), QUrlQuery(), QByteArray(), timeoutMs, false,
+                                &userMessage, &technical);
     if (!reply) {
         HealthStatus status;
         status.error.transportFailure = true;
@@ -397,7 +469,8 @@ void ApiClient::requestLogin(const QString &login, const QString &password, int 
 
     QString userMessage;
     QString technical;
-    QNetworkReply *reply = send(QStringLiteral("/api/v1/sessions"), payload, timeoutMs, false, &userMessage, &technical);
+    QNetworkReply *reply = send(HttpVerb::Post, QStringLiteral("/api/v1/sessions"), QUrlQuery(), payload, timeoutMs, false,
+                                &userMessage, &technical);
     if (!reply) {
         SessionResult result;
         result.error.transportFailure = true;
@@ -412,4 +485,63 @@ void ApiClient::requestLogin(const QString &login, const QString &password, int 
         reply->deleteLater();
         finishLogin(generation, result);
     });
+}
+
+void ApiClient::finishResponse(quint64 id, quint64 generation, bool withAuth, const ApiResponse &response)
+{
+    ApiResponse copy = response;
+    copy.id = id;
+    copy.current = generation == m_requestGen;
+    if (withAuth && copy.current && copy.error.httpStatus == 401) {
+        const QString code = copy.error.code.isEmpty() ? QStringLiteral("unauthorized") : copy.error.code;
+        emit sessionRejected(code);
+    }
+    emit responseFinished(copy);
+}
+
+quint64 ApiClient::request(HttpVerb verb,
+                           const QString &path,
+                           const QUrlQuery &query,
+                           const QByteArray &body,
+                           bool withAuth,
+                           int timeoutMs)
+{
+    const quint64 id = ++m_requestSeq;
+    const quint64 generation = m_requestGen;
+
+    if (withAuth && m_token.isEmpty()) {
+        ApiResponse response;
+        response.path = path;
+        response.error.httpStatus = 401;
+        response.error.code = QStringLiteral("unauthorized");
+        response.error.userMessage = sessionEndedMessage(response.error.code);
+        QTimer::singleShot(0, this, [this, id, generation, withAuth, response]() {
+            finishResponse(id, generation, withAuth, response);
+        });
+        return id;
+    }
+
+    QString userMessage;
+    QString technical;
+    QNetworkReply *reply = send(verb, path, query, body, timeoutMs, withAuth, &userMessage, &technical);
+    if (!reply) {
+        ApiResponse response;
+        response.path = path;
+        response.error.transportFailure = true;
+        response.error.reparseBaseUrl = true;
+        response.error.userMessage = userMessage;
+        response.error.technical = technical;
+        QTimer::singleShot(0, this, [this, id, generation, response]() {
+            finishResponse(id, generation, false, response);
+        });
+        return id;
+    }
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply, id, generation, withAuth, path]() {
+        ApiResponse response = parseApiReply(reply);
+        response.path = path;
+        reply->deleteLater();
+        finishResponse(id, generation, withAuth, response);
+    });
+    return id;
 }
