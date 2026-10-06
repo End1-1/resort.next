@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # CMake only. Do not add a qmake .pro for this service.
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    project(hotel-api VERSION 0.6.0 LANGUAGES CXX)
+    project(hotel-api VERSION 0.7.0 LANGUAGES CXX)
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
     set(CMAKE_CXX_EXTENSIONS OFF)
@@ -34,6 +34,8 @@ set(HOTEL_API_SOURCES
     src/dictionaries.h
     src/rack.cpp
     src/rack.h
+    src/reservations.cpp
+    src/reservations.h
     src/realtimehub.cpp
     src/realtimehub.h
     src/runner.cpp
@@ -50,7 +52,7 @@ endif()
 
 add_executable(hotel-api ${HOTEL_API_SOURCES})
 
-target_compile_definitions(hotel-api PRIVATE HOTEL_API_VERSION="0.6.0")
+target_compile_definitions(hotel-api PRIVATE HOTEL_API_VERSION="0.7.0")
 
 target_link_libraries(hotel-api PRIVATE
     Qt6::Core
@@ -186,9 +188,35 @@ else()
 endif()
 add_dependencies(hotel-api-rack-test hotel-api)
 
+add_executable(hotel-api-reservation-test
+    src/reservations.cpp
+    src/reservations.h
+    src/auth.cpp
+    src/auth.h
+    src/db.cpp
+    src/db.h
+    src/dberror.cpp
+    src/dberror.h
+    tests/test_reservations.cpp
+)
+target_include_directories(hotel-api-reservation-test PRIVATE src)
+target_link_libraries(hotel-api-reservation-test PRIVATE Qt6::Core Qt6::Network Qt6::Sql Qt6::Test)
+target_compile_definitions(hotel-api-reservation-test PRIVATE
+    "HOTEL_MIGRATION_0002=\"${CMAKE_CURRENT_SOURCE_DIR}/../dbdump/migrations/0002_nx_core.sql\""
+    "HOTEL_MIGRATION_0003=\"${CMAKE_CURRENT_SOURCE_DIR}/../dbdump/migrations/0003_nx_label.sql\""
+    "HOTEL_MIGRATION_0004=\"${CMAKE_CURRENT_SOURCE_DIR}/../dbdump/migrations/0004_nx_audit.sql\""
+)
+if(MSVC)
+    target_compile_options(hotel-api-reservation-test PRIVATE /W4 /utf-8)
+else()
+    target_compile_options(hotel-api-reservation-test PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+add_dependencies(hotel-api-reservation-test hotel-api)
+
 add_test(NAME hotel-api-auth-test COMMAND hotel-api-auth-test)
 add_test(NAME hotel-api-dictionary-test COMMAND hotel-api-dictionary-test)
 add_test(NAME hotel-api-rack-test COMMAND hotel-api-rack-test)
+add_test(NAME hotel-api-reservation-test COMMAND hotel-api-reservation-test)
 
 include(GNUInstallDirs)
 install(TARGETS hotel-api RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

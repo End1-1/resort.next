@@ -37,8 +37,8 @@
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
         <location filename="../src/apiclient.cpp" line="245"/>
-        <location filename="../src/apiclient.cpp" line="287"/>
-        <location filename="../src/apiclient.cpp" line="308"/>
+        <location filename="../src/apiclient.cpp" line="303"/>
+        <location filename="../src/apiclient.cpp" line="324"/>
         <source>Server unavailable.</source>
         <translation>Սերվերն անհասանելի է։</translation>
     </message>
@@ -138,6 +138,51 @@
         <translation>Մուտքը չհաջողվեց, HTTP %1 (%2)։</translation>
     </message>
     <message>
+        <location filename="../src/apiclient.cpp" line="272"/>
+        <source>That room already has a stay on those nights.</source>
+        <translation>Այդ գիշերներին սենյակն արդեն զբաղված է։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="274"/>
+        <source>That status change is not allowed.</source>
+        <translation>Այդ կարգավիճակի փոփոխությունը չի թույլատրվում։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="276"/>
+        <source>The reservation was changed. Reload it and try again.</source>
+        <translation>Ամրագրումն արդեն փոխվել է։ Բացեք նորից։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="278"/>
+        <source>Check the guest out before canceling the reservation.</source>
+        <translation>Նախ դուրս գրեք հյուրին, հետո չեղարկեք ամրագրումը։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="280"/>
+        <source>Dates and room cannot change while the guest is in house or checked out.</source>
+        <translation>Ամսաթվերն ու սենյակը չի կարելի փոխել, քանի հյուրը բնակվում է կամ արդեն դուրս է եկել։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="282"/>
+        <source>The room was not found.</source>
+        <translation>Սենյակը չի գտնվել։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="284"/>
+        <source>The guest was not found.</source>
+        <translation>Հյուրը չի գտնվել։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="286"/>
+        <source>The reservation was not found.</source>
+        <translation>Ամրագրումը չի գտնվել։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="288"/>
+        <source>The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.</source>
+        <translation>Սերվերում աղյուսակ կամ սյունակ չկա (schema_outdated)։ Կիրառեք nx_ միգրացիաները մինչև 0004_nx_audit.sql։</translation>
+    </message>
+    <message>
         <location filename="../src/apiclient.cpp" line="133"/>
         <source>The server returned an unexpected response.</source>
         <translation>Սերվերը վերադարձրեց անսպասելի պատասխան։</translation>
@@ -188,47 +233,46 @@
         <translation>Մտեք նորից։ Սեսիան այլևս վավեր չէ։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="272"/>
         <source>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</source>
-        <translation>Սերվերում աղյուսակ չկա (schema_outdated)։ Կիրառեք nx_ միգրացիաները, այդ թվում 0003_nx_label.sql։</translation>
+        <translation type="vanished">Սերվերում աղյուսակ չկա (schema_outdated)։ Կիրառեք nx_ միգրացիաները, այդ թվում 0003_nx_label.sql։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="285"/>
+        <location filename="../src/apiclient.cpp" line="301"/>
         <source>Request failed, HTTP %1 (%2).</source>
         <translation>Հարցումը չկատարվեց, HTTP %1 (%2)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="314"/>
+        <location filename="../src/apiclient.cpp" line="330"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Սերվերը պատասխանեց HTTP %1, բազայի վիճակն անհայտ է։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="317"/>
+        <location filename="../src/apiclient.cpp" line="333"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Սերվերը պատասխանեց անսպասելի տվյալներով։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="320"/>
+        <location filename="../src/apiclient.cpp" line="336"/>
         <source>Server</source>
         <translation>Սերվեր</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="324"/>
+        <location filename="../src/apiclient.cpp" line="340"/>
         <source>responded</source>
         <translation>պատասխանեց</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="326"/>
+        <location filename="../src/apiclient.cpp" line="342"/>
         <source>unknown</source>
         <translation>անհայտ</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="327"/>
+        <location filename="../src/apiclient.cpp" line="343"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1՝ աշխատում է (%2)։ Բազա՝ %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="329"/>
+        <location filename="../src/apiclient.cpp" line="345"/>
         <source>. Version %1</source>
         <translation>։ Տարբերակ %1</translation>
     </message>
@@ -742,6 +786,261 @@
     </message>
 </context>
 <context>
+    <name>ReservationDialog</name>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="24"/>
+        <source>Reserved</source>
+        <translation>Ամրագրված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="26"/>
+        <source>In house</source>
+        <translation>Բնակվում է</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="28"/>
+        <source>Checked out</source>
+        <translation>Դուրս է եկել</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="30"/>
+        <location filename="../src/reservationdialog.cpp" line="128"/>
+        <source>Canceled</source>
+        <translation>Չեղարկված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="109"/>
+        <source>Last name</source>
+        <translation>Ազգանուն</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="110"/>
+        <source>First name</source>
+        <translation>Անուն</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="111"/>
+        <source>Room</source>
+        <translation>Սենյակ</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="112"/>
+        <source>Arrival</source>
+        <translation>Ժամանում</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="113"/>
+        <source>Departure</source>
+        <translation>Մեկնում</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="114"/>
+        <source>Status</source>
+        <translation>Կարգավիճակ</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="115"/>
+        <source>Remarks</source>
+        <translation>Նշում</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="116"/>
+        <source>Stay</source>
+        <translation>Կեցություն</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="117"/>
+        <source>Check in</source>
+        <translation>Գրանցել ժամանումը</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="118"/>
+        <source>Check out</source>
+        <translation>Գրանցել մեկնումը</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="119"/>
+        <source>Cancel reservation</source>
+        <translation>Չեղարկել ամրագրումը</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="120"/>
+        <source>Save</source>
+        <translation>Պահպանել</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="124"/>
+        <source>Tentative</source>
+        <translation>Նախնական</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="125"/>
+        <source>Confirmed</source>
+        <translation>Հաստատված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="126"/>
+        <source>Guaranteed</source>
+        <translation>Երաշխավորված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="127"/>
+        <source>Blocked</source>
+        <translation>Արգելափակված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <source>New reservation</source>
+        <translation>Նոր ամրագրում</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <source>Reservation %1</source>
+        <translation>Ամրագրում %1</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="240"/>
+        <source>Last name is required.</source>
+        <translation>Ազգանունը պարտադիր է։</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="244"/>
+        <source>Choose a room.</source>
+        <translation>Ընտրեք սենյակ։</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="248"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>Մեկնման ամսաթիվը պետք է լինի ժամանումից հետո։</translation>
+    </message>
+</context>
+<context>
+    <name>ReservationsPage</name>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="95"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>Մեկնման ամսաթիվը պետք է լինի ժամանումից հետո։</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="99"/>
+        <source>Loading reservations…</source>
+        <translation>Ամրագրումների բեռնում…</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="138"/>
+        <source>Reservations</source>
+        <translation>Ամրագրումներ</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="139"/>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Guest</source>
+        <translation>Հյուր</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="140"/>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Room</source>
+        <translation>Սենյակ</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="141"/>
+        <source>Show</source>
+        <translation>Ցույց տալ</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="142"/>
+        <source>New reservation</source>
+        <translation>Նոր ամրագրում</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Arrival</source>
+        <translation>Ժամանում</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Departure</source>
+        <translation>Մեկնում</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Status</source>
+        <translation>Կարգավիճակ</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Stay</source>
+        <translation>Կեցություն</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="146"/>
+        <source>Any status</source>
+        <translation>Ցանկացած կարգավիճակ</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="148"/>
+        <location filename="../src/reservationspage.cpp" line="171"/>
+        <source>Tentative</source>
+        <translation>Նախնական</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="149"/>
+        <location filename="../src/reservationspage.cpp" line="173"/>
+        <source>Confirmed</source>
+        <translation>Հաստատված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="150"/>
+        <location filename="../src/reservationspage.cpp" line="175"/>
+        <source>Guaranteed</source>
+        <translation>Երաշխավորված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="151"/>
+        <location filename="../src/reservationspage.cpp" line="177"/>
+        <source>Blocked</source>
+        <translation>Արգելափակված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="152"/>
+        <location filename="../src/reservationspage.cpp" line="179"/>
+        <location filename="../src/reservationspage.cpp" line="192"/>
+        <source>Canceled</source>
+        <translation>Չեղարկված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="159"/>
+        <source>Reservations load after sign-in.</source>
+        <translation>Ամրագրումները բեռնվում են մուտքից հետո։</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="186"/>
+        <source>Reserved</source>
+        <translation>Ամրագրված</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="188"/>
+        <source>In house</source>
+        <translation>Բնակվում է</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="190"/>
+        <source>Checked out</source>
+        <translation>Դուրս է եկել</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="229"/>
+        <source>No reservations.</source>
+        <translation>Ամրագրումներ չկան։</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="231"/>
+        <source>%1 reservations</source>
+        <translation>%1 ամրագրում</translation>
+    </message>
+</context>
+<context>
     <name>UrlUtil</name>
     <message>
         <location filename="../src/urlutil.cpp" line="20"/>
@@ -807,12 +1106,17 @@
 <context>
     <name>WorkspacePage</name>
     <message>
-        <location filename="../src/workspacepage.cpp" line="37"/>
+        <location filename="../src/workspacepage.cpp" line="44"/>
         <source>Rack</source>
         <translation>Շախմատ</translation>
     </message>
     <message>
-        <location filename="../src/workspacepage.cpp" line="38"/>
+        <location filename="../src/workspacepage.cpp" line="45"/>
+        <source>Reservations</source>
+        <translation>Ամրագրումներ</translation>
+    </message>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="46"/>
         <source>Rooms</source>
         <translation>Սենյակներ</translation>
     </message>

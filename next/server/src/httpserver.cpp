@@ -4,12 +4,14 @@
 #include "config.h"
 #include "dictionaries.h"
 #include "rack.h"
+#include "reservations.h"
 #include "healthcheck.h"
 #include "sessions.h"
 #include "version.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QUrlQuery>
 #include <QtGlobal>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
@@ -48,6 +50,8 @@ QByteArray notFoundPayload(const QHttpServerRequest &request)
 QHttpServerResponse::StatusCode toStatus(int httpStatus)
 {
     switch (httpStatus) {
+    case 201:
+        return QHttpServerResponse::StatusCode::Created;
     case 400:
         return QHttpServerResponse::StatusCode::BadRequest;
     case 401:
@@ -171,6 +175,72 @@ HttpApi::HttpApi(AppConfig config)
             return jsonResponse(result.body, toStatus(result.httpStatus));
         };
     };
+    m_server.route(QStringLiteral("/api/v1/reservations"),
+                   QHttpServerRequest::Method::Get,
+                   [this](const QHttpServerRequest &request) {
+                       const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Session);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       const QUrlQuery query = request.query();
+                       const ApiResult result = listReservations(m_config.database,
+                                                                 m_config.dbConnectTimeoutSec,
+                                                                 auth.principal.propertyId,
+                                                                 query.queryItemValue(QStringLiteral("from")),
+                                                                 query.queryItemValue(QStringLiteral("to")),
+                                                                 query.queryItemValue(QStringLiteral("guest")),
+                                                                 query.queryItemValue(QStringLiteral("status")),
+                                                                 query.queryItemValue(QStringLiteral("room")),
+                                                                 query.queryItemValue(QStringLiteral("room_id")));
+                       return jsonResponse(result.body, toStatus(result.httpStatus));
+                   });
+    m_server.route(QStringLiteral("/api/v1/reservations"),
+                   QHttpServerRequest::Method::Post,
+                   [this](const QHttpServerRequest &request) {
+                       const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Command);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       const ApiResult result = createReservation(m_config.database,
+                                                                  m_config.dbConnectTimeoutSec,
+                                                                  auth.principal.propertyId,
+                                                                  auth.principal.userId,
+                                                                  request.body());
+                       return jsonResponse(result.body, toStatus(result.httpStatus));
+                   });
+    m_server.route(QStringLiteral("/api/v1/reservations/<arg>"),
+                   QHttpServerRequest::Method::Get,
+                   [this](const QString &idText, const QHttpServerRequest &request) {
+                       const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Session);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       bool ok = false;
+                       const qint64 id = idText.toLongLong(&ok);
+                       const ApiResult result = getReservation(m_config.database,
+                                                               m_config.dbConnectTimeoutSec,
+                                                               auth.principal.propertyId,
+                                                               ok ? id : 0);
+                       return jsonResponse(result.body, toStatus(result.httpStatus));
+                   });
+    m_server.route(QStringLiteral("/api/v1/reservations/<arg>"),
+                   QHttpServerRequest::Method::Patch,
+                   [this](const QString &idText, const QHttpServerRequest &request) {
+                       const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Command);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       bool ok = false;
+                       const qint64 id = idText.toLongLong(&ok);
+                       if (!ok || id <= 0) {
+                           const ApiResult missing = apiError(404, "reservation_not_found", "reservation was not found");
+                           return jsonResponse(missing.body, toStatus(missing.httpStatus));
+                       }
+                       const ApiResult result = updateReservation(m_config.database,
+                                                                  m_config.dbConnectTimeoutSec,
+                                                                  auth.principal.propertyId,
+                                                                  auth.principal.userId,
+                                                                  id,
+                                                                  request.body());
+                       return jsonResponse(result.body, toStatus(result.httpStatus));
+                   });
+
     m_server.route(QStringLiteral("/api/v1/rack"),
                    QHttpServerRequest::Method::Get,
                    [this](const QHttpServerRequest &request) {

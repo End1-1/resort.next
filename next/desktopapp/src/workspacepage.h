@@ -6,6 +6,7 @@
 
 class DictionariesPage;
 class RackPage;
+class ReservationsPage;
 
 // Rack chart first, room list beside it. Both talk only to hotel-api.
 class WorkspacePage : public QTabWidget {
@@ -25,5 +26,6 @@ private:
     void retranslateUi();
 
     RackPage *m_rack = nullptr;
+    ReservationsPage *m_reservations = nullptr;
     DictionariesPage *m_rooms = nullptr;
 };

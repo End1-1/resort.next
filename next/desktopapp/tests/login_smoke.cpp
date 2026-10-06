@@ -134,6 +134,8 @@ private:
                     "{\"token_type\":\"Bearer\",\"expires_at\":\"2099-01-01T00:00:00Z\",\"commands_allowed\":true,"
                     "\"user\":{\"id\":1,\"login\":\"ivan\",\"name\":\"Ivan\",\"role_id\":1,\"group\":1}}");
             }
+        } else if (method == "GET" && path == "/api/v1/reservations") {
+            body = QByteArrayLiteral("{\"items\":[]}");
         } else if (method == "GET" && path == "/api/v1/rack") {
             body = QByteArrayLiteral(
                 "{\"lang\":\"en\",\"from\":\"2026-10-01\",\"to\":\"2026-10-15\",\"rooms\":[{\"id\":1,\"code\":\"101\","
@@ -809,6 +811,9 @@ void LoginSmoke::logoutSendsBearerAndReturnsToLogin()
     auto *rackStatus = visibleMain()->findChild<QLabel *>(QStringLiteral("rackStatus"));
     QVERIFY(rackStatus);
     QTRY_VERIFY_WITH_TIMEOUT(rackStatus->text().contains(QStringLiteral("1 rooms, 14 nights")), 8000);
+    auto *reservations = visibleMain()->findChild<QLabel *>(QStringLiteral("reservationsStatus"));
+    QVERIFY(reservations);
+    QTRY_VERIFY_WITH_TIMEOUT(reservations->text().contains(QStringLiteral("No reservations")), 8000);
 
     auto *logout = visibleMain()->findChild<QAction *>(QStringLiteral("logoutAction"));
     QVERIFY(logout);

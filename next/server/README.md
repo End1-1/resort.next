@@ -55,6 +55,10 @@ curl -sS http://127.0.0.1:8080/health
 | `GET /api/v1/rooms`, `/room-types`, `/buildings` | Bearer. Names from `nx_label` (`?lang=` or `Accept-Language`). |
 | `GET /api/v1/room-statuses` | Bearer. Codes only; the client translates them. |
 | `GET /api/v1/rack` | Bearer. `from` and `to` (YYYY-MM-DD, `to` exclusive, max 120 nights). Rooms and overlapping stays. |
+| `GET /api/v1/reservations` | Bearer. Optional `from`+`to`, `guest`, `status`, `room`, `room_id`. |
+| `GET /api/v1/reservations/{id}` | Bearer. One reservation and its stays. |
+| `POST /api/v1/reservations` | Bearer and `commands_allowed`. One stay. `409` `overlap` if the room is taken. |
+| `PATCH /api/v1/reservations/{id}` | Bearer and `commands_allowed`. Dates, room, guest, status. Sends `version`. |
 | anything else under `/api/v1` | `401` without a bearer, otherwise `404` JSON |
 | WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Hello frame, no PMS events. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
 
@@ -85,7 +89,7 @@ The JSON user object includes `role_id` (`nx_role.id`, or null). `group` is the 
 
 `DELETE /api/v1/sessions` sets `revoked_at` on that row. `GET /api/v1/sessions/current` returns the user, `commands_allowed`, and `expires_at`, and does not repeat the token.
 
-Room, room-type, and building reads are registered. Apply `0003_nx_label.sql` after `0002`. A missing `nx_label` is `503` `schema_outdated`. Example rooms: `next/dbdump/seed/nx_demo_rooms.example.sql`. `GET /api/v1/rack?from=YYYY-MM-DD&to=YYYY-MM-DD` is the occupancy chart. A stay uses nights `[arrival, departure)`. Canceled rows are left out. Creating a reservation is not registered. Folio routes are not registered.
+Room, room-type, and building reads are registered. Apply `0003_nx_label.sql` after `0002`. A missing `nx_label` is `503` `schema_outdated`. Example rooms: `next/dbdump/seed/nx_demo_rooms.example.sql`. `GET /api/v1/rack?from=YYYY-MM-DD&to=YYYY-MM-DD` is the occupancy chart. A stay uses nights `[arrival, departure)`. Canceled rows are left out. `POST` and `PATCH /api/v1/reservations` create and change a booking. Apply `0004_nx_audit.sql` before writing. Overlap is a transaction with `SELECT ... FOR UPDATE` on `nx_room`. Folio routes are not registered.
 
 ```bash
 curl -sS -H 'Content-Type: application/json' \
