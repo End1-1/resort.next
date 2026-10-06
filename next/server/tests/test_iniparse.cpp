@@ -1,7 +1,10 @@
 #include "iniparse.h"
 
+#include <QCoreApplication>
 #include <QFile>
 #include <QTest>
+
+int runDatabaseConfigTests(int argc, char **argv);
 
 class TestIniParse : public QObject
 {
@@ -18,6 +21,7 @@ private slots:
     void utf16Bom();
     void malformedLine();
     void missingFile();
+    void mysqlKeysKeepLiteralPassword();
 };
 
 void TestIniParse::shippedExample()
@@ -28,8 +32,17 @@ void TestIniParse::shippedExample()
              qPrintable(error));
     QVERIFY(values.hasListen);
     QCOMPARE(values.listen, QStringLiteral("127.0.0.1:8080"));
-    QVERIFY(values.hasDsn);
-    QCOMPARE(values.dsn, QString());
+    QVERIFY(!values.hasDsn);
+    QVERIFY(values.hasMysqlHost);
+    QCOMPARE(values.mysqlHost, QString());
+    QVERIFY(values.hasMysqlPort);
+    QCOMPARE(values.mysqlPort, QString());
+    QVERIFY(values.hasMysqlSchema);
+    QCOMPARE(values.mysqlSchema, QString());
+    QVERIFY(values.hasMysqlUser);
+    QCOMPARE(values.mysqlUser, QString());
+    QVERIFY(values.hasMysqlPassword);
+    QCOMPARE(values.mysqlPassword, QString());
     QVERIFY(values.hasWsListen);
     QCOMPARE(values.wsListen, QString());
 }
@@ -144,5 +157,40 @@ void TestIniParse::missingFile()
     QVERIFY(error.startsWith(QStringLiteral("cannot open ")));
 }
 
-QTEST_GUILESS_MAIN(TestIniParse)
+void TestIniParse::mysqlKeysKeepLiteralPassword()
+{
+    const QByteArray data =
+        "# mysql_password=not-this\n"
+        "; mysql_user=not-this\n"
+        "mysql_host = 127.0.0.1\n"
+        "mysql_port = 3306\n"
+        "mysql_schema = hotelnext\n"
+        "mysql_user = root\n"
+        "mysql_password = p@ss:w%rd#;x\n";
+    HotelIniValues values;
+    QString error;
+    QVERIFY2(parseHotelIni(data, &values, &error), qPrintable(error));
+    QCOMPARE(values.mysqlHost, QStringLiteral("127.0.0.1"));
+    QCOMPARE(values.mysqlPort, QStringLiteral("3306"));
+    QCOMPARE(values.mysqlSchema, QStringLiteral("hotelnext"));
+    QCOMPARE(values.mysqlUser, QStringLiteral("root"));
+    QCOMPARE(values.mysqlPassword, QStringLiteral("p@ss:w%rd#;x"));
+    QVERIFY(!values.mysqlPassword.contains(QStringLiteral("%40")));
+
+    QVERIFY2(parseHotelIni("mysql_password=\" spaced \"\n", &values, &error), qPrintable(error));
+    QCOMPARE(values.mysqlPassword, QStringLiteral(" spaced "));
+
+    QString bad;
+    QVERIFY(!parseHotelIni("mysqlhost=127.0.0.1\n", &values, &bad));
+    QVERIFY(bad.contains(QStringLiteral("unknown key")));
+}
+
+int main(int argc, char **argv)
+{
+    QCoreApplication app(argc, argv);
+    TestIniParse ini;
+    const int status = QTest::qExec(&ini, argc, argv);
+    return status | runDatabaseConfigTests(argc, argv);
+}
+
 #include "test_iniparse.moc"

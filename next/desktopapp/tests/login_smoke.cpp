@@ -275,12 +275,18 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     QTemporaryDir configDir;
     QVERIFY(configDir.isValid());
     const QString iniPath = configDir.filePath(QStringLiteral("hotel-api.ini"));
-    QVERIFY(writeText(iniPath, "listen=127.0.0.1:18080\ndsn=\nws_listen=127.0.0.1:18081\n"));
+    QVERIFY(writeText(iniPath,
+                      "listen=127.0.0.1:18080\nmysql_host=\nmysql_schema=\nws_listen=127.0.0.1:18081\n"));
 
     QProcess server;
     server.setProcessChannelMode(QProcess::SeparateChannels);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.remove(QStringLiteral("HOTEL_DSN"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_HOST"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_PORT"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_SCHEMA"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_USER"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_PASSWORD"));
     env.remove(QStringLiteral("HOTEL_WS_LISTEN"));
     env.insert(QStringLiteral("HOTEL_CONFIG"), iniPath);
     env.insert(QStringLiteral("HOTEL_LISTEN"), QStringLiteral("127.0.0.1:18080"));
