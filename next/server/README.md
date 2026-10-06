@@ -8,7 +8,7 @@ Build system is CMake. There is no qmake `.pro`.
 
 ## Dependencies
 
-Qt 6.4 or newer, modules **Core, Network, Sql, HttpServer, WebSockets**, plus a C++17 compiler and CMake 3.21+. The MariaDB/MySQL driver plugin (`QMYSQL`) is needed only when `HOTEL_DSN` is set. The binary still runs without it; `/health` then reports `driver_not_loaded`.
+Qt 6.4 or newer, modules **Core, Network, Sql, HttpServer, WebSockets**, plus a C++17 compiler and CMake 3.21+. The MariaDB/MySQL driver plugin (`QMYSQL`) is needed only when a database DSN is configured. The binary still runs without it; `/health` then reports `driver_not_loaded`.
 
 The HTTP calls in `src/httpserver.cpp` follow the Qt 6.4 API (`setHeader`, `afterRequest`, `QHttpServer::listen`) and, from Qt 6.8 on (including 6.10), `QHttpHeaders`, `addAfterRequestHandler`, and `QTcpServer` plus `bind`. Both paths are in the same file.
 
@@ -36,20 +36,20 @@ The service binary is `/tmp/hotel-next-build/server/hotel-api`. Building `next/s
 
 ## Run
 
-Default listen address is loopback. No database is contacted until you set a DSN.
+Default listen address is loopback. No database is contacted until a DSN is set in `hotel-api.ini` or in a non-empty `HOTEL_DSN`.
 
 ```bash
-HOTEL_LISTEN=127.0.0.1:8080 /tmp/hotel-next-build/server/hotel-api
+/tmp/hotel-next-build/server/hotel-api
 curl -sS http://127.0.0.1:8080/health
 ```
 
-`GET /health` with no `HOTEL_DSN` returns 200 and `"db":{"configured":false,"state":"skipped"}`. With a DSN, the process opens `QMYSQL` (3 second connect timeout) and returns 200 `"state":"up"` or 503 `"state":"down"`. The JSON and the log do not include the URL or the password.
+`GET /health` with no DSN returns 200 and `"db":{"configured":false,"state":"skipped"}`. With a DSN, the process opens `QMYSQL` (3 second connect timeout) and returns 200 `"state":"up"` or 503 `"state":"down"`. The JSON and the log do not include the URL or the password. Startup logs the config path, or `hotel-api config none`.
 
 | Method and path | Now |
 |-----------------|-----|
-| `GET /health` | Implemented. Empty `HOTEL_DSN` is 200 `db.state=skipped`. |
+| `GET /health` | Implemented. No DSN is 200 `db.state=skipped`. |
 | `GET /api/v1` | Identity marker (`status=partial`) |
-| `POST /api/v1/sessions` | Login. JSON `login` + `password`. Empty `HOTEL_DSN` is 503 `database_not_configured`. Wrong password is 401. |
+| `POST /api/v1/sessions` | Login. JSON `login` + `password`. No DSN is 503 `database_not_configured`. Wrong password is 401. |
 | anything else | `404` JSON |
 | WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Hello frame, no PMS events. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
 
@@ -88,17 +88,26 @@ curl -sS -H 'Content-Type: application/json' \
 
 ## Configuration
 
-The process reads the environment. It does not load a `.env` file by itself. systemd `EnvironmentFile=` does that; see `deploy/hotel-api.service` and `config/hotel-api.env.example`.
+The process reads `hotel-api.ini` by itself. It does not read a `.env` file. systemd `EnvironmentFile=` can still inject variables; see `deploy/hotel-api.service` and `config/hotel-api.env.example`.
 
-Optional INI, path in `HOTEL_CONFIG` (`config/hotel-api.ini.example`):
+Search order:
+
+1. `HOTEL_CONFIG`, when the variable is set and the value is not empty. A missing file aborts startup. The path is not combined with the steps below.
+2. `hotel-api.ini` in the executable's directory (`QCoreApplication::applicationDirPath`). This is not the process working directory. The Windows service is started with working directory `System32`, and Qt Creator may use the source tree as the working directory; the ini next to `hotel-api.exe` is still found.
+3. On Linux only, `/etc/hotel-api/hotel-api.ini`.
+4. If none of those files exist, built-in defaults: listen `127.0.0.1:8080`, no database, WebSocket off. The log line is `hotel-api config none`.
+
+When a file is read, the log line is `hotel-api config` plus that path. The line never includes the DSN or the password.
+
+The first existing file wins. An unreadable file aborts startup instead of skipping to the next candidate. CMake copies `config/hotel-api.ini.example` next to the built executable under that same example name. Rename or copy it to `hotel-api.ini` in that directory before filling it in. `hotel-api.ini` is gitignored under `next/`. Do not commit a real DSN.
 
 | Key | Environment override | Meaning |
 |-----|----------------------|---------|
-| `listen` | `HOTEL_LISTEN` | `<ip>:<port>` or a bare port (then `127.0.0.1`). Default `127.0.0.1:8080`. Host must be numeric. |
+| `listen` | `HOTEL_LISTEN` | `<ip>:<port>` or a bare port (then `127.0.0.1`). Default `127.0.0.1:8080` when the key is absent. Host must be numeric. |
 | `dsn` | `HOTEL_DSN` | `mysql://USER:PASSWORD@HOST:3306/DATABASE`, or empty. Percent-encode `@` and `:` inside the user or password. |
-| `ws_listen` | `HOTEL_WS_LISTEN` | Same shape as `listen`. Unset or empty: WebSocket stays off. |
+| `ws_listen` | `HOTEL_WS_LISTEN` | Same shape as `listen`. Absent or empty: WebSocket stays off. |
 
-If a variable is set, even to empty, it overrides the INI key. Copy the examples outside the repository before filling them in. Do not commit a real DSN.
+An environment variable overrides the ini key only when it is set and not empty (after trimming). `HOTEL_DSN=` does not clear a `dsn` written in the ini. That keeps a file-first setup working when a shell, Qt Creator kit, or `EnvironmentFile` exports the variable as empty. To ignore the ini database, remove the `dsn` key or point `HOTEL_CONFIG` at a different file. A non-empty variable still wins, including `HOTEL_LISTEN=127.0.0.1:8080` in the env example.
 
 A malformed DSN aborts startup. The error text does not repeat the URL.
 
@@ -113,7 +122,7 @@ Compiled only into the Windows binary:
 - Started by the Service Control Manager: service name `HotelApi`, display name `Hotel API`.
 - `hotel-api --install` registers that service (elevated). `hotel-api --uninstall` removes it. Stop it before uninstall.
 - `hotel-api --console`, or any start that is not the SCM, runs the same listeners in the foreground.
-- The service sees the **system** environment. Set `HOTEL_LISTEN` / `HOTEL_DSN` there, or set `HOTEL_CONFIG` to an ini that is not in git.
+- The service looks for `hotel-api.ini` next to `hotel-api.exe`. It does not look in `System32`. A non-empty `HOTEL_CONFIG` replaces that path. A non-empty `HOTEL_LISTEN`, `HOTEL_DSN`, or `HOTEL_WS_LISTEN` in the system environment overrides the matching ini key.
 
 ## Contract
 

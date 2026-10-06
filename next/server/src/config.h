@@ -29,7 +29,13 @@ struct ConfigLoadResult {
     bool ok = false;
     AppConfig config;
     QString error;
+    // Absolute path of the ini that was read. Empty when no file was used.
+    QString configPath;
 };
 
-// Environment wins over HOTEL_CONFIG. HOTEL_DSN empty => database.configured false.
+// Search order when HOTEL_CONFIG is unset or empty:
+//   1. hotel-api.ini next to the executable (application dir, not the working directory)
+//   2. /etc/hotel-api/hotel-api.ini on Linux
+// A non-empty HOTEL_CONFIG replaces that search.
+// HOTEL_LISTEN, HOTEL_DSN, and HOTEL_WS_LISTEN override ini keys only when non-empty.
 ConfigLoadResult loadConfig();

@@ -1,7 +1,10 @@
 #include "config.h"
 
+#include <QCoreApplication>
+#include <QDir>
 #include <QFileInfo>
 #include <QSettings>
+#include <QStringList>
 #include <QUrl>
 
 namespace {
@@ -105,6 +108,49 @@ bool parseDsn(const QString &text, DatabaseTarget *target, QString *error)
     return true;
 }
 
+QString nonEmptyEnv(const char *name)
+{
+    const QString value = qEnvironmentVariable(name).trimmed();
+    return value;
+}
+
+// applicationDirPath is the executable's directory. The Windows service
+// working directory is System32, so the ini must not be resolved from cwd.
+QStringList defaultConfigCandidates()
+{
+    QStringList candidates;
+    const QString appDir = QCoreApplication::applicationDirPath();
+    if (!appDir.isEmpty())
+        candidates.append(QDir(appDir).filePath(QStringLiteral("hotel-api.ini")));
+#ifdef Q_OS_LINUX
+    candidates.append(QStringLiteral("/etc/hotel-api/hotel-api.ini"));
+#endif
+    return candidates;
+}
+
+bool readIniFile(const QString &path, QString *listen, QString *dsn, QString *websocket, QString *error)
+{
+    QSettings settings(path, QSettings::IniFormat);
+    settings.setFallbacksEnabled(false);
+    if (settings.status() != QSettings::NoError) {
+        *error = QStringLiteral("could not read config file: %1")
+                     .arg(QDir::toNativeSeparators(path));
+        return false;
+    }
+    if (settings.contains(QStringLiteral("listen")))
+        *listen = settings.value(QStringLiteral("listen")).toString();
+    if (settings.contains(QStringLiteral("dsn")))
+        *dsn = settings.value(QStringLiteral("dsn")).toString();
+    if (settings.contains(QStringLiteral("ws_listen")))
+        *websocket = settings.value(QStringLiteral("ws_listen")).toString();
+    if (settings.status() != QSettings::NoError) {
+        *error = QStringLiteral("could not read config file: %1")
+                     .arg(QDir::toNativeSeparators(path));
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 ConfigLoadResult loadConfig()
@@ -116,28 +162,46 @@ ConfigLoadResult loadConfig()
     QString dsn;
     QString websocket;
 
-    if (qEnvironmentVariableIsSet("HOTEL_CONFIG")) {
-        const QString path = qEnvironmentVariable("HOTEL_CONFIG").trimmed();
-        if (path.isEmpty() || !QFileInfo::exists(path)) {
-            fail(&result, QStringLiteral("HOTEL_CONFIG does not exist"));
+    const QString overridePath = nonEmptyEnv("HOTEL_CONFIG");
+    QString chosenPath;
+    if (!overridePath.isEmpty()) {
+        const QFileInfo info(overridePath);
+        if (!info.isFile()) {
+            fail(&result,
+                 QStringLiteral("HOTEL_CONFIG does not exist: %1")
+                     .arg(QDir::toNativeSeparators(info.absoluteFilePath())));
             return result;
         }
-        QSettings settings(path, QSettings::IniFormat);
-        if (settings.status() != QSettings::NoError) {
-            fail(&result, QStringLiteral("HOTEL_CONFIG could not be read"));
-            return result;
+        chosenPath = info.absoluteFilePath();
+    } else {
+        const QStringList candidates = defaultConfigCandidates();
+        for (const QString &candidate : candidates) {
+            const QFileInfo info(candidate);
+            if (info.isFile()) {
+                chosenPath = info.absoluteFilePath();
+                break;
+            }
         }
-        listen = settings.value(QStringLiteral("listen"), listen).toString();
-        dsn = settings.value(QStringLiteral("dsn")).toString();
-        websocket = settings.value(QStringLiteral("ws_listen")).toString();
     }
 
-    if (qEnvironmentVariableIsSet("HOTEL_LISTEN"))
-        listen = qEnvironmentVariable("HOTEL_LISTEN");
-    if (qEnvironmentVariableIsSet("HOTEL_DSN"))
-        dsn = qEnvironmentVariable("HOTEL_DSN");
-    if (qEnvironmentVariableIsSet("HOTEL_WS_LISTEN"))
-        websocket = qEnvironmentVariable("HOTEL_WS_LISTEN");
+    if (!chosenPath.isEmpty()) {
+        QString error;
+        if (!readIniFile(chosenPath, &listen, &dsn, &websocket, &error)) {
+            fail(&result, error);
+            return result;
+        }
+        result.configPath = QDir::toNativeSeparators(chosenPath);
+    }
+
+    const QString envListen = nonEmptyEnv("HOTEL_LISTEN");
+    if (!envListen.isEmpty())
+        listen = envListen;
+    const QString envDsn = nonEmptyEnv("HOTEL_DSN");
+    if (!envDsn.isEmpty())
+        dsn = envDsn;
+    const QString envWebsocket = nonEmptyEnv("HOTEL_WS_LISTEN");
+    if (!envWebsocket.isEmpty())
+        websocket = envWebsocket;
 
     QString error;
     if (!parseListen(listen, &result.config.http, &error, "HOTEL_LISTEN")) {

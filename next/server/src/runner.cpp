@@ -72,6 +72,10 @@ int runApplication(int argc, char **argv, const std::function<void()> &onReady)
     QCoreApplication::setOrganizationName(QStringLiteral("SmartHotel"));
 
     const ConfigLoadResult loaded = loadConfig();
+    if (!loaded.configPath.isEmpty())
+        qInfo().noquote() << "hotel-api config" << loaded.configPath;
+    else if (loaded.ok)
+        qInfo().noquote() << "hotel-api config none";
     if (!loaded.ok) {
         qCritical().noquote() << loaded.error;
         return 1;

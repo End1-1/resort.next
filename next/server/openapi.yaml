@@ -44,10 +44,14 @@ paths:
       operationId: getHealth
       summary: Process and optional database probe
       description: |
-        200 when the process is up and either no HOTEL_DSN is set or MariaDB
-        answered. 503 when a DSN is set and the probe failed. The body does not
-        contain the DSN or the password. An empty DSN does not fail /health;
-        POST /api/v1/sessions returns 503 database_not_configured in that case.
+        200 when the process is up and either no database DSN is configured or
+        MariaDB answered. 503 when a DSN is configured and the probe failed.
+        The DSN comes from hotel-api.ini beside the executable, or from
+        /etc/hotel-api/hotel-api.ini on Linux. A non-empty HOTEL_CONFIG
+        selects a different file. A non-empty HOTEL_DSN overrides the file's
+        dsn. The body does not contain the DSN or the password. No DSN does
+        not fail /health; POST /api/v1/sessions returns 503
+        database_not_configured in that case.
       responses:
         '200':
           description: Up. db.state is skipped or up.
@@ -83,7 +87,7 @@ paths:
         Active users only (state = active) whose password_scheme is md5.
         Unknown user, disabled user, a non-md5 scheme, and a wrong password are
         all 401 with the same body. The password, the MD5 hash, and the DSN are
-        not written to the log or the response. HOTEL_DSN empty is 503
+        not written to the log or the response. No configured DSN is 503
         database_not_configured. Missing nx_user or nx_session is 503
         session_store_unavailable.
       requestBody:
@@ -113,8 +117,9 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: |
-            HOTEL_DSN is empty, QMYSQL is missing, MariaDB did not answer, or
-            nx_user / nx_session are missing or the session row could not be stored.
+            No database DSN is configured, QMYSQL is missing, MariaDB did not
+            answer, or nx_user / nx_session are missing or the session row
+            could not be stored.
           content:
             application/json:
               schema:

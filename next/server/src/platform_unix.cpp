@@ -23,7 +23,9 @@ void printHelp()
         "  Foreground process. On Linux, systemd (Type=simple) is the daemon supervisor.\n"
         "  See next/server/deploy/hotel-api.service. --install / --uninstall are Windows-only.\n"
         "  --console   same as the default on Linux\n"
-        "  Config: HOTEL_LISTEN, HOTEL_DSN, HOTEL_WS_LISTEN, HOTEL_CONFIG\n",
+        "  Config file: hotel-api.ini next to the executable, then /etc/hotel-api/hotel-api.ini.\n"
+        "  HOTEL_CONFIG replaces that search when set and non-empty.\n"
+        "  HOTEL_LISTEN, HOTEL_DSN, HOTEL_WS_LISTEN override ini keys when non-empty.\n",
         stdout);
 }
 
