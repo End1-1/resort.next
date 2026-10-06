@@ -4,13 +4,16 @@
 #include "config.h"
 #include "dictionaries.h"
 #include "rack.h"
+#include "realtimehub.h"
 #include "reservations.h"
 #include "healthcheck.h"
 #include "sessions.h"
 #include "version.h"
 
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMetaObject>
 #include <QUrlQuery>
 #include <QtGlobal>
 
@@ -204,6 +207,8 @@ HttpApi::HttpApi(AppConfig config)
                                                                   auth.principal.propertyId,
                                                                   auth.principal.userId,
                                                                   request.body());
+                       if (result.httpStatus == 201)
+                           publishReservation("reservation.created", result);
                        return jsonResponse(result.body, toStatus(result.httpStatus));
                    });
     m_server.route(QStringLiteral("/api/v1/reservations/<arg>"),
@@ -238,6 +243,11 @@ HttpApi::HttpApi(AppConfig config)
                                                                   auth.principal.userId,
                                                                   id,
                                                                   request.body());
+                       if (result.httpStatus == 200) {
+                           const bool canceled = result.body.value(QStringLiteral("status_code")).toString()
+                               == QLatin1String("canceled");
+                           publishReservation(canceled ? "reservation.cancelled" : "reservation.updated", result);
+                       }
                        return jsonResponse(result.body, toStatus(result.httpStatus));
                    });
 
@@ -295,6 +305,44 @@ HttpApi::HttpApi(AppConfig config)
         return std::move(response);
     });
 #endif
+}
+
+void HttpApi::setRealtime(RealtimeHub *hub)
+{
+    m_hub = hub;
+}
+
+void HttpApi::publishReservation(const char *type, const ApiResult &result)
+{
+    if (!m_hub || result.httpStatus >= 400 || !result.body.contains(QStringLiteral("id")))
+        return;
+    QJsonObject event;
+    event.insert(QStringLiteral("type"), QLatin1String(type));
+    event.insert(QStringLiteral("reservation_id"), result.body.value(QStringLiteral("id")));
+    event.insert(QStringLiteral("status_code"), result.body.value(QStringLiteral("status_code")));
+    const QJsonArray stays = result.body.value(QStringLiteral("stays")).toArray();
+    const QJsonObject stay = stays.isEmpty() ? QJsonObject() : stays.at(0).toObject();
+    if (!stay.isEmpty()) {
+        event.insert(QStringLiteral("stay_id"), stay.value(QStringLiteral("id")));
+        event.insert(QStringLiteral("room_id"), stay.value(QStringLiteral("room_id")));
+        event.insert(QStringLiteral("state_code"), stay.value(QStringLiteral("state_code")));
+    }
+    const auto send = [this](const QJsonObject &body) {
+        QMetaObject::invokeMethod(m_hub,
+                                  "publish",
+                                  Qt::QueuedConnection,
+                                  Q_ARG(QByteArray, QJsonDocument(body).toJson(QJsonDocument::Compact)));
+    };
+    send(event);
+    const QString state = stay.value(QStringLiteral("state_code")).toString();
+    if (state == QLatin1String("in_house") || state == QLatin1String("checked_out")) {
+        QJsonObject room;
+        room.insert(QStringLiteral("type"), QStringLiteral("room.status_changed"));
+        room.insert(QStringLiteral("room_id"), stay.value(QStringLiteral("room_id")));
+        room.insert(QStringLiteral("status_code"),
+                    state == QLatin1String("in_house") ? QStringLiteral("occupied") : QStringLiteral("vacant_dirty"));
+        send(room);
+    }
 }
 
 bool HttpApi::listen(QString *errorMessage)

@@ -521,17 +521,8 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     HealthMonitor monitor(&probe);
     monitor.setWebSocketUrl(QStringLiteral("ws://127.0.0.1:18081/api/v1/ws"));
     monitor.start();
-    const bool hello = QTest::qWaitFor([&monitor]() {
-        return monitor.socketText().contains(QStringLiteral("hello"));
-    }, 5000);
-    if (!hello) {
-        const QByteArray err = server.readAllStandardError();
-        const QString socketText = monitor.socketText();
-        monitor.stop();
-        stopServer();
-        QFAIL(qPrintable(QStringLiteral("WebSocket hello missing (%1): %2")
-                             .arg(socketText, QString::fromUtf8(err))));
-    }
+    QTRY_VERIFY(monitor.socketText().contains(QStringLiteral("not signed in")));
+    QVERIFY(!monitor.socketText().contains(QStringLiteral("hello")));
     monitor.stop();
 
     ConnectionDialog dialog(DesktopConfig{});

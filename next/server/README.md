@@ -1,6 +1,6 @@
 # next/server
 
-`hotel-api` is the Qt/C++ HTTP service that will own hotel rules and be the only writer to MariaDB. This directory binds a port, serves `/health`, and implements `POST /api/v1/sessions` against `nx_user` / `nx_session`. It does not implement reservations or folios. Those tables exist in `next/dbdump/migrations/0002_nx_core.sql`; no folio route is registered.
+`hotel-api` is the Qt/C++ HTTP service that owns hotel rules and is the only writer to MariaDB. This directory binds a port, serves `/health`, sessions, read-only room dictionaries, the rack chart, and reservation create/update. Folio routes are not registered. After a reservation commit it can publish WebSocket hints on `/api/v1/ws` when `HOTEL_WS_LISTEN` is set. Core tables are `next/dbdump/migrations/0002_nx_core.sql`; labels are `0003_nx_label.sql`; audit columns are `0004_nx_audit.sql`.
 
 It is not the old `Server/` tray program (UDP `"who"`). It does not link Qt Widgets and it does not compile `Resort/` sources.
 
@@ -60,7 +60,7 @@ curl -sS http://127.0.0.1:8080/health
 | `POST /api/v1/reservations` | Bearer and `commands_allowed`. One stay. `409` `overlap` if the room is taken. |
 | `PATCH /api/v1/reservations/{id}` | Bearer and `commands_allowed`. Dates, room, guest, status. Sends `version`. |
 | anything else under `/api/v1` | `401` without a bearer, otherwise `404` JSON |
-| WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Hello frame, no PMS events. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
+| WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Token in `?token=` or the first text frame `{"type":"auth","token"}`. Then `hello`, and after commit `reservation.created` / `updated` / `cancelled` and `room.status_changed`. See `next/docs/ws-events.md`. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
 
 ## Sessions
 

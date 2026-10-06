@@ -402,6 +402,11 @@ bool ApiClient::hasToken() const
     return !m_token.isEmpty();
 }
 
+QString ApiClient::token() const
+{
+    return m_token;
+}
+
 QNetworkReply *ApiClient::send(HttpVerb verb,
                                const QString &path,
                                const QUrlQuery &query,

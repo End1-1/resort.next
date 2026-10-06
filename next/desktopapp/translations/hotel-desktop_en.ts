@@ -298,17 +298,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="145"/>
+        <location filename="../src/appcontroller.cpp" line="151"/>
         <source>Could not remember the login. %1</source>
         <translation>Could not remember the login. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="157"/>
+        <location filename="../src/appcontroller.cpp" line="163"/>
         <source>Could not save the language. %1</source>
         <translation>Could not save the language. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="190"/>
+        <location filename="../src/appcontroller.cpp" line="196"/>
         <source>The server address changed. Sign in again.</source>
         <translation>The server address changed. Sign in again.</translation>
     </message>
@@ -488,43 +488,48 @@
     <name>HealthMonitor</name>
     <message>
         <location filename="../src/healthmonitor.cpp" line="23"/>
-        <location filename="../src/healthmonitor.cpp" line="118"/>
+        <location filename="../src/healthmonitor.cpp" line="120"/>
         <source>Checking connection…</source>
         <translation>Checking connection…</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="133"/>
-        <location filename="../src/healthmonitor.cpp" line="147"/>
+        <location filename="../src/healthmonitor.cpp" line="135"/>
+        <location filename="../src/healthmonitor.cpp" line="151"/>
         <source>WebSocket: not configured</source>
         <translation>WebSocket: not configured</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="135"/>
+        <location filename="../src/healthmonitor.cpp" line="137"/>
         <source>WebSocket: connecting…</source>
         <translation>WebSocket: connecting…</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="137"/>
+        <location filename="../src/healthmonitor.cpp" line="139"/>
         <source>WebSocket: invalid address</source>
         <translation>WebSocket: invalid address</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="139"/>
+        <location filename="../src/healthmonitor.cpp" line="141"/>
         <source>WebSocket: connected, waiting for hello</source>
         <translation>WebSocket: connected, waiting for hello</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="141"/>
+        <location filename="../src/healthmonitor.cpp" line="143"/>
+        <source>WebSocket: not signed in</source>
+        <translation>WebSocket: not signed in</translation>
+    </message>
+    <message>
+        <location filename="../src/healthmonitor.cpp" line="145"/>
         <source>WebSocket: connected (hello)</source>
         <translation>WebSocket: connected (hello)</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="143"/>
+        <location filename="../src/healthmonitor.cpp" line="147"/>
         <source>WebSocket: connected</source>
         <translation>WebSocket: connected</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="145"/>
+        <location filename="../src/healthmonitor.cpp" line="149"/>
         <source>WebSocket: no connection</source>
         <translation>WebSocket: no connection</translation>
     </message>

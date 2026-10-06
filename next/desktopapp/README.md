@@ -1,6 +1,6 @@
 # next/desktopapp
 
-Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake only. The client speaks HTTP JSON (and an optional WebSocket hello). It does not link Qt Sql and it does not open MariaDB. Business rules stay in `next/server`.
+Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake only. The client speaks HTTP JSON and, after sign-in, an authenticated WebSocket for live refresh. It does not link Qt Sql and it does not open MariaDB. Business rules stay in `next/server`.
 
 `hotel-desktop` is the windowed program: connection settings, login, a rack chart, and a room list. `hotel-desktop-stub` remains a console check of `GET /health` and, optionally, one login call. `Resort/` is unchanged and still writes SQL.
 
@@ -21,7 +21,7 @@ Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake
 | `src/reservationdialog.*` | Create and edit. The server validates. |
 | `src/workspacepage.*` | Tabs passed to `MainWindow::setWorkspacePage`. |
 | `src/mainwindow.*` | Session summary, menus, `QStackedWidget` workspace. |
-| `src/healthmonitor.*` | Periodic `/health` and optional WebSocket hello. |
+| `src/healthmonitor.*` | Periodic `/health` and the authenticated WebSocket (reconnect with backoff). |
 | `src/appcontroller.*` | Shows login, then the main window. |
 | `hotel-desktop.ini.example` | Commented sample. The program does not read this filename. |
 
@@ -140,7 +140,7 @@ Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedde
 ## Окна
 
 1. **Вход.** Логин, пароль, «Войти», «Настройки подключения». Логин запоминается, пароль нет. Сеть не блокирует интерфейс (`QNetworkAccessManager`, таймаут около 8 секунд на вход и 5 секунд на `/health`). Строка состояния — последний `/health` и WebSocket.
-2. **После входа.** Имя, логин, `role_id`, `commands_allowed`, адрес сервера, живое состояние (опрос `/health` раз в 15 секунд; если WebSocket задан — ещё кадр hello). Вкладки: шахматка, брони (поиск, «Новая бронь», двойной щелчок), номера. Клик по блоку шахматки открывает бронь. Токен только в памяти процесса, на экран не выводится.
+2. **После входа.** Имя, логин, `role_id`, `commands_allowed`, адрес сервера, живое состояние (опрос `/health` раз в 15 секунд). Если WebSocket задан, клиент открывает сокет только с токеном в памяти и шлёт `{"type":"auth","token"}`. Кадр `hello` значит, что канал жив. Кадры `reservation.*` и `room.status_changed` заново запрашивают шахматку и список броней. Обрыв — повтор через 1 с, затем 2, 4, 8, не чаще 30 с. Вкладки: шахматка, брони (поиск, «Новая бронь», двойной щелчок), номера. Клик по блоку шахматки открывает бронь. Токен только в памяти процесса, на экран не выводится.
 3. **Сессия → Выход.** Клиент вызывает `DELETE /api/v1/sessions` с `Authorization: Bearer` и только потом стирает токен из памяти. Сервер ставит `nx_session.revoked_at`. Если сервер не ответил, окно входа всё равно открывается и пишет, что выход на сервере не подтверждён. Закрытие окна завершает процесс и тоже теряет токен (строка на сервере при этом остаётся до срока, если выход не вызывали).
 4. Смена адреса сервера в настройках, пока сеанс открыт, сначала шлёт тот же `DELETE` на старый адрес, затем стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
 5. После входа клиент читает `GET /api/v1/sessions/current`. Ответ `401` (`unauthorized`, `session_expired`, `user_disabled`) возвращает на вход с фразой на языке окна, а не с текстом «неверный пароль».
