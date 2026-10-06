@@ -649,6 +649,99 @@
     </message>
 </context>
 <context>
+    <name>RackPage</name>
+    <message>
+        <location filename="../src/rackpage.cpp" line="64"/>
+        <source>Reserved</source>
+        <translation>Ամրագրված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="66"/>
+        <source>In house</source>
+        <translation>Բնակվում է</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="68"/>
+        <source>Checked out</source>
+        <translation>Դուրս է եկել</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="70"/>
+        <source>Out of order</source>
+        <translation>Վերանորոգման</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="72"/>
+        <source>Out of inventory</source>
+        <translation>Դուրս է ֆոնդից</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="145"/>
+        <location filename="../src/rackpage.cpp" line="160"/>
+        <source>No guest</source>
+        <translation>Առանց հյուրի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="161"/>
+        <source>%1
+%2 – %3
+%4</source>
+        <translation>%1
+%2 – %3
+%4</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="256"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>Մեկնման ամսաթիվը պետք է լինի ժամանումից հետո։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="260"/>
+        <source>The rack window is at most 120 nights.</source>
+        <translation>Շախմատի պատուհանը առավելագույնը 120 գիշեր է։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="264"/>
+        <source>Loading the rack…</source>
+        <translation>Շախմատի բեռնում…</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="284"/>
+        <source>Rack</source>
+        <translation>Շախմատ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="285"/>
+        <source>From</source>
+        <translation>Սկսած</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="286"/>
+        <source>To</source>
+        <translation>Մինչև</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="287"/>
+        <source>Show</source>
+        <translation>Ցույց տալ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="289"/>
+        <source>The rack loads after sign-in.</source>
+        <translation>Շախմատը բեռնվում է մուտքից հետո։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="331"/>
+        <source>No rooms.</source>
+        <translation>Սենյակներ չկան։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="333"/>
+        <source>%1 rooms, %2 nights</source>
+        <translation>%1 սենյակ, %2 գիշեր</translation>
+    </message>
+</context>
+<context>
     <name>UrlUtil</name>
     <message>
         <location filename="../src/urlutil.cpp" line="20"/>
@@ -709,6 +802,19 @@
         <location filename="../src/urlutil.cpp" line="130"/>
         <source>Invalid WebSocket path.</source>
         <translation>WebSocket-ի ուղին սխալ է։</translation>
+    </message>
+</context>
+<context>
+    <name>WorkspacePage</name>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="37"/>
+        <source>Rack</source>
+        <translation>Շախմատ</translation>
+    </message>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="38"/>
+        <source>Rooms</source>
+        <translation>Սենյակներ</translation>
     </message>
 </context>
 </TS>

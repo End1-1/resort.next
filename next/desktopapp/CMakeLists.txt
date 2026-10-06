@@ -39,6 +39,10 @@ add_library(hotel-desktop-ui STATIC
     src/connectiondialog.h
     src/dictionariespage.cpp
     src/dictionariespage.h
+    src/rackpage.cpp
+    src/rackpage.h
+    src/workspacepage.cpp
+    src/workspacepage.h
     src/healthmonitor.cpp
     src/healthmonitor.h
     src/uilanguage.cpp
@@ -77,6 +81,8 @@ set(HOTEL_DESKTOP_I18N_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/appcontroller.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connectiondialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dictionariespage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/rackpage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/workspacepage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/healthmonitor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uilanguage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/loginwindow.cpp

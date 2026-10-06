@@ -3,6 +3,7 @@
 #include "auth.h"
 #include "config.h"
 #include "dictionaries.h"
+#include "rack.h"
 #include "healthcheck.h"
 #include "sessions.h"
 #include "version.h"
@@ -170,6 +171,21 @@ HttpApi::HttpApi(AppConfig config)
             return jsonResponse(result.body, toStatus(result.httpStatus));
         };
     };
+    m_server.route(QStringLiteral("/api/v1/rack"),
+                   QHttpServerRequest::Method::Get,
+                   [this](const QHttpServerRequest &request) {
+                       const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Session);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       const ApiResult result = occupancyChart(m_config.database,
+                                                               m_config.dbConnectTimeoutSec,
+                                                               auth.principal.propertyId,
+                                                               requestLocale(request),
+                                                               request.query().queryItemValue(QStringLiteral("from")),
+                                                               request.query().queryItemValue(QStringLiteral("to")));
+                       return jsonResponse(result.body, toStatus(result.httpStatus));
+                   });
+
     m_server.route(QStringLiteral("/api/v1/rooms"), QHttpServerRequest::Method::Get, dictionaryRoute(listRooms));
     m_server.route(QStringLiteral("/api/v1/room-types"), QHttpServerRequest::Method::Get, dictionaryRoute(listRoomTypes));
     m_server.route(QStringLiteral("/api/v1/buildings"), QHttpServerRequest::Method::Get, dictionaryRoute(listBuildings));

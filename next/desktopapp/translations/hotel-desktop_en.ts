@@ -649,6 +649,99 @@
     </message>
 </context>
 <context>
+    <name>RackPage</name>
+    <message>
+        <location filename="../src/rackpage.cpp" line="64"/>
+        <source>Reserved</source>
+        <translation>Reserved</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="66"/>
+        <source>In house</source>
+        <translation>In house</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="68"/>
+        <source>Checked out</source>
+        <translation>Checked out</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="70"/>
+        <source>Out of order</source>
+        <translation>Out of order</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="72"/>
+        <source>Out of inventory</source>
+        <translation>Out of inventory</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="145"/>
+        <location filename="../src/rackpage.cpp" line="160"/>
+        <source>No guest</source>
+        <translation>No guest</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="161"/>
+        <source>%1
+%2 – %3
+%4</source>
+        <translation>%1
+%2 – %3
+%4</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="256"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>The departure date must be after the arrival date.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="260"/>
+        <source>The rack window is at most 120 nights.</source>
+        <translation>The rack window is at most 120 nights.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="264"/>
+        <source>Loading the rack…</source>
+        <translation>Loading the rack…</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="284"/>
+        <source>Rack</source>
+        <translation>Rack</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="285"/>
+        <source>From</source>
+        <translation>From</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="286"/>
+        <source>To</source>
+        <translation>To</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="287"/>
+        <source>Show</source>
+        <translation>Show</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="289"/>
+        <source>The rack loads after sign-in.</source>
+        <translation>The rack loads after sign-in.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="331"/>
+        <source>No rooms.</source>
+        <translation>No rooms.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="333"/>
+        <source>%1 rooms, %2 nights</source>
+        <translation>%1 rooms, %2 nights</translation>
+    </message>
+</context>
+<context>
     <name>UrlUtil</name>
     <message>
         <location filename="../src/urlutil.cpp" line="20"/>
@@ -709,6 +802,19 @@
         <location filename="../src/urlutil.cpp" line="130"/>
         <source>Invalid WebSocket path.</source>
         <translation>Invalid WebSocket path.</translation>
+    </message>
+</context>
+<context>
+    <name>WorkspacePage</name>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="37"/>
+        <source>Rack</source>
+        <translation>Rack</translation>
+    </message>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="38"/>
+        <source>Rooms</source>
+        <translation>Rooms</translation>
     </message>
 </context>
 </TS>

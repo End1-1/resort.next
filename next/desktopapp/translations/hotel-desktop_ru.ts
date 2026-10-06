@@ -649,6 +649,99 @@
     </message>
 </context>
 <context>
+    <name>RackPage</name>
+    <message>
+        <location filename="../src/rackpage.cpp" line="64"/>
+        <source>Reserved</source>
+        <translation>Забронирован</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="66"/>
+        <source>In house</source>
+        <translation>Проживает</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="68"/>
+        <source>Checked out</source>
+        <translation>Выехал</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="70"/>
+        <source>Out of order</source>
+        <translation>На ремонте</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="72"/>
+        <source>Out of inventory</source>
+        <translation>Выведен из фонда</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="145"/>
+        <location filename="../src/rackpage.cpp" line="160"/>
+        <source>No guest</source>
+        <translation>Без гостя</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="161"/>
+        <source>%1
+%2 – %3
+%4</source>
+        <translation>%1
+%2 – %3
+%4</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="256"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>Дата выезда должна быть позже даты заезда.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="260"/>
+        <source>The rack window is at most 120 nights.</source>
+        <translation>Окно шахматки — не больше 120 ночей.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="264"/>
+        <source>Loading the rack…</source>
+        <translation>Загрузка шахматки…</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="284"/>
+        <source>Rack</source>
+        <translation>Шахматка</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="285"/>
+        <source>From</source>
+        <translation>С</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="286"/>
+        <source>To</source>
+        <translation>По</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="287"/>
+        <source>Show</source>
+        <translation>Показать</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="289"/>
+        <source>The rack loads after sign-in.</source>
+        <translation>Шахматка загружается после входа.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="331"/>
+        <source>No rooms.</source>
+        <translation>Номеров нет.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="333"/>
+        <source>%1 rooms, %2 nights</source>
+        <translation>Номеров: %1, ночей: %2</translation>
+    </message>
+</context>
+<context>
     <name>UrlUtil</name>
     <message>
         <location filename="../src/urlutil.cpp" line="20"/>
@@ -709,6 +802,19 @@
         <location filename="../src/urlutil.cpp" line="130"/>
         <source>Invalid WebSocket path.</source>
         <translation>Некорректный путь WebSocket.</translation>
+    </message>
+</context>
+<context>
+    <name>WorkspacePage</name>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="37"/>
+        <source>Rack</source>
+        <translation>Шахматка</translation>
+    </message>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="38"/>
+        <source>Rooms</source>
+        <translation>Номера</translation>
     </message>
 </context>
 </TS>
