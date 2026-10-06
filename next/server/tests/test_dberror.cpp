@@ -20,6 +20,7 @@ void TestDbError::mapsNativeCodes()
     QCOMPARE(publicDatabaseErrorCode(QStringLiteral("1049")), QStringLiteral("unknown_database"));
     QCOMPARE(publicDatabaseErrorCode(QStringLiteral("2002")), QStringLiteral("cannot_connect"));
     QCOMPARE(publicDatabaseErrorCode(QStringLiteral("2003")), QStringLiteral("cannot_connect"));
+    QCOMPARE(publicDatabaseErrorCode(QStringLiteral("2026")), QStringLiteral("tls_error"));
     QCOMPARE(publicDatabaseErrorCode(QStringLiteral("2013")), QStringLiteral("connection_failed"));
     QCOMPARE(publicDatabaseErrorCode(QStringLiteral("1146")), QStringLiteral("connection_failed"));
     QCOMPARE(publicDatabaseErrorCode(QString()), QStringLiteral("connection_failed"));
@@ -30,6 +31,7 @@ void TestDbError::probeRejectsRawText()
 {
     QCOMPARE(probeDatabaseError(QStringLiteral("access_denied")), QStringLiteral("access_denied"));
     QCOMPARE(probeDatabaseError(QStringLiteral("driver_not_loaded")), QStringLiteral("driver_not_loaded"));
+    QCOMPARE(probeDatabaseError(QStringLiteral("tls_error")), QStringLiteral("tls_error"));
     QCOMPARE(probeDatabaseError(QStringLiteral("Access denied for user 'hotel_api'")),
              QStringLiteral("connection_failed"));
     QCOMPARE(probeDatabaseError(QStringLiteral("s3cret")), QStringLiteral("connection_failed"));
@@ -89,17 +91,28 @@ void TestDbError::logKeepsUserAndDropsPassword()
 
 void TestDbError::connectOptions()
 {
-    QCOMPARE(mysqlConnectOptions(3),
+    const QString preferred = QStringLiteral(
+        "MYSQL_OPT_CONNECT_TIMEOUT=3;MYSQL_OPT_READ_TIMEOUT=3;MYSQL_OPT_WRITE_TIMEOUT=3;"
+        "MYSQL_OPT_SSL_MODE=PREFERRED;MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0");
+    QCOMPARE(mysqlConnectOptions(3, QString(), QString()), preferred);
+    QCOMPARE(mysqlConnectOptions(0, QStringLiteral("preferred"), QString()), preferred);
+    QCOMPARE(mysqlConnectOptions(8, QStringLiteral("off"), QString()),
              QStringLiteral(
-                 "MYSQL_OPT_CONNECT_TIMEOUT=3;MYSQL_OPT_READ_TIMEOUT=3;MYSQL_OPT_WRITE_TIMEOUT=3"));
-    QCOMPARE(mysqlConnectOptions(0),
+                 "MYSQL_OPT_CONNECT_TIMEOUT=8;MYSQL_OPT_READ_TIMEOUT=8;MYSQL_OPT_WRITE_TIMEOUT=8;"
+                 "MYSQL_OPT_SSL_MODE=DISABLED;MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0"));
+    QCOMPARE(mysqlConnectOptions(3, QStringLiteral("required"), QStringLiteral("C:/ca.pem")),
              QStringLiteral(
-                 "MYSQL_OPT_CONNECT_TIMEOUT=3;MYSQL_OPT_READ_TIMEOUT=3;MYSQL_OPT_WRITE_TIMEOUT=3"));
-    QCOMPARE(mysqlConnectOptions(8),
+                 "MYSQL_OPT_CONNECT_TIMEOUT=3;MYSQL_OPT_READ_TIMEOUT=3;MYSQL_OPT_WRITE_TIMEOUT=3;"
+                 "MYSQL_OPT_SSL_MODE=REQUIRED;MYSQL_OPT_SSL_VERIFY_SERVER_CERT=1;"
+                 "MYSQL_OPT_SSL_CA=C:/ca.pem"));
+    QCOMPARE(mysqlConnectOptions(3, QStringLiteral("verify"), QStringLiteral("/etc/hotel-api/ca.pem")),
              QStringLiteral(
-                 "MYSQL_OPT_CONNECT_TIMEOUT=8;MYSQL_OPT_READ_TIMEOUT=8;MYSQL_OPT_WRITE_TIMEOUT=8"));
-    QVERIFY(mysqlConnectOptions(3).contains(QStringLiteral("MYSQL_OPT_CONNECT_TIMEOUT=3")));
-    QVERIFY(!mysqlConnectOptions(3).contains(QStringLiteral("MYSQL_SET_CHARSET_NAME")));
+                 "MYSQL_OPT_CONNECT_TIMEOUT=3;MYSQL_OPT_READ_TIMEOUT=3;MYSQL_OPT_WRITE_TIMEOUT=3;"
+                 "MYSQL_OPT_SSL_MODE=VERIFY_CA;MYSQL_OPT_SSL_VERIFY_SERVER_CERT=1;"
+                 "MYSQL_OPT_SSL_CA=/etc/hotel-api/ca.pem"));
+    QVERIFY(!mysqlConnectOptions(3, QStringLiteral("preferred"), QStringLiteral("C:/ca.pem"))
+                 .contains(QStringLiteral("SSL_CA")));
+    QVERIFY(!mysqlConnectOptions(3, QStringLiteral("preferred"), QString()).contains(QStringLiteral("MYSQL_SET_CHARSET_NAME")));
 }
 
 QTEST_GUILESS_MAIN(TestDbError)

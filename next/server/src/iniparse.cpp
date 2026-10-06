@@ -44,6 +44,16 @@ bool takeKey(const QString &key, const QString &value, int lineNo, HotelIniValue
         out->mysqlPassword = value;
         return true;
     }
+    if (key.compare(QLatin1String("mysql_ssl"), Qt::CaseInsensitive) == 0) {
+        out->hasMysqlSsl = true;
+        out->mysqlSsl = value;
+        return true;
+    }
+    if (key.compare(QLatin1String("mysql_ssl_ca"), Qt::CaseInsensitive) == 0) {
+        out->hasMysqlSslCa = true;
+        out->mysqlSslCa = value;
+        return true;
+    }
     if (key.compare(QLatin1String("dsn"), Qt::CaseInsensitive) == 0) {
         out->hasDsn = true;
         out->dsn = value;

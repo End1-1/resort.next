@@ -49,7 +49,9 @@ QString databaseDownPhrase(const QString &dbError)
     if (dbError == QLatin1String("unknown_database"))
         return QCoreApplication::translate("ApiClient", "database not found (down, unknown_database)");
     if (dbError == QLatin1String("cannot_connect"))
-        return QCoreApplication::translate("ApiClient", "no connection (down, cannot_connect)");
+        return QStringLiteral("нет соединения (down, cannot_connect)");
+    if (dbError == QLatin1String("tls_error"))
+        return QStringLiteral("ошибка TLS (down, tls_error)");
     if (dbError == QLatin1String("driver_not_loaded"))
         return QCoreApplication::translate("ApiClient", "driver not loaded (down, driver_not_loaded)");
     if (dbError == QLatin1String("connection_failed"))
@@ -200,11 +202,12 @@ QString loginErrorMessage(int httpStatus, const QString &code)
             "ApiClient",
             "The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.");
     }
-    if (code == QLatin1String("connection_failed")) {
-        return QCoreApplication::translate("ApiClient", "The database connection failed (connection_failed).");
+    if (code == QLatin1String("tls_error")) {
+        return QStringLiteral(
+            "Сервер не договорился о TLS с MariaDB (tls_error). Для локальной базы без TLS задайте mysql_ssl=preferred или off.");
     }
-    if (code == QLatin1String("database_unavailable"))
-        return QCoreApplication::translate("ApiClient", "The database is unavailable (database_unavailable).");
+    if (code == QLatin1String("database_unavailable") || code == QLatin1String("connection_failed"))
+        return QStringLiteral("База данных недоступна (database_unavailable).");
     if (httpStatus == 400 || code == QLatin1String("invalid_request"))
         return QCoreApplication::translate("ApiClient", "Invalid request to the server.");
     if (httpStatus == 404 || code == QLatin1String("not_found"))

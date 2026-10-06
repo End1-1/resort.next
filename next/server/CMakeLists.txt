@@ -79,6 +79,8 @@ add_executable(hotel-api-config-test
     src/iniparse.h
     src/config.cpp
     src/config.h
+    src/dberror.cpp
+    src/dberror.h
     tests/test_iniparse.cpp
     tests/test_config.cpp
 )
