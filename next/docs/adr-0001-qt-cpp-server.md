@@ -50,6 +50,6 @@ Not done, on purpose:
 ## Consequences
 
 - Audit text that says "Go", "static binary", or "`backend/`" is historical for the engine choice. Follow this ADR for the engine and the path. Follow the audit for phases, API shape, and the order of moving money.
-- The desktop strangler starts in `next/desktopapp` (`hotel-desktop-stub` calls `GET /health`). `Resort/` keeps its SQL until a later phase turns a module over behind a flag.
+- The desktop strangler lives in `next/desktopapp`. `hotel-desktop` is the windowed client (connection settings, login, an empty workspace). `hotel-desktop-stub` still calls `GET /health`. There is no logout route: the client drops the bearer token in memory and `nx_session` stays until it expires. `Resort/` keeps its SQL until a later phase turns a module over behind a flag.
 - Schema files go in `next/dbdump/migrations/` as DDL. The core store is `0002_nx_core.sql`. A production dump does not.
 - Hiring and deployment follow Qt 6, not a Go toolchain. The widget-coupling warning from §3.2 is a review rule for every later PR: no `QWidget` in `next/server`.
