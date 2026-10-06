@@ -1,9 +1,10 @@
 #include "config.h"
 
+#include "iniparse.h"
+
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
-#include <QSettings>
 #include <QStringList>
 #include <QUrl>
 
@@ -130,24 +131,15 @@ QStringList defaultConfigCandidates()
 
 bool readIniFile(const QString &path, QString *listen, QString *dsn, QString *websocket, QString *error)
 {
-    QSettings settings(path, QSettings::IniFormat);
-    settings.setFallbacksEnabled(false);
-    if (settings.status() != QSettings::NoError) {
-        *error = QStringLiteral("could not read config file: %1")
-                     .arg(QDir::toNativeSeparators(path));
+    HotelIniValues values;
+    if (!readHotelIniFile(path, &values, error))
         return false;
-    }
-    if (settings.contains(QStringLiteral("listen")))
-        *listen = settings.value(QStringLiteral("listen")).toString();
-    if (settings.contains(QStringLiteral("dsn")))
-        *dsn = settings.value(QStringLiteral("dsn")).toString();
-    if (settings.contains(QStringLiteral("ws_listen")))
-        *websocket = settings.value(QStringLiteral("ws_listen")).toString();
-    if (settings.status() != QSettings::NoError) {
-        *error = QStringLiteral("could not read config file: %1")
-                     .arg(QDir::toNativeSeparators(path));
-        return false;
-    }
+    if (values.hasListen)
+        *listen = values.listen;
+    if (values.hasDsn)
+        *dsn = values.dsn;
+    if (values.hasWsListen)
+        *websocket = values.wsListen;
     return true;
 }
 
