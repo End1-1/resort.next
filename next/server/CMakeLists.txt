@@ -77,10 +77,13 @@ find_package(Qt6 REQUIRED COMPONENTS Test)
 add_executable(hotel-api-config-test
     src/iniparse.cpp
     src/iniparse.h
+    src/config.cpp
+    src/config.h
     tests/test_iniparse.cpp
+    tests/test_config.cpp
 )
 target_include_directories(hotel-api-config-test PRIVATE src)
-target_link_libraries(hotel-api-config-test PRIVATE Qt6::Core Qt6::Test)
+target_link_libraries(hotel-api-config-test PRIVATE Qt6::Core Qt6::Network Qt6::Test)
 target_compile_definitions(hotel-api-config-test PRIVATE
     "HOTEL_API_INI_EXAMPLE=\"${CMAKE_CURRENT_SOURCE_DIR}/config/hotel-api.ini.example\""
 )

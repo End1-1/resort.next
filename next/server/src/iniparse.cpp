@@ -19,6 +19,31 @@ bool takeKey(const QString &key, const QString &value, int lineNo, HotelIniValue
         out->listen = value;
         return true;
     }
+    if (key.compare(QLatin1String("mysql_host"), Qt::CaseInsensitive) == 0) {
+        out->hasMysqlHost = true;
+        out->mysqlHost = value;
+        return true;
+    }
+    if (key.compare(QLatin1String("mysql_port"), Qt::CaseInsensitive) == 0) {
+        out->hasMysqlPort = true;
+        out->mysqlPort = value;
+        return true;
+    }
+    if (key.compare(QLatin1String("mysql_schema"), Qt::CaseInsensitive) == 0) {
+        out->hasMysqlSchema = true;
+        out->mysqlSchema = value;
+        return true;
+    }
+    if (key.compare(QLatin1String("mysql_user"), Qt::CaseInsensitive) == 0) {
+        out->hasMysqlUser = true;
+        out->mysqlUser = value;
+        return true;
+    }
+    if (key.compare(QLatin1String("mysql_password"), Qt::CaseInsensitive) == 0) {
+        out->hasMysqlPassword = true;
+        out->mysqlPassword = value;
+        return true;
+    }
     if (key.compare(QLatin1String("dsn"), Qt::CaseInsensitive) == 0) {
         out->hasDsn = true;
         out->dsn = value;

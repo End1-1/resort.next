@@ -5,9 +5,20 @@
 
 // Keys recognized in hotel-api.ini. Absent keys stay has* = false.
 // Values are literal: %40 is not turned into @, and there is no comma split.
+// dsn is accepted only so an old file still parses. New files use mysql_*.
 struct HotelIniValues {
     bool hasListen = false;
     QString listen;
+    bool hasMysqlHost = false;
+    QString mysqlHost;
+    bool hasMysqlPort = false;
+    QString mysqlPort;
+    bool hasMysqlSchema = false;
+    QString mysqlSchema;
+    bool hasMysqlUser = false;
+    QString mysqlUser;
+    bool hasMysqlPassword = false;
+    QString mysqlPassword;
     bool hasDsn = false;
     QString dsn;
     bool hasWsListen = false;

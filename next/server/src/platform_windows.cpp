@@ -115,8 +115,9 @@ int installService()
     std::fputs("hotel-api: installed service HotelApi (auto start).\n"
                "Place hotel-api.ini next to the executable. The service working directory is\n"
                "System32, so the ini is read from the executable directory, not the current directory.\n"
-               "A non-empty HOTEL_CONFIG replaces that path. A non-empty HOTEL_LISTEN, HOTEL_DSN,\n"
-               "or HOTEL_WS_LISTEN overrides the matching ini key.\n",
+               "A non-empty HOTEL_CONFIG replaces that path. A non-empty HOTEL_LISTEN,\n"
+               "HOTEL_WS_LISTEN, or HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT, HOTEL_MYSQL_SCHEMA,\n"
+               "HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD overrides the matching ini key.\n",
                stdout);
     return 0;
 }
@@ -169,7 +170,9 @@ void printHelp()
         "  --uninstall   remove HotelApi (elevated prompt; stop it first)\n"
         "  Config file: hotel-api.ini next to the executable (not the working directory).\n"
         "  HOTEL_CONFIG replaces that path when set and non-empty.\n"
-        "  HOTEL_LISTEN, HOTEL_DSN, HOTEL_WS_LISTEN override ini keys when non-empty.\n"
+        "  HOTEL_LISTEN, HOTEL_WS_LISTEN, and HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT,\n"
+        "  HOTEL_MYSQL_SCHEMA, HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD override ini\n"
+        "  keys when non-empty.\n"
         "  The service process sees the system environment, not a user shell profile.\n",
         stdout);
 }

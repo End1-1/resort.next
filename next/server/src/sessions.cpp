@@ -186,7 +186,7 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
     if (!target.configured) {
         return fail(503,
                     "database_not_configured",
-                    "no database configured; set dsn in hotel-api.ini or HOTEL_DSN");
+                    "no database configured; set mysql_host and mysql_schema in hotel-api.ini");
     }
     if (login.isEmpty() || password.isEmpty() || password.size() > kMaxPasswordChars) {
         qInfo("session denied");

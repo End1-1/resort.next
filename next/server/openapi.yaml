@@ -44,18 +44,21 @@ paths:
       operationId: getHealth
       summary: Process and optional database probe
       description: |
-        200 when the process is up and either no database DSN is configured or
-        MariaDB answered. 503 when a DSN is configured and the probe failed.
-        The DSN comes from hotel-api.ini beside the executable, or from
-        /etc/hotel-api/hotel-api.ini on Linux. A non-empty HOTEL_CONFIG
-        selects a different file. A non-empty HOTEL_DSN overrides the file's
-        dsn.         The body does not contain the DSN, the password, the host, the user,
-        or the driver text. When the probe fails, db.error is a short code:
-        driver_not_loaded, access_denied (MySQL 1045), unknown_database
-        (1049), cannot_connect (2002 or 2003), or connection_failed.
-        The server log has the native code and the scrubbed driver text.
-        No DSN does not fail /health; POST /api/v1/sessions returns 503
-        database_not_configured in that case.
+        200 when the process is up and either no database is configured or
+        MariaDB answered. 503 when mysql_host and mysql_schema are set and
+        the probe failed. Those keys come from hotel-api.ini beside the
+        executable, or from /etc/hotel-api/hotel-api.ini on Linux. A
+        non-empty HOTEL_CONFIG selects a different file. Non-empty
+        HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT, HOTEL_MYSQL_SCHEMA,
+        HOTEL_MYSQL_USER, and HOTEL_MYSQL_PASSWORD override the matching
+        ini keys. The body does not contain the password, the host, the
+        user, or the driver text. When the probe fails, db.error is a
+        short code: driver_not_loaded, access_denied (MySQL 1045),
+        unknown_database (1049), cannot_connect (2002 or 2003), or
+        connection_failed. The server log has the native code and the
+        scrubbed driver text. No database configured does not fail
+        /health; POST /api/v1/sessions returns 503 database_not_configured
+        in that case.
       responses:
         '200':
           description: Up. db.state is skipped or up.
@@ -64,7 +67,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
         '503':
-          description: DSN is set and the database probe failed.
+          description: A database is configured and the probe failed.
           content:
             application/json:
               schema:
@@ -90,8 +93,8 @@ paths:
         Body is JSON with login (nx_user.login) and password (plaintext).
         Active users only (state = active) whose password_scheme is md5.
         Unknown user, disabled user, a non-md5 scheme, and a wrong password are
-        all 401 with the same body. The password, the MD5 hash, and the DSN are
-        not written to the log or the response.         No configured DSN is 503
+        all 401 with the same body. The password and the MD5 hash are not
+        written to the log or the response. No configured database is 503
         database_not_configured. A refused MariaDB account is 503
         access_denied, a missing database is 503 unknown_database, and a
         failure to reach the port is 503 cannot_connect. Other connect
@@ -125,7 +128,7 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: |
-            No database DSN is configured, QMYSQL is missing, MariaDB refused
+            No database is configured, QMYSQL is missing, MariaDB refused
             the account (access_denied), the database is missing
             (unknown_database), the port could not be reached (cannot_connect),
             the connection failed for another reason (database_unavailable),
