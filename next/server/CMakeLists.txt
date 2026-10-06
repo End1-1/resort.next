@@ -22,6 +22,8 @@ set(HOTEL_API_SOURCES
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     src/healthcheck.cpp
     src/healthcheck.h
     src/httpserver.cpp
@@ -98,10 +100,12 @@ endif()
 add_executable(hotel-api-dberror-test
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_dberror.cpp
 )
 target_include_directories(hotel-api-dberror-test PRIVATE src)
-target_link_libraries(hotel-api-dberror-test PRIVATE Qt6::Core Qt6::Test)
+target_link_libraries(hotel-api-dberror-test PRIVATE Qt6::Core Qt6::Sql Qt6::Test)
 if(MSVC)
     target_compile_options(hotel-api-dberror-test PRIVATE /W4 /utf-8)
 else()
