@@ -10,7 +10,8 @@ Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake
 
 | Piece | Role |
 |-------|------|
-| `src/apiclient.*`, `src/urlutil.*` | Base URL, in-memory bearer token, async `GET /health` and `POST /api/v1/sessions`, Russian error mapping. No widgets. |
+| `src/apiclient.*`, `src/urlutil.*` | Base URL, in-memory bearer token, async `GET /health` and `POST /api/v1/sessions`. Server error codes are mapped to the UI language here. No widgets. |
+| `src/uilanguage.*`, `translations/` | Armenian, English, and Russian (`hy` / `en` / `ru`). |
 | `src/appconfig.*` | Per-user INI. Never stores a password or a token. |
 | `src/connectiondialog.*` | Address, WebSocket, «Проверить соединение». |
 | `src/loginwindow.*` | Login form. |
@@ -30,7 +31,8 @@ The owner kit is Qt 6.10.2 MSVC 2022, opened from Qt Creator. The same sources b
 Linux packages (Ubuntu 24.04):
 
 ```bash
-sudo apt install cmake g++ ninja-build qt6-base-dev qt6-websockets-dev
+sudo apt install cmake g++ ninja-build qt6-base-dev qt6-websockets-dev \
+  qt6-l10n-tools qt6-tools-dev qt6-translations-l10n
 ```
 
 From the repository root:
@@ -49,7 +51,7 @@ Building `next/desktopapp` on its own also works (`cmake -S next/desktopapp`).
 2. Open `next/CMakeLists.txt` (not a `.pro`).
 3. Select the `hotel-desktop` target and press Run.
 
-The executable is `WIN32_EXECUTABLE`, so it starts as a GUI process (no extra console window) via `qt_add_executable(... WIN32)`, which supplies `WinMain`. Russian source strings are compiled with `/utf-8`.
+The executable is `WIN32_EXECUTABLE`, so it starts as a GUI process (no extra console window) via `qt_add_executable(... WIN32)`, which supplies `WinMain`. Source strings are UTF-8 English; MSVC needs `/utf-8` (already set). Install the Qt **Linguist** tools (`lrelease` / `lupdate`) in the same kit. Armenian text uses the platform font fallback: Sylfaen and Segoe UI on Windows, Noto Sans Armenian when it is installed.
 
 To copy the program out of the build tree, run `windeployqt` from the **same** kit on the built exe:
 
@@ -103,15 +105,28 @@ Do not commit `HOTEL_PASSWORD`.
 
 Окно «Настройки подключения» показывает этот путь целиком. Кнопка «Проверить соединение» вызывает `GET /health` по адресу из полей (ещё не обязательно сохранённому) и пишет состояние сервера и базы: `up`, `down`, `skipped`, `driver_not_loaded`, `access_denied`, `unknown_database`, `cannot_connect`, `connection_failed`.
 
+Комментарий в рукописном ini — целая строка с `;`. На Qt 6.10 `QSettings` не считает `#` комментарием, и файл с такой строкой не читается (тот же дефект, из‑за которого сервер ушёл с `QSettings`). Файл, который программа записывает сама, комментариев не содержит.
+
 Ключи в секции `[General]` (без другой секции):
 
 ```ini
 base_url=http://127.0.0.1:8080
 websocket_url=
 last_login=
+language=
 ```
 
 `base_url` — `host:port` или `http(s)://host:port`, без пути и без логина в URL. `websocket_url` пустой значит «только /health». Без пути подставляется `/api/v1/ws`. `wss://` можно сохранить заранее. `last_login` обновляется по кнопке «Войти». Пароля в файле нет.
+
+`language` — `hy`, `en` или `ru`. Пустое значение: язык системы, если это армянский, английский или русский, иначе **русский**. Выбор в окне входа (флаг в углу) или в меню «Настройки → Язык» пишется в этот ключ сразу и переводит окна без перезапуска.
+
+## Languages
+
+The UI is Armenian, English, and Russian from the first window. Source strings in C++ are English (`tr()` / `QCoreApplication::translate`). Catalogs live in `translations/hotel-desktop_{hy,en,ru}.ts` and are compiled with `qt_add_translations` into `:/i18n/hotel-desktop_<lang>.qm`. Qt’s own `qtbase_<lang>.qm` is loaded from the Qt installation for standard dialog buttons (Save, Cancel, Close). Qt 6.4 on Ubuntu ships `qtbase_ru` and `qtbase_en` and does not ship `qtbase_hy`; Armenian buttons that we own are still translated in our catalog.
+
+Server JSON stays language-neutral. The client maps `error` codes such as `database_not_configured` in `ApiClient`. A copied `hotel-desktop.ini` must use `;` comments: Qt 6.10 `QSettings` rejects a `#` line.
+
+Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedded in the binary). The PNG is what `QIcon` loads, so the client does not link Qt Svg.
 
 Если личного файла ещё нет, один раз читается **только для чтения** `hotel-desktop.ini` рядом с exe (каталог `hotel-desktop.exe`, не текущий каталог Qt Creator). Программа его не создаёт и не перезаписывает. Образец для копирования — `hotel-desktop.ini.example` (CMake кладёт его рядом с exe при сборке; само имя `.example` клиент не открывает). Как только личный файл появился — при «Сохранить» или при «Войти», который запоминает логин — файл рядом с exe больше не читается, даже если в личном файле не хватает ключа.
 
@@ -124,25 +139,26 @@ last_login=
 3. **Сессия → Выход.** Токен стирается из памяти, снова окно входа. Метода logout в `hotel-api` пока нет: строка `nx_session` живёт до срока (12 часов) или пока её не уберут на сервере. Закрытие окна завершает процесс и тоже теряет токен.
 4. Смена адреса сервера в настройках, пока сеанс открыт, тоже стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
 
-Сообщения входа:
+Сообщения входа (код с сервера, фраза на языке окна):
 
-| Ответ | Текст |
-|-------|--------|
-| сеть, таймаут, хост не найден, отказ | «Сервер недоступен…» или «Превышено время ожидания ответа сервера.» |
-| 401 | «Неверный логин или пароль.» |
-| 503 `database_not_configured` | «База не настроена…» |
-| 503 `session_store_unavailable` | «Хранилище сессий недоступно…» |
-| 503 `driver_not_loaded` | «Драйвер базы данных не загружен…» |
-| 503 `access_denied` | «Отказ в доступе к базе на сервере…» |
-| 503 `unknown_database` | «База на сервере не найдена…» |
-| 503 `cannot_connect` | «Сервер не подключился к MariaDB…» |
-| 503 `database_unavailable` | «База данных недоступна…» |
+| Ответ | Код | Смысл |
+|-------|-----|--------|
+| сеть, таймаут, хост не найден, отказ | — | сервер недоступен или время ожидания вышло |
+| 401 | `unauthorized` | неверный логин или пароль |
+| 503 | `database_not_configured` | база не настроена |
+| 503 | `session_store_unavailable` | хранилище сессий недоступно |
+| 503 | `driver_not_loaded` | драйвер базы не загружен |
+| 503 | `access_denied` | учётная запись MariaDB не принята для этого хоста |
+| 503 | `unknown_database` | база на сервере не найдена |
+| 503 | `cannot_connect` | сервер не дождался MariaDB на порту |
+| 503 | `connection_failed` | соединение с базой не установлено |
+| 503 | `database_unavailable` | база недоступна |
 
-Пустые `mysql_host` и `mysql_schema` на сервере как раз дают «База не настроена»: `/health` при этом `db.state=skipped`, а вход — 503.
+Фраза зависит от языка окна. Пустые `mysql_host` и `mysql_schema` на сервере дают код `database_not_configured`: `/health` при этом `db.state=skipped`, а вход — 503.
 
 ## Smoke test
 
-`hotel-desktop-login-smoke` checks address parsing, the INI rules, the main-window menu, and (when `HOTEL_API_BIN` is set) a real login against `hotel-api` with an empty DSN. The test points `XDG_CONFIG_HOME` at a temp directory so it does not write your settings. Offscreen is the default platform when `QT_QPA_PLATFORM` is unset.
+`hotel-desktop-login-smoke` checks address parsing, the INI rules, the main-window menu, that the `hy` and `ru` catalogs have no unfinished strings and that all three `.qm` files load, and (when `HOTEL_API_BIN` is set) a real login against `hotel-api` with empty `mysql_host` and `mysql_schema`. The test points `XDG_CONFIG_HOME` at a temp directory so it does not write your settings. Offscreen is the default platform when `QT_QPA_PLATFORM` is unset.
 
 ```bash
 cmake -S next -B /tmp/hotel-next-build -G Ninja

@@ -19,6 +19,7 @@ private slots:
     void onLogin(const UserSnapshot &user);
     void onLogout();
     void onRememberLogin(const QString &login);
+    void onLanguage(const QString &code);
     void editSettings();
     void refreshStatus();
 

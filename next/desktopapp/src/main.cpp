@@ -1,14 +1,14 @@
 #include "appconfig.h"
 #include "appcontroller.h"
+#include "uilanguage.h"
 
 #include <QApplication>
-#include <QGuiApplication>
 
 int main(int argc, char **argv)
 {
     AppConfig::applyIdentity();
     QApplication app(argc, argv);
-    QGuiApplication::setApplicationDisplayName(QStringLiteral("Отель"));
+    HotelLocale::installUiFont();
 
     AppController controller;
     controller.start();

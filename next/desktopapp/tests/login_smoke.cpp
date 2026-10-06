@@ -2,6 +2,7 @@
 #include "appconfig.h"
 #include "connectiondialog.h"
 #include "healthmonitor.h"
+#include "uilanguage.h"
 #include "loginwindow.h"
 #include "mainwindow.h"
 #include "urlutil.h"
@@ -11,14 +12,23 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QFont>
+#include <QImage>
 #include <QLabel>
+#include <QLibraryInfo>
 #include <QLineEdit>
+#include <QMenu>
+#include <QPainter>
 #include <QProcess>
 #include <QPushButton>
+#include <QRawFont>
 #include <QSignalSpy>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
+#include <QToolButton>
+#include <QTranslator>
+#include <QXmlStreamReader>
 
 namespace {
 
@@ -41,6 +51,11 @@ private slots:
     void parsesAddresses();
     void configFileRoundTripSkipsPassword();
     void bundledDefaultsUsedOnlyWhenUserFileMissing();
+    void shippedExampleLoads();
+    void languageFollowsSystemUnlessIniOverrides();
+    void translationsAreCompleteAndLoad();
+    void languageSwitchRetranslatesWithoutRestart();
+    void armenianTextIsNotBoxes();
     void userPathIsNotBesideExe();
     void settingsDialogShowsPathAndWritesUserFile();
     void mainWindowShowsSessionAndLogout();
@@ -108,6 +123,7 @@ void LoginSmoke::configFileRoundTripSkipsPassword()
     DesktopConfig toSave = loaded.config;
     toSave.lastLogin = QStringLiteral("bob");
     toSave.webSocketUrl = QStringLiteral("ws://10.0.0.5:10/api/v1/ws");
+    toSave.language = QStringLiteral("hy");
     QString error;
     QVERIFY2(AppConfig::saveTo(user, toSave, &error), qPrintable(error));
 
@@ -121,6 +137,12 @@ void LoginSmoke::configFileRoundTripSkipsPassword()
     const ConfigLoad again = AppConfig::loadFrom(user, QString());
     QCOMPARE(again.config.lastLogin, QStringLiteral("bob"));
     QCOMPARE(again.config.webSocketUrl, QStringLiteral("ws://10.0.0.5:10/api/v1/ws"));
+    QCOMPARE(again.config.language, QStringLiteral("hy"));
+    QVERIFY(text.contains(QStringLiteral("language=hy")));
+
+    QVERIFY(writeText(user, "language=de\nbase_url=http://10.0.0.5:9\n"));
+    const ConfigLoad unknown = AppConfig::loadFrom(user, QString());
+    QVERIFY(unknown.config.language.isEmpty());
 }
 
 void LoginSmoke::bundledDefaultsUsedOnlyWhenUserFileMissing()
@@ -158,6 +180,19 @@ void LoginSmoke::bundledDefaultsUsedOnlyWhenUserFileMissing()
     QCOMPARE(builtin.source, ConfigLoad::Source::BuiltIn);
     QCOMPARE(builtin.config.baseUrl, QStringLiteral("http://127.0.0.1:8080"));
     QVERIFY(builtin.config.webSocketUrl.isEmpty());
+}
+
+void LoginSmoke::shippedExampleLoads()
+{
+    const QString example = QDir(QStringLiteral(QT_TESTCASE_SOURCEDIR)).filePath(QStringLiteral("hotel-desktop.ini.example"));
+    QVERIFY(QFileInfo::exists(example));
+    const ConfigLoad loaded = AppConfig::loadFrom(QStringLiteral("/no/such/hotel-desktop-user.ini"), example);
+    QCOMPARE(loaded.source, ConfigLoad::Source::BundledDefaults);
+    QVERIFY2(loaded.warning.isEmpty(), qPrintable(loaded.warning));
+    QCOMPARE(loaded.config.baseUrl, QStringLiteral("http://127.0.0.1:8080"));
+    QVERIFY(loaded.config.webSocketUrl.isEmpty());
+    QVERIFY(loaded.config.lastLogin.isEmpty());
+    QVERIFY(loaded.config.language.isEmpty());
 }
 
 void LoginSmoke::userPathIsNotBesideExe()
@@ -199,6 +234,7 @@ void LoginSmoke::settingsDialogShowsPathAndWritesUserFile()
 
 void LoginSmoke::mainWindowShowsSessionAndLogout()
 {
+    HotelLocale::applyCode(QStringLiteral("en"));
     UserSnapshot user;
     user.id = 4;
     user.login = QStringLiteral("ivan");
@@ -213,15 +249,15 @@ void LoginSmoke::mainWindowShowsSessionAndLogout()
     QCOMPARE(window.findChild<QLabel *>(QStringLiteral("userLabel"))->text(), QStringLiteral("Иван Иванов"));
     QCOMPARE(window.findChild<QLabel *>(QStringLiteral("loginLabel"))->text(), QStringLiteral("ivan"));
     QCOMPARE(window.findChild<QLabel *>(QStringLiteral("roleLabel"))->text(), QStringLiteral("7"));
-    QCOMPARE(window.findChild<QLabel *>(QStringLiteral("commandsLabel"))->text(), QStringLiteral("да"));
+    QCOMPARE(window.findChild<QLabel *>(QStringLiteral("commandsLabel"))->text(), QStringLiteral("yes"));
     QCOMPARE(window.findChild<QLabel *>(QStringLiteral("serverLabel"))->text(), QStringLiteral("http://127.0.0.1:8080"));
     QVERIFY(window.findChild<QLabel *>(QStringLiteral("workspacePlaceholderLabel")));
 
     user.rolePresent = false;
     user.commandsAllowed = false;
     window.showSession(user, QStringLiteral("http://127.0.0.1:8080"));
-    QCOMPARE(window.findChild<QLabel *>(QStringLiteral("roleLabel"))->text(), QStringLiteral("не назначена"));
-    QCOMPARE(window.findChild<QLabel *>(QStringLiteral("commandsLabel"))->text(), QStringLiteral("нет"));
+    QCOMPARE(window.findChild<QLabel *>(QStringLiteral("roleLabel"))->text(), QStringLiteral("not assigned"));
+    QCOMPARE(window.findChild<QLabel *>(QStringLiteral("commandsLabel"))->text(), QStringLiteral("no"));
 
     QSignalSpy logoutSpy(&window, &MainWindow::logoutRequested);
     auto *logout = window.findChild<QAction *>(QStringLiteral("logoutAction"));
@@ -234,6 +270,7 @@ void LoginSmoke::mainWindowShowsSessionAndLogout()
 
 void LoginSmoke::emptyLoginDoesNotCallServer()
 {
+    HotelLocale::applyCode(QStringLiteral("en"));
     ApiClient api;
     LoginWindow window(&api);
     window.show();
@@ -242,11 +279,12 @@ void LoginSmoke::emptyLoginDoesNotCallServer()
     window.findChild<QLineEdit *>(QStringLiteral("passwordEdit"))->clear();
     QVERIFY(QMetaObject::invokeMethod(&window, "submit"));
     QCOMPARE(window.findChild<QLabel *>(QStringLiteral("errorLabel"))->text(),
-             QStringLiteral("Введите логин и пароль."));
+             QStringLiteral("Enter your login and password."));
 }
 
 void LoginSmoke::unreachableServerMessage()
 {
+    HotelLocale::applyCode(QStringLiteral("en"));
     ApiClient api;
     api.setBaseUrl(QStringLiteral("http://127.0.0.1:59999"));
     LoginWindow window(&api);
@@ -260,13 +298,14 @@ void LoginSmoke::unreachableServerMessage()
     QCOMPARE(remembered.at(0).at(0).toString(), QStringLiteral("ivan"));
 
     auto *error = window.findChild<QLabel *>(QStringLiteral("errorLabel"));
-    QTRY_VERIFY_WITH_TIMEOUT(error->text().contains(QStringLiteral("Сервер недоступен")), 12000);
+    QTRY_VERIFY_WITH_TIMEOUT(error->text().contains(QStringLiteral("Server unavailable")), 12000);
     QVERIFY2(!error->text().contains(QStringLiteral("secret")), qPrintable(error->text()));
     QVERIFY(!api.hasToken());
 }
 
 void LoginSmoke::loginShowsDatabaseNotConfigured()
 {
+    HotelLocale::applyCode(QStringLiteral("en"));
     const QString bin = qEnvironmentVariable("HOTEL_API_BIN");
     if (bin.isEmpty())
         QSKIP("HOTEL_API_BIN is not set");
@@ -346,7 +385,7 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     QVERIFY(QMetaObject::invokeMethod(&dialog, "checkConnection"));
     auto *probeLabel = dialog.findChild<QLabel *>(QStringLiteral("probeStatusLabel"));
     QTRY_VERIFY_WITH_TIMEOUT(probeLabel->text().contains(QStringLiteral("skipped")), 8000);
-    QVERIFY2(probeLabel->text().contains(QStringLiteral("не настроена")), qPrintable(probeLabel->text()));
+    QVERIFY2(probeLabel->text().contains(QStringLiteral("not configured")), qPrintable(probeLabel->text()));
 
     ApiClient api;
     api.setBaseUrl(QStringLiteral("http://127.0.0.1:18080"));
@@ -357,18 +396,162 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     window.findChild<QLineEdit *>(QStringLiteral("passwordEdit"))->setText(QStringLiteral("wrong-password"));
     QVERIFY(QMetaObject::invokeMethod(&window, "submit"));
     auto *error = window.findChild<QLabel *>(QStringLiteral("errorLabel"));
-    QTRY_VERIFY_WITH_TIMEOUT(error->text().contains(QStringLiteral("База не настроена")), 10000);
-    QVERIFY2(error->text().contains(QStringLiteral("database_not_configured"))
-                 || error->text().contains(QStringLiteral("База не настроена")),
-             qPrintable(error->text()));
+    QTRY_VERIFY_WITH_TIMEOUT(error->text().contains(QStringLiteral("database_not_configured")), 10000);
+    QVERIFY2(error->text().contains(QStringLiteral("not configured")), qPrintable(error->text()));
     QVERIFY(!error->text().contains(QStringLiteral("wrong-password")));
     QVERIFY(!api.hasToken());
 
     stopServer();
 }
 
+void LoginSmoke::languageFollowsSystemUnlessIniOverrides()
+{
+    QCOMPARE(HotelLocale::defaultCode(QLocale(QLocale::Armenian)), QStringLiteral("hy"));
+    QCOMPARE(HotelLocale::defaultCode(QLocale(QLocale::English)), QStringLiteral("en"));
+    QCOMPARE(HotelLocale::defaultCode(QLocale(QLocale::Russian)), QStringLiteral("ru"));
+    QCOMPARE(HotelLocale::defaultCode(QLocale(QLocale::German)), QStringLiteral("ru"));
+    QCOMPARE(HotelLocale::resolveCode(QString(), QLocale(QLocale::French)), QStringLiteral("ru"));
+    QCOMPARE(HotelLocale::resolveCode(QStringLiteral("hy"), QLocale(QLocale::English)), QStringLiteral("hy"));
+    QCOMPARE(HotelLocale::normalizeStored(QStringLiteral(" EN ")), QStringLiteral("en"));
+    QVERIFY(HotelLocale::normalizeStored(QStringLiteral("de")).isEmpty());
+}
+
+void LoginSmoke::translationsAreCompleteAndLoad()
+{
+    const QDir dir(QDir(QStringLiteral(QT_TESTCASE_SOURCEDIR)).filePath(QStringLiteral("translations")));
+    const QStringList catalogs = {QStringLiteral("hotel-desktop_ru.ts"), QStringLiteral("hotel-desktop_hy.ts")};
+    for (const QString &name : catalogs) {
+        QFile file(dir.filePath(name));
+        QVERIFY2(file.open(QIODevice::ReadOnly), qPrintable(file.fileName()));
+        QXmlStreamReader xml(&file);
+        int messages = 0;
+        QString source;
+        while (!xml.atEnd()) {
+            xml.readNext();
+            if (!xml.isStartElement())
+                continue;
+            if (xml.name() == QLatin1String("source"))
+                source = xml.readElementText();
+            if (xml.name() == QLatin1String("translation")) {
+                const QString type = xml.attributes().value(QLatin1String("type")).toString();
+                const QString text = xml.readElementText();
+                if (type == QLatin1String("obsolete") || type == QLatin1String("vanished"))
+                    continue;
+                ++messages;
+                QVERIFY2(type != QLatin1String("unfinished"), qPrintable(source));
+                QVERIFY2(!text.trimmed().isEmpty(), qPrintable(name + QLatin1Char(' ') + source));
+            }
+        }
+        QVERIFY2(!xml.hasError(), qPrintable(xml.errorString()));
+        QVERIFY(messages >= 90);
+    }
+
+    struct Expectation {
+        const char *code;
+        const char *button;
+        const char *database;
+    };
+    const Expectation rows[] = {
+        {"en", "Sign in", "The database is not configured"},
+        {"ru", "Войти", "База не настроена"},
+        {"hy", "Մուտք գործել", "Բազան կարգավորված չէ"},
+    };
+    for (const Expectation &row : rows) {
+        QTranslator translator;
+        const QString path = QStringLiteral(":/i18n/hotel-desktop_%1").arg(QString::fromLatin1(row.code));
+        QVERIFY2(translator.load(path), qPrintable(path));
+        QVERIFY(qApp->installTranslator(&translator));
+        QCOMPARE(QCoreApplication::translate("LoginWindow", "Sign in", "button"), QString::fromUtf8(row.button));
+        const QString db = QCoreApplication::translate(
+            "ApiClient",
+            "The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.");
+        QVERIFY2(db.contains(QString::fromUtf8(row.database)), qPrintable(db));
+        QVERIFY(db.contains(QStringLiteral("database_not_configured")));
+        qApp->removeTranslator(&translator);
+    }
+
+    const QString ruQt = QDir(QLibraryInfo::path(QLibraryInfo::TranslationsPath)).filePath(QStringLiteral("qtbase_ru.qm"));
+    if (QFileInfo::exists(ruQt)) {
+        HotelLocale::applyCode(QStringLiteral("ru"));
+        QVERIFY(HotelLocale::qtBaseCatalogLoaded());
+    }
+    HotelLocale::applyCode(QStringLiteral("en"));
+}
+
+void LoginSmoke::languageSwitchRetranslatesWithoutRestart()
+{
+    ApiClient api;
+    LoginWindow login(&api);
+    MainWindow window;
+    HotelLocale::applyCode(QStringLiteral("en"));
+    QCOMPARE(login.findChild<QPushButton *>(QStringLiteral("loginButton"))->text(), QStringLiteral("Sign in"));
+    QCOMPARE(login.windowTitle(), QStringLiteral("Sign in"));
+    QCOMPARE(window.findChild<QMenu *>(QStringLiteral("languageMenu"))->title(), QStringLiteral("Language"));
+
+    auto *button = login.findChild<QToolButton *>(QStringLiteral("languageButton"));
+    QVERIFY(button);
+    QVERIFY(!button->icon().isNull());
+    QCOMPARE(button->menu()->actions().size(), 3);
+
+    HotelLocale::applyCode(QStringLiteral("ru"));
+    QCOMPARE(login.findChild<QPushButton *>(QStringLiteral("loginButton"))->text(), QStringLiteral("Войти"));
+    QCOMPARE(login.windowTitle(), QStringLiteral("Вход"));
+    QCOMPARE(window.findChild<QMenu *>(QStringLiteral("languageMenu"))->title(), QStringLiteral("Язык"));
+    QCOMPARE(window.findChild<QAction *>(QStringLiteral("logoutAction"))->text(), QStringLiteral("Выход"));
+    QVERIFY(button->icon().isNull() == false);
+
+    HotelLocale::applyCode(QStringLiteral("hy"));
+    QCOMPARE(login.findChild<QPushButton *>(QStringLiteral("loginButton"))->text(), QStringLiteral("Մուտք գործել"));
+    QCOMPARE(window.findChild<QMenu *>(QStringLiteral("languageMenu"))->title(), QStringLiteral("Լեզու"));
+    QCOMPARE(login.findChild<QLabel *>(QStringLiteral("errorLabel"))->text(), QString());
+    login.findChild<QLineEdit *>(QStringLiteral("loginEdit"))->clear();
+    login.findChild<QLineEdit *>(QStringLiteral("passwordEdit"))->clear();
+    QVERIFY(QMetaObject::invokeMethod(&login, "submit"));
+    QCOMPARE(login.findChild<QLabel *>(QStringLiteral("errorLabel"))->text(),
+             QStringLiteral("Մուտքագրեք մուտքանունը և գաղտնաբառը։"));
+
+    HotelLocale::applyCode(QStringLiteral("en"));
+    QCOMPARE(login.findChild<QLabel *>(QStringLiteral("errorLabel"))->text(),
+             QStringLiteral("Enter your login and password."));
+}
+
+void LoginSmoke::armenianTextIsNotBoxes()
+{
+    HotelLocale::installUiFont();
+    const QChar letter(0x0570);
+    bool supported = false;
+    const QStringList families = QApplication::font().families();
+    for (const QString &family : families) {
+        const QRawFont raw = QRawFont::fromFont(QFont(family));
+        if (raw.isValid() && raw.supportsCharacter(letter))
+            supported = true;
+    }
+    QVERIFY2(supported, qPrintable(QStringLiteral("UI font list has no Armenian glyphs: %1").arg(families.join(QLatin1Char(',')))));
+
+    const auto paint = [](const QFont &font) {
+        QImage image(220, 48, QImage::Format_RGB32);
+        image.fill(Qt::white);
+        QPainter painter(&image);
+        painter.setPen(Qt::black);
+        QFont sized = font;
+        sized.setPointSize(18);
+        painter.setFont(sized);
+        painter.drawText(image.rect(), Qt::AlignCenter, QStringLiteral("Հայերեն"));
+        return image;
+    };
+
+    QFont broken(QStringLiteral("DejaVu Sans"));
+    broken.setStyleStrategy(QFont::NoFontMerging);
+    const QRawFont brokenRaw = QRawFont::fromFont(broken);
+    if (brokenRaw.isValid() && !brokenRaw.supportsCharacter(letter)) {
+        QFont ui = QApplication::font();
+        QVERIFY(paint(ui) != paint(broken));
+    }
+}
+
 void LoginSmoke::mapsDatabaseConnectCodes()
 {
+    HotelLocale::applyCode(QStringLiteral("ru"));
     const QString denied = loginErrorMessage(503, QStringLiteral("access_denied"));
     QVERIFY(denied.contains(QStringLiteral("access_denied")));
     QVERIFY(denied.contains(QStringLiteral("Отказ в доступе")));
@@ -382,6 +565,7 @@ void LoginSmoke::mapsDatabaseConnectCodes()
     QVERIFY(offline.contains(QStringLiteral("не подключился")));
 
     QVERIFY(loginErrorMessage(503, QStringLiteral("database_unavailable")).contains(QStringLiteral("недоступна")));
+    QVERIFY(loginErrorMessage(503, QStringLiteral("connection_failed")).contains(QStringLiteral("connection_failed")));
 
     HealthStatus health;
     health.reachable = true;
@@ -395,6 +579,7 @@ void LoginSmoke::mapsDatabaseConnectCodes()
     QVERIFY2(summary.contains(QStringLiteral("отказ в доступе")), qPrintable(summary));
     QVERIFY(summary.contains(QStringLiteral("access_denied")));
     QVERIFY(!summary.contains(QStringLiteral("password")));
+    HotelLocale::applyCode(QStringLiteral("en"));
 }
 
 int main(int argc, char **argv)

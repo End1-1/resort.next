@@ -1,5 +1,6 @@
 #include "urlutil.h"
 
+#include <QCoreApplication>
 #include <QLatin1String>
 #include <QUrl>
 
@@ -16,7 +17,7 @@ UrlParse fail(const QString &error, const QString &technical)
 bool badShape(const QUrl &url, bool allowWebSocket, UrlParse *error)
 {
     if (!url.isValid()) {
-        *error = fail(QStringLiteral("Некорректный адрес."),
+        *error = fail(QCoreApplication::translate("UrlUtil", "Invalid address."),
                       QStringLiteral("URL is not valid"));
         return true;
     }
@@ -25,28 +26,28 @@ bool badShape(const QUrl &url, bool allowWebSocket, UrlParse *error)
     const bool ws = scheme == QLatin1String("ws") || scheme == QLatin1String("wss");
     if (allowWebSocket ? !ws : !http) {
         *error = fail(allowWebSocket
-                          ? QStringLiteral("Адрес WebSocket должен начинаться с ws:// или wss://.")
-                          : QStringLiteral("Адрес сервера должен быть http или https."),
+                          ? QCoreApplication::translate("UrlUtil", "The WebSocket address must start with ws:// or wss://.")
+                          : QCoreApplication::translate("UrlUtil", "The server address must be http or https."),
                       QStringLiteral("unsupported URL scheme"));
         return true;
     }
     if (url.host().isEmpty()) {
-        *error = fail(QStringLiteral("В адресе не указан хост."),
+        *error = fail(QCoreApplication::translate("UrlUtil", "The address has no host."),
                       QStringLiteral("URL is missing a host"));
         return true;
     }
     if (!url.userInfo().isEmpty()) {
-        *error = fail(QStringLiteral("Не указывайте логин или пароль в адресе."),
+        *error = fail(QCoreApplication::translate("UrlUtil", "Do not put a login or password in the address."),
                       QStringLiteral("URL must not include user info"));
         return true;
     }
     if (url.hasQuery() || url.hasFragment()) {
-        *error = fail(QStringLiteral("Адрес не должен содержать параметры или фрагмент."),
+        *error = fail(QCoreApplication::translate("UrlUtil", "The address must not contain a query or a fragment."),
                       QStringLiteral("URL must not include a query or fragment"));
         return true;
     }
     if (url.port() == 0) {
-        *error = fail(QStringLiteral("Некорректный порт."),
+        *error = fail(QCoreApplication::translate("UrlUtil", "Invalid port."),
                       QStringLiteral("URL port is invalid"));
         return true;
     }
@@ -71,11 +72,11 @@ UrlParse parseServerBase(const QString &text)
 {
     const QString trimmed = text.trimmed();
     if (trimmed.isEmpty()) {
-        return fail(QStringLiteral("Укажите адрес сервера."),
+        return fail(QCoreApplication::translate("UrlUtil", "Enter the server address."),
                     QStringLiteral("base URL is empty"));
     }
     if (trimmed.contains(QLatin1Char(' ')) || trimmed.contains(QLatin1Char('\\'))) {
-        return fail(QStringLiteral("Адрес сервера не должен содержать пробелы."),
+        return fail(QCoreApplication::translate("UrlUtil", "The server address must not contain spaces."),
                     QStringLiteral("base URL contains whitespace"));
     }
 
@@ -90,7 +91,7 @@ UrlParse parseServerBase(const QString &text)
 
     const QString path = url.path();
     if (!path.isEmpty() && path != QLatin1String("/")) {
-        return fail(QStringLiteral("Адрес сервера не должен содержать путь. Укажите только хост и порт."),
+        return fail(QCoreApplication::translate("UrlUtil", "The server address must not contain a path. Enter only the host and port."),
                     QStringLiteral("base URL must not include a path"));
     }
 
@@ -109,7 +110,7 @@ UrlParse parseWebSocketUrl(const QString &text)
         return result;
     }
     if (trimmed.contains(QLatin1Char(' ')) || trimmed.contains(QLatin1Char('\\'))) {
-        return fail(QStringLiteral("Адрес WebSocket не должен содержать пробелы."),
+        return fail(QCoreApplication::translate("UrlUtil", "The WebSocket address must not contain spaces."),
                     QStringLiteral("WebSocket URL contains whitespace"));
     }
 
@@ -126,7 +127,7 @@ UrlParse parseWebSocketUrl(const QString &text)
     if (path.isEmpty() || path == QLatin1String("/"))
         path = QStringLiteral("/api/v1/ws");
     else if (!path.startsWith(QLatin1Char('/'))) {
-        return fail(QStringLiteral("Некорректный путь WebSocket."),
+        return fail(QCoreApplication::translate("UrlUtil", "Invalid WebSocket path."),
                     QStringLiteral("WebSocket path is invalid"));
     }
 

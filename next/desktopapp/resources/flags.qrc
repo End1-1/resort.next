@@ -1,0 +1,8 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/flags">
+        <file alias="hy.png">flags/hy.png</file>
+        <file alias="en.png">flags/en.png</file>
+        <file alias="ru.png">flags/ru.png</file>
+    </qresource>
+</RCC>
