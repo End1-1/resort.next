@@ -101,7 +101,7 @@ Do not commit `HOTEL_PASSWORD`.
 
 На Linux при заданном `XDG_CONFIG_HOME` каталог начинается с него, а не с `~/.config`. Имя организации для `QSettings` — `Resort`, имя приложения — `hotel-desktop`. Формат файла всё равно INI по полному пути: на Windows это не `HKCU` и не `HKLM`.
 
-Окно «Настройки подключения» показывает этот путь целиком. Кнопка «Проверить соединение» вызывает `GET /health` по адресу из полей (ещё не обязательно сохранённому) и пишет состояние сервера и базы: `up`, `down`, `skipped`, `driver_not_loaded`.
+Окно «Настройки подключения» показывает этот путь целиком. Кнопка «Проверить соединение» вызывает `GET /health` по адресу из полей (ещё не обязательно сохранённому) и пишет состояние сервера и базы: `up`, `down`, `skipped`, `driver_not_loaded`, `access_denied`, `unknown_database`, `cannot_connect`, `connection_failed`.
 
 Ключи в секции `[General]` (без другой секции):
 
@@ -133,6 +133,9 @@ last_login=
 | 503 `database_not_configured` | «База не настроена…» |
 | 503 `session_store_unavailable` | «Хранилище сессий недоступно…» |
 | 503 `driver_not_loaded` | «Драйвер базы данных не загружен…» |
+| 503 `access_denied` | «Отказ в доступе к базе на сервере…» |
+| 503 `unknown_database` | «База на сервере не найдена…» |
+| 503 `cannot_connect` | «Сервер не подключился к MariaDB…» |
 | 503 `database_unavailable` | «База данных недоступна…» |
 
 Пустой `HOTEL_DSN` как раз даёт «База не настроена»: `/health` при этом `db.state=skipped`, а вход — 503.

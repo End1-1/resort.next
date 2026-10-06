@@ -1,5 +1,9 @@
 #include "db.h"
 
+#include "dberror.h"
+
+#include <QDebug>
+#include <QSqlError>
 #include <QSqlQuery>
 #include <QUuid>
 
@@ -21,15 +25,27 @@ MysqlConnection::MysqlConnection(const DatabaseTarget &target, int connectTimeou
     db.setDatabaseName(target.database);
     db.setUserName(target.user);
     db.setPassword(target.password);
-    const int timeoutSec = connectTimeoutSec > 0 ? connectTimeoutSec : 3;
-    // QMYSQL accepts MYSQL_OPT_CONNECT_TIMEOUT. MYSQL_SET_CHARSET_NAME is not a
-    // connect option on this driver (it warns and is ignored). SET NAMES below
-    // is the charset switch that matches a utf8 MD5() on the server.
-    db.setConnectOptions(QStringLiteral("MYSQL_OPT_CONNECT_TIMEOUT=%1").arg(timeoutSec));
+    // MYSQL_SET_CHARSET_NAME is not a connect option on this driver (it warns
+    // and is ignored). SET NAMES below is the charset switch. Host 127.0.0.1
+    // is TCP; on Windows "localhost" can be a named pipe and a different
+    // MariaDB account. The options string does not change that.
+    db.setConnectOptions(mysqlConnectOptions(connectTimeoutSec));
     opened = db.open();
     if (!opened) {
-        failure = QStringLiteral("connection_failed");
-        // QSqlError::text() can repeat the user name. Drop it.
+        // Capture the error before close(). close() can drop lastError().
+        const QSqlError error = db.lastError();
+        const QString native = error.nativeErrorCode();
+        failure = publicDatabaseErrorCode(native);
+        const QString driver = scrubDatabaseMessage(error.driverText(), target.password);
+        const QString server = scrubDatabaseMessage(error.databaseText(), target.password);
+        qWarning().noquote() << formatConnectFailureLog(failure,
+                                                        native,
+                                                        target.host,
+                                                        target.port,
+                                                        target.database,
+                                                        target.user,
+                                                        driver,
+                                                        server);
         db.close();
         return;
     }

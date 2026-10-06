@@ -255,19 +255,38 @@ line 5: unknown key "listn": C:\hotel-api\hotel-api.ini
 
 На Linux пакет `libqt6sql6-mysql` ставит `libqsqlmysql.so` в каталог плагинов Qt. Отдельный `libmariadb.dll` там не нужен; клиентская библиотека приходит из пакета. Без пакета `/health` даёт тот же `driver_not_loaded`.
 
-### База не ответила — `503`, `connection_failed`
+### База не ответила — `503`
 
-Плагин есть, DSN разобран, соединение не открылось. Таймаут 3 секунды.
+Плагин есть, DSN разобран, `db.open()` не прошёл. Таймаут подключения, чтения и записи — 3 секунды (`MYSQL_OPT_CONNECT_TIMEOUT`, `MYSQL_OPT_READ_TIMEOUT`, `MYSQL_OPT_WRITE_TIMEOUT`). Эти опции понимает MariaDB Connector/C 10.x и 11.x, в том числе на Windows. `MYSQL_SET_CHARSET_NAME` в опции не ставится: драйвер Qt её игнорирует, кодировка включается командой `SET NAMES utf8mb4` уже после успешного открытия.
 
-`/health`:
+Соединение создаётся на потоке HTTP-обработчика, с уникальным именем `mysql-<uuid>`, и снимается в деструкторе. Это не общая «default connection» и не чужой поток. Такое имя само по себе `connection_failed` не даёт.
 
-```json
-{"status":"degraded","service":"hotel-api","version":"0.3.0","db":{"configured":true,"state":"down","error":"connection_failed"}}
+В лог пишется номер ошибки MariaDB и текст драйвера. Пароль в эту строку не попадает: если он встретился в тексте, на его месте `***`. Хост, порт, имя базы и пользователь в логе есть. В JSON их нет — только короткий код.
+
+Пример строки при отказе в доступе (1045):
+
+```text
+database connect failed: code=access_denied native=1045 host=127.0.0.1 port=3306 database=hotelnext user=hotel_api driver=Access denied for user 'hotel_api'@'127.0.0.1' (using password: YES) server=Access denied for user 'hotel_api'@'127.0.0.1' (using password: YES)
+database probe failed: access_denied
 ```
 
-`POST /api/v1/sessions` в этом состоянии: `503`, `error` `database_unavailable`.
+`/health` в том же случае:
 
-Сюда попадает недоступный хост, неверный порт, отказ в пароле, несуществующая база, файрвол. Тело ответа и лог не печатают DSN, поэтому по тексту не отличить «неверный пароль» от «порт закрыт». Проверка — `mariadb` с той же учётной записью с этой машины.
+```json
+{"status":"degraded","service":"hotel-api","version":"0.3.0","db":{"configured":true,"state":"down","error":"access_denied"}}
+```
+
+`POST /api/v1/sessions` отвечает `503` с тем же машинным кодом в поле `error` (`access_denied`, `unknown_database` или `cannot_connect`). Текст `message` общий, без хоста и без пароля. Номер, которому нет отдельного кода, по-прежнему даёт в `/health` `connection_failed`, а на входе `database_unavailable`.
+
+| Номер MariaDB | Код в `/health` и во входе | Что проверить |
+|---------------|----------------------------|---------------|
+| 1045 | `access_denied` | Учётка и хост. `'hotel_api'@'127.0.0.1'` и `'hotel_api'@'localhost'` — разные пользователи. Права, выданные на `localhost` (сокет или именованный канал), TCP на `127.0.0.1` не покрывают. Другие программы при этом могут входить, а этот DSN получает Access denied. Нужен пользователь именно для хоста из `dsn`, с правом на базу из `dsn`. |
+| 1049 | `unknown_database` | Базы из `dsn` нет. Создать её и применить `next/dbdump/migrations/0002_nx_core.sql`. |
+| 2003 | `cannot_connect` | До порта никто не принял TCP: служба не запущена, слушает только сокет или именованный канал, другой порт, файрвол. |
+| 2002 | `cannot_connect` | Клиент не открыл локальный сокет или канал. Для хоста `127.0.0.1` обычно приходит 2003, не 2002. |
+| другой | `connection_failed` в `/health`, `database_unavailable` на входе | Смотреть `native=` и `driver=` в логе. |
+
+Строка Windows `nlansp_c.dll` с кодом `8007277C` («No such service is known») — это Winsock NLA (Network Location Awareness), Win32 `WSASERVICE_NOT_FOUND` (10108). Так бывает, когда служба NLA не запущена и провайдер имён не загрузился. Это не номер MariaDB и не причина `connection_failed`.
 
 Пока в базе нет таблиц `nx_user` / `nx_session`, health может быть `up`, а логин отвечает `503` `session_store_unavailable`. Это уже схема, не ini. Миграция: `next/dbdump/migrations/0002_nx_core.sql`.
 

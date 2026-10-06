@@ -43,7 +43,7 @@ Default listen address is loopback. No database is contacted until a DSN is set 
 curl -sS http://127.0.0.1:8080/health
 ```
 
-`GET /health` with no DSN returns 200 and `"db":{"configured":false,"state":"skipped"}`. With a DSN, the process opens `QMYSQL` (3 second connect timeout) and returns 200 `"state":"up"` or 503 `"state":"down"`. The JSON and the log do not include the URL or the password. Startup logs the config path, or `hotel-api config none`.
+`GET /health` with no DSN returns 200 and `"db":{"configured":false,"state":"skipped"}`. With a DSN, the process opens `QMYSQL` (3 second connect, read, and write timeout) and returns 200 `"state":"up"` or 503 `"state":"down"`. The JSON never includes the URL, the password, the host, or the driver text. A failed open logs the MySQL native code and the driver text with the password scrubbed, and sets `db.error` to `access_denied` (1045), `unknown_database` (1049), `cannot_connect` (2002/2003), or `connection_failed`. Startup logs the config path, or `hotel-api config none`.
 
 | Method and path | Now |
 |-----------------|-----|
