@@ -138,7 +138,7 @@ last_login=
 | 503 `cannot_connect` | «Сервер не подключился к MariaDB…» |
 | 503 `database_unavailable` | «База данных недоступна…» |
 
-Пустой `HOTEL_DSN` как раз даёт «База не настроена»: `/health` при этом `db.state=skipped`, а вход — 503.
+Пустые `mysql_host` и `mysql_schema` на сервере как раз дают «База не настроена»: `/health` при этом `db.state=skipped`, а вход — 503.
 
 ## Smoke test
 

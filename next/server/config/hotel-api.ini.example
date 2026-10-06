@@ -6,8 +6,9 @@
 #   1. hotel-api.ini рядом с exe (не текущий каталог; служба Windows стартует из System32)
 #   2. /etc/hotel-api/hotel-api.ini только на Linux
 # Непустой HOTEL_CONFIG заменяет оба шага.
-# HOTEL_LISTEN, HOTEL_DSN, HOTEL_WS_LISTEN перекрывают ключ только если не пустые.
-# Пустая переменная ключ из файла не стирает.
+# HOTEL_LISTEN, HOTEL_WS_LISTEN и HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT,
+# HOTEL_MYSQL_SCHEMA, HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD перекрывают ключ,
+# только если не пустые. Пустая переменная ключ из файла не стирает.
 # hotel-api.ini в git не коммитить.
 
 # HTTP. Числовой IP и порт, либо один порт (тогда 127.0.0.1).
@@ -16,14 +17,20 @@
 # Не годится: localhost:8080, 127.0.0.1, порт 0
 listen=127.0.0.1:8080
 
-# MariaDB. Пусто — базу не открывать, /health останется db.state=skipped.
-# Формат: mysql://USER:PASSWORD@HOST:3306/DATABASE
-# В логине и пароле @ пишите как %40, : как %3A.
-# Пример: mysql://hotel_api:p%40ss%3Aword@127.0.0.1:3306/resort
-# Без query и fragment: ?charset=... обрывает старт.
-dsn=
+# MariaDB. База включена, когда mysql_host и mysql_schema не пустые.
+# Тогда нужен и mysql_user, иначе процесс не стартует.
+# mysql_port можно не писать или оставить пустым: будет 3306.
+# Пароль пишется как есть. @ : % # ; не кодируются и не отрезаются.
+# Пробелы вокруг = допустимы: mysql_user = root
+# Кавычки — если в значении нужны пробелы по краям: mysql_password=" secret "
+mysql_host=
+mysql_port=
+mysql_schema=
+mysql_user=
+; Пароль в шаблоне пустой. Боевой пароль в этот .example не писать.
+mysql_password=
 
 # WebSocket /api/v1/ws. Пусто — сокет выключен.
 # Те же правила адреса, что у listen. Порт другой, не тот же, что listen.
-# Пример: 127.0.0.1:8081
+# Один порт значит 127.0.0.1 и этот порт. Пример: 8081
 ws_listen=

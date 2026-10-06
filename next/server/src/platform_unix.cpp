@@ -25,7 +25,9 @@ void printHelp()
         "  --console   same as the default on Linux\n"
         "  Config file: hotel-api.ini next to the executable, then /etc/hotel-api/hotel-api.ini.\n"
         "  HOTEL_CONFIG replaces that search when set and non-empty.\n"
-        "  HOTEL_LISTEN, HOTEL_DSN, HOTEL_WS_LISTEN override ini keys when non-empty.\n",
+        "  HOTEL_LISTEN, HOTEL_WS_LISTEN, and HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT,\n"
+        "  HOTEL_MYSQL_SCHEMA, HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD override ini\n"
+        "  keys when non-empty.\n",
         stdout);
 }
 

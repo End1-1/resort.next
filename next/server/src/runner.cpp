@@ -76,6 +76,9 @@ int runApplication(int argc, char **argv, const std::function<void()> &onReady)
         qInfo().noquote() << "hotel-api config" << loaded.configPath;
     else if (loaded.ok)
         qInfo().noquote() << "hotel-api config none";
+    const QString databaseNotice = databaseConfigNoticeLine(loaded.databaseNotice);
+    if (!databaseNotice.isEmpty())
+        qWarning().noquote() << databaseNotice;
     if (!loaded.ok) {
         qCritical().noquote() << loaded.error;
         return 1;

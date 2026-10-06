@@ -1,5 +1,6 @@
 #include "httpserver.h"
 
+#include "config.h"
 #include "healthcheck.h"
 #include "sessions.h"
 #include "version.h"
@@ -143,7 +144,7 @@ bool HttpApi::listen(QString *errorMessage)
     m_port = bound;
 #endif
     qInfo().noquote() << "hotel-api http" << m_config.http.address.toString() << m_port;
-    qInfo().noquote() << "hotel-api database" << (m_config.database.configured ? "configured" : "not configured");
+    qInfo().noquote() << "hotel-api database" << databaseStartupDetail(m_config.database);
     return true;
 }
 
