@@ -41,6 +41,7 @@ private slots:
     void parsesAddresses();
     void configFileRoundTripSkipsPassword();
     void bundledDefaultsUsedOnlyWhenUserFileMissing();
+    void shippedExampleLoads();
     void userPathIsNotBesideExe();
     void settingsDialogShowsPathAndWritesUserFile();
     void mainWindowShowsSessionAndLogout();
@@ -157,6 +158,18 @@ void LoginSmoke::bundledDefaultsUsedOnlyWhenUserFileMissing()
     QCOMPARE(builtin.source, ConfigLoad::Source::BuiltIn);
     QCOMPARE(builtin.config.baseUrl, QStringLiteral("http://127.0.0.1:8080"));
     QVERIFY(builtin.config.webSocketUrl.isEmpty());
+}
+
+void LoginSmoke::shippedExampleLoads()
+{
+    const QString example = QDir(QStringLiteral(QT_TESTCASE_SOURCEDIR)).filePath(QStringLiteral("hotel-desktop.ini.example"));
+    QVERIFY(QFileInfo::exists(example));
+    const ConfigLoad loaded = AppConfig::loadFrom(QStringLiteral("/no/such/hotel-desktop-user.ini"), example);
+    QCOMPARE(loaded.source, ConfigLoad::Source::BundledDefaults);
+    QVERIFY2(loaded.warning.isEmpty(), qPrintable(loaded.warning));
+    QCOMPARE(loaded.config.baseUrl, QStringLiteral("http://127.0.0.1:8080"));
+    QVERIFY(loaded.config.webSocketUrl.isEmpty());
+    QVERIFY(loaded.config.lastLogin.isEmpty());
 }
 
 void LoginSmoke::userPathIsNotBesideExe()
