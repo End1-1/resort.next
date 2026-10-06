@@ -72,7 +72,7 @@
 - Bearer на маршрутах **не проверяется**. Клиент умеет слать `Authorization: Bearer`, сервер заголовок не читает. Эндпоинта выхода нет: меню «Выход» только стирает токен из памяти. Строка `nx_session` живёт до срока (12 часов).
 - WebSocket `/api/v1/ws` поднимается только при непустом `ws_listen`. Кадр hello, событий PMS нет.
 - `nx_folio` и `nx_posting` есть в DDL. HTTP-маршрута фолио нет.
-- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с, hello по WebSocket). Рабочая область пустая (`MainWindow::setWorkspacePage`). UI по-русски. Токен только в памяти.
+- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с, hello по WebSocket). Рабочая область пустая (`MainWindow::setWorkspacePage`). UI: `hy` / `en` / `ru`, переключение без перезапуска. Токен только в памяти. Коды ошибок сервера клиент переводит сам.
 - Конфиг клиента — пути из §2. Ключ `password` при сохранении удаляется. Образец `hotel-desktop.ini.example` программа не открывает; на `main` его комментарии всё ещё `#` (см. §5).
 - `hotel-desktop-stub` — консоль без окон: `GET /health`, опционально один логин. Ini клиента не читает. Это не UI ресепшена.
 - `0001_hotel_api_session.sql` не применять. Сервис таблицу `hotel_api_session` не читает.
@@ -80,9 +80,11 @@
 
 ## 5. В работе прямо сейчас
 
-Проверено по GitHub 2026-10-06: открыт один PR, не draft и не влит.
+Проверено по GitHub 2026-10-06: открыт [PR #11](https://github.com/End1-1/resort.next/pull/11) (не draft). Переводы `hy` / `en` / `ru` — отдельный PR поверх того же example.
 
-[PR #11](https://github.com/End1-1/resort.next/pull/11) — «Use semicolon comments in hotel-desktop.ini.example», ветка `cursor/desktop-ini-semicolon-9e6f`, **OPEN**. `hotel-desktop` читает INI через `QSettings`. На Qt 6.10 строка `#` без `=` — ошибка формата, скопированный example отвергается, клиент берёт встроенные значения. В PR комментарии example и заметка в README переведены на `;`. Затронуты `next/desktopapp/hotel-desktop.ini.example`, `next/desktopapp/README.md`, `next/desktopapp/tests/login_smoke.cpp`. Серверный `hotel-api.ini.example` остаётся с `#`: его читает `iniparse`, не `QSettings`. Второй PR на ту же замену не открывать: доделать или влить #11.
+[PR #11](https://github.com/End1-1/resort.next/pull/11) — «Use semicolon comments in hotel-desktop.ini.example», ветка `cursor/desktop-ini-semicolon-9e6f`, **OPEN**. `hotel-desktop` читает INI через `QSettings`. На Qt 6.10 строка `#` без `=` — ошибка формата, скопированный example отвергается, клиент берёт встроенные значения. В PR комментарии example и заметка в README переведены на `;`. Затронуты `next/desktopapp/hotel-desktop.ini.example`, `next/desktopapp/README.md`, `next/desktopapp/tests/login_smoke.cpp`. Серверный `hotel-api.ini.example` остаётся с `#`: его читает `iniparse`, не `QSettings`. Второй PR только на эту замену не открывать: доделать или влить #11.
+
+Языки `hy` / `en` / `ru` для `hotel-desktop` — отдельная тема (решение в §2). Ветка с переводами включает коммит #11, чтобы example остался с `;` и получил ключ `language`. Если #11 уже влит, в новом PR остаётся только i18n.
 
 Оконный клиент и парсер сервера уже в `main` (#10 и #8). Новое окно логина не начинать.
 

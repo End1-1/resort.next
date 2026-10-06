@@ -12,6 +12,10 @@
 struct ApiError {
     bool transportFailure = false;
     bool timedOut = false;
+    // True when userMessage came from parseServerBase / parseWebSocketUrl.
+    // Those strings are translated at the call, so a language switch must parse again.
+    bool reparseBaseUrl = false;
+    int networkError = 0;
     int httpStatus = 0;
     QString code;
     QString userMessage;
@@ -62,8 +66,12 @@ struct SessionResult {
     ApiError error;
 };
 
-// Plain Russian. This client has no translation catalog yet.
+// Maps a server error code and HTTP status to the current UI language.
 QString loginErrorMessage(int httpStatus, const QString &code);
+
+// Maps a stored ApiError (network, HTTP, or URL parse) to the current UI language.
+// URL-parse failures (reparseBaseUrl) keep the message already stored in userMessage.
+QString userMessageFor(const ApiError &error);
 
 QString healthSummary(const HealthStatus &status);
 

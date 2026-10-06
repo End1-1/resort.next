@@ -2,7 +2,7 @@
 
 #include <QString>
 
-// Parsed connection address. error is Russian (shown in the UI).
+// Parsed connection address. error is translated for the UI. technical stays English.
 // technical is English and never includes a password.
 struct UrlParse {
     bool ok = false;

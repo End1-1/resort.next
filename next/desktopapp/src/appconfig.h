@@ -7,6 +7,8 @@ struct DesktopConfig {
     QString baseUrl = QStringLiteral("http://127.0.0.1:8080");
     QString webSocketUrl;
     QString lastLogin;
+    // hy, en, or ru. Empty means: system locale if it is one of those, otherwise ru.
+    QString language;
 };
 
 struct ConfigLoad {

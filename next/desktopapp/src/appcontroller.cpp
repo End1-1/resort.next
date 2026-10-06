@@ -1,7 +1,9 @@
 #include "appcontroller.h"
 
 #include "connectiondialog.h"
+#include "uilanguage.h"
 
+#include <QCoreApplication>
 #include <QLatin1String>
 
 AppController::AppController(QObject *parent)
@@ -16,6 +18,8 @@ AppController::AppController(QObject *parent)
     connect(&m_login, &LoginWindow::openSettingsRequested, this, &AppController::editSettings);
     connect(&m_main, &MainWindow::logoutRequested, this, &AppController::onLogout);
     connect(&m_main, &MainWindow::openSettingsRequested, this, &AppController::editSettings);
+    connect(&m_login, &LoginWindow::languageRequested, this, &AppController::onLanguage);
+    connect(&m_main, &MainWindow::languageRequested, this, &AppController::onLanguage);
     connect(&m_monitor, &HealthMonitor::statusChanged, this, &AppController::refreshStatus);
 }
 
@@ -23,11 +27,15 @@ void AppController::start()
 {
     const ConfigLoad loaded = AppConfig::load();
     m_config = loaded.config;
+    HotelLocale::installUiFont();
+    HotelLocale::applyCode(HotelLocale::resolveCode(m_config.language));
     m_api.setBaseUrl(m_config.baseUrl);
     m_login.setLastLogin(m_config.lastLogin);
     m_login.setServerAddress(m_config.baseUrl);
-    if (!loaded.warning.isEmpty())
-        m_login.setError(loaded.warning);
+    if (!loaded.warning.isEmpty()) {
+        const ConfigLoad again = AppConfig::load();
+        m_login.setError(again.warning);
+    }
     m_monitor.setWebSocketUrl(m_config.webSocketUrl);
     m_monitor.start();
     refreshStatus();
@@ -60,7 +68,19 @@ void AppController::onRememberLogin(const QString &login)
     m_config.lastLogin = login;
     QString error;
     if (!AppConfig::save(m_config, &error))
-        m_login.setError(QStringLiteral("Не удалось запомнить логин. %1").arg(error));
+        m_login.setError(tr("Could not remember the login. %1").arg(error));
+}
+
+void AppController::onLanguage(const QString &code)
+{
+    const QString normalized = HotelLocale::normalizeStored(code);
+    if (normalized.isEmpty() || normalized == m_config.language)
+        return;
+    m_config.language = normalized;
+    HotelLocale::applyCode(normalized);
+    QString error;
+    if (!AppConfig::save(m_config, &error))
+        m_login.setError(tr("Could not save the language. %1").arg(error));
 }
 
 void AppController::editSettings()
@@ -82,7 +102,7 @@ void AppController::editSettings()
     if (baseChanged && signedIn) {
         m_api.clearToken();
         m_login.prepareForShow();
-        m_login.setError(QStringLiteral("Адрес сервера изменён. Войдите снова."));
+        m_login.setError(tr("The server address changed. Sign in again."));
         m_login.show();
         m_login.raise();
         m_login.activateWindow();
