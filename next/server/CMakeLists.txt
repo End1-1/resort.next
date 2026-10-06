@@ -20,6 +20,8 @@ set(HOTEL_API_SOURCES
     src/iniparse.h
     src/db.cpp
     src/db.h
+    src/dberror.cpp
+    src/dberror.h
     src/healthcheck.cpp
     src/healthcheck.h
     src/httpserver.cpp
@@ -75,10 +77,13 @@ find_package(Qt6 REQUIRED COMPONENTS Test)
 add_executable(hotel-api-config-test
     src/iniparse.cpp
     src/iniparse.h
+    src/config.cpp
+    src/config.h
     tests/test_iniparse.cpp
+    tests/test_config.cpp
 )
 target_include_directories(hotel-api-config-test PRIVATE src)
-target_link_libraries(hotel-api-config-test PRIVATE Qt6::Core Qt6::Test)
+target_link_libraries(hotel-api-config-test PRIVATE Qt6::Core Qt6::Network Qt6::Test)
 target_compile_definitions(hotel-api-config-test PRIVATE
     "HOTEL_API_INI_EXAMPLE=\"${CMAKE_CURRENT_SOURCE_DIR}/config/hotel-api.ini.example\""
 )
@@ -88,10 +93,24 @@ else()
     target_compile_options(hotel-api-config-test PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+add_executable(hotel-api-dberror-test
+    src/dberror.cpp
+    src/dberror.h
+    tests/test_dberror.cpp
+)
+target_include_directories(hotel-api-dberror-test PRIVATE src)
+target_link_libraries(hotel-api-dberror-test PRIVATE Qt6::Core Qt6::Test)
+if(MSVC)
+    target_compile_options(hotel-api-dberror-test PRIVATE /W4 /utf-8)
+else()
+    target_compile_options(hotel-api-dberror-test PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     enable_testing()
 endif()
 add_test(NAME hotel-api-config-test COMMAND hotel-api-config-test)
+add_test(NAME hotel-api-dberror-test COMMAND hotel-api-dberror-test)
 
 include(GNUInstallDirs)
 install(TARGETS hotel-api RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

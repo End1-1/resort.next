@@ -12,7 +12,7 @@ DDL: [`next/dbdump/migrations/0002_nx_core.sql`](../dbdump/migrations/0002_nx_co
 
 ## Применение
 
-Из корня репозитория, в ту базу, куда смотрит DSN (`dsn` в `hotel-api.ini` или непустой `HOTEL_DSN`):
+Из корня репозитория, в ту базу, куда смотрят `mysql_host` / `mysql_schema` в `hotel-api.ini` (или непустые `HOTEL_MYSQL_HOST` / `HOTEL_MYSQL_SCHEMA`):
 
 ```bash
 mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \

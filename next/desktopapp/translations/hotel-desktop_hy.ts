@@ -36,118 +36,163 @@
     <message>
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
-        <location filename="../src/apiclient.cpp" line="76"/>
-        <location filename="../src/apiclient.cpp" line="210"/>
+        <location filename="../src/apiclient.cpp" line="219"/>
+        <location filename="../src/apiclient.cpp" line="240"/>
         <source>Server unavailable.</source>
         <translation>Սերվերն անհասանելի է։</translation>
     </message>
     <message>
         <location filename="../src/apiclient.cpp" line="48"/>
+        <source>access denied (down, access_denied)</source>
+        <translation>մուտքը մերժված է (down, access_denied)</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="50"/>
+        <source>database not found (down, unknown_database)</source>
+        <translation>բազան չի գտնվել (down, unknown_database)</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="52"/>
+        <source>no connection (down, cannot_connect)</source>
+        <translation>կապ չկա (down, cannot_connect)</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="54"/>
+        <source>driver not loaded (down, driver_not_loaded)</source>
+        <translation>դրայվերը բեռնված չէ (down, driver_not_loaded)</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="56"/>
+        <source>unavailable (down, connection_failed)</source>
+        <translation>անհասանելի է (down, connection_failed)</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="175"/>
         <source>Incorrect login or password.</source>
         <translation>Սխալ մուտքանուն կամ գաղտնաբառ։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="50"/>
+        <location filename="../src/apiclient.cpp" line="177"/>
         <source>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</source>
         <translation>Բազան կարգավորված չէ (database_not_configured)։ Մուտքն անհնար է, քանի դեռ սերվերում MariaDB-ի կապը նշված չէ։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="55"/>
+        <location filename="../src/apiclient.cpp" line="182"/>
         <source>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</source>
         <translation>Սեսիաների պահոցն անհասանելի է (session_store_unavailable)։ Սերվերում չկան nx_user և nx_session աղյուսակները, կամ սեսիան չգրանցվեց։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="60"/>
+        <location filename="../src/apiclient.cpp" line="187"/>
         <source>The database driver is not loaded on the server (driver_not_loaded).</source>
         <translation>Բազայի դրայվերը սերվերում բեռնված չէ (driver_not_loaded)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="64"/>
+        <location filename="../src/apiclient.cpp" line="191"/>
+        <source>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</source>
+        <translation>Սերվերը մերժեց բազայի մուտքը (access_denied)։ MariaDB-ի հաշիվն այս հոսթից չի ընդունվել։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="196"/>
+        <source>The database was not found on the server (unknown_database).</source>
+        <translation>Բազան սերվերում չի գտնվել (unknown_database)։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="199"/>
+        <source>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</source>
+        <translation>Սերվերը չկապվեց MariaDB-ի հետ (cannot_connect)։ Ստուգեք, որ ծառայությունը լսում է պորտը։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="204"/>
+        <source>The database connection failed (connection_failed).</source>
+        <translation>Բազայի հետ կապը չհաստատվեց (connection_failed)։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="207"/>
         <source>The database is unavailable (database_unavailable).</source>
         <translation>Բազան անհասանելի է (database_unavailable)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="66"/>
+        <location filename="../src/apiclient.cpp" line="209"/>
         <source>Invalid request to the server.</source>
         <translation>Սխալ հարցում սերվերին։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="68"/>
+        <location filename="../src/apiclient.cpp" line="211"/>
         <source>The server did not find the sign-in address.</source>
         <translation>Սերվերը չգտավ մուտքի հասցեն։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="70"/>
+        <location filename="../src/apiclient.cpp" line="213"/>
         <source>The server is temporarily unavailable (503).</source>
         <translation>Սերվերը ժամանակավորապես անհասանելի է (503)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="73"/>
+        <location filename="../src/apiclient.cpp" line="216"/>
         <source>Sign-in failed, HTTP %1.</source>
         <translation>Մուտքը չհաջողվեց, HTTP %1։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="74"/>
+        <location filename="../src/apiclient.cpp" line="217"/>
         <source>Sign-in failed, HTTP %1 (%2).</source>
         <translation>Մուտքը չհաջողվեց, HTTP %1 (%2)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="150"/>
+        <location filename="../src/apiclient.cpp" line="133"/>
         <source>The server returned an unexpected response.</source>
         <translation>Սերվերը վերադարձրեց անսպասելի պատասխան։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="177"/>
+        <location filename="../src/apiclient.cpp" line="160"/>
         <source>available (up)</source>
         <translation>հասանելի է (up)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="179"/>
+        <location filename="../src/apiclient.cpp" line="162"/>
         <source>not configured (skipped)</source>
         <translation>կարգավորված չէ (skipped)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="182"/>
+        <location filename="../src/apiclient.cpp" line="58"/>
         <source>unavailable (down)</source>
         <translation>անհասանելի է (down)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="183"/>
+        <location filename="../src/apiclient.cpp" line="59"/>
         <source>unavailable (down, %1)</source>
         <translation>անհասանելի է (down, %1)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="216"/>
+        <location filename="../src/apiclient.cpp" line="246"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Սերվերը պատասխանեց HTTP %1, բազայի վիճակն անհայտ է։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="219"/>
+        <location filename="../src/apiclient.cpp" line="249"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Սերվերը պատասխանեց անսպասելի տվյալներով։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="222"/>
+        <location filename="../src/apiclient.cpp" line="252"/>
         <source>Server</source>
         <translation>Սերվեր</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="226"/>
+        <location filename="../src/apiclient.cpp" line="256"/>
         <source>responded</source>
         <translation>պատասխանեց</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="228"/>
+        <location filename="../src/apiclient.cpp" line="258"/>
         <source>unknown</source>
         <translation>անհայտ</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="229"/>
+        <location filename="../src/apiclient.cpp" line="259"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1՝ աշխատում է (%2)։ Բազա՝ %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="231"/>
+        <location filename="../src/apiclient.cpp" line="261"/>
         <source>. Version %1</source>
         <translation>։ Տարբերակ %1</translation>
     </message>
@@ -383,7 +428,7 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/uilanguage.cpp" line="119"/>
+        <location filename="../src/uilanguage.cpp" line="128"/>
         <location filename="../src/mainwindow.cpp" line="172"/>
         <source>Hotel</source>
         <translation>Հյուրանոց</translation>

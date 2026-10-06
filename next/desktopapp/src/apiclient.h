@@ -66,7 +66,10 @@ struct SessionResult {
     ApiError error;
 };
 
-// Maps a server error code, HTTP status, or network error to the current UI language.
+// Maps a server error code and HTTP status to the current UI language.
+QString loginErrorMessage(int httpStatus, const QString &code);
+
+// Maps a stored ApiError (network, HTTP, or URL parse) to the current UI language.
 // URL-parse failures (reparseBaseUrl) keep the message already stored in userMessage.
 QString userMessageFor(const ApiError &error);
 

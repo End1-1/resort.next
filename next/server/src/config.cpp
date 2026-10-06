@@ -109,6 +109,93 @@ bool parseDsn(const QString &text, DatabaseTarget *target, QString *error)
     return true;
 }
 
+bool mysqlValuesPresent(const DatabaseResolveInput &input)
+{
+    return !input.mysqlHost.isEmpty() || !input.mysqlPort.isEmpty() || !input.mysqlSchema.isEmpty()
+        || !input.mysqlUser.isEmpty() || !input.mysqlPassword.isEmpty();
+}
+
+} // namespace
+
+DatabaseResolveResult resolveDatabaseTarget(const DatabaseResolveInput &input)
+{
+    DatabaseResolveResult result;
+    const bool mysql = mysqlValuesPresent(input);
+    const QString dsn = input.dsn.trimmed();
+    const bool legacy = !dsn.isEmpty();
+
+    if (mysql) {
+        if (legacy)
+            result.notice = DatabaseConfigNotice::MysqlOverridesDsn;
+        if (input.mysqlHost.isEmpty()) {
+            result.ok = false;
+            result.error = QStringLiteral("mysql_host is required");
+            return result;
+        }
+        if (input.mysqlSchema.isEmpty()) {
+            result.ok = false;
+            result.error = QStringLiteral("mysql_schema is required");
+            return result;
+        }
+        if (input.mysqlUser.isEmpty()) {
+            result.ok = false;
+            result.error = QStringLiteral("mysql_user is required");
+            return result;
+        }
+        int port = 3306;
+        if (!input.mysqlPort.isEmpty()) {
+            bool ok = false;
+            const int parsed = input.mysqlPort.toInt(&ok);
+            if (!ok || parsed < 1 || parsed > 65535) {
+                result.ok = false;
+                result.error = QStringLiteral("mysql_port has an invalid port");
+                return result;
+            }
+            port = parsed;
+        }
+        result.target.configured = true;
+        result.target.host = input.mysqlHost;
+        result.target.port = port;
+        result.target.database = input.mysqlSchema;
+        result.target.user = input.mysqlUser;
+        result.target.password = input.mysqlPassword;
+        return result;
+    }
+
+    if (legacy) {
+        result.notice = DatabaseConfigNotice::DeprecatedDsn;
+        QString error;
+        if (!parseDsn(dsn, &result.target, &error)) {
+            result.ok = false;
+            result.error = error;
+        }
+        return result;
+    }
+
+    return result;
+}
+
+QString databaseStartupDetail(const DatabaseTarget &target)
+{
+    if (!target.configured)
+        return QStringLiteral("not configured");
+    return QStringLiteral("%1:%2/%3 user=%4")
+        .arg(target.host, QString::number(target.port), target.database, target.user);
+}
+
+QString databaseConfigNoticeLine(DatabaseConfigNotice notice)
+{
+    if (notice == DatabaseConfigNotice::DeprecatedDsn) {
+        return QStringLiteral(
+            "hotel-api database: dsn is deprecated; use mysql_host, mysql_port, mysql_schema, mysql_user, mysql_password");
+    }
+    if (notice == DatabaseConfigNotice::MysqlOverridesDsn)
+        return QStringLiteral("hotel-api database: mysql_* overrides dsn");
+    return QString();
+}
+
+namespace {
+
 QString nonEmptyEnv(const char *name)
 {
     const QString value = qEnvironmentVariable(name).trimmed();
@@ -129,18 +216,46 @@ QStringList defaultConfigCandidates()
     return candidates;
 }
 
-bool readIniFile(const QString &path, QString *listen, QString *dsn, QString *websocket, QString *error)
+struct IniFields {
+    QString listen = QStringLiteral("127.0.0.1:8080");
+    QString websocket;
+    QString mysqlHost;
+    QString mysqlPort;
+    QString mysqlSchema;
+    QString mysqlUser;
+    QString mysqlPassword;
+    QString dsn;
+};
+
+bool readIniFile(const QString &path, IniFields *fields, QString *error)
 {
     HotelIniValues values;
     if (!readHotelIniFile(path, &values, error))
         return false;
     if (values.hasListen)
-        *listen = values.listen;
-    if (values.hasDsn)
-        *dsn = values.dsn;
+        fields->listen = values.listen;
     if (values.hasWsListen)
-        *websocket = values.wsListen;
+        fields->websocket = values.wsListen;
+    if (values.hasMysqlHost)
+        fields->mysqlHost = values.mysqlHost;
+    if (values.hasMysqlPort)
+        fields->mysqlPort = values.mysqlPort;
+    if (values.hasMysqlSchema)
+        fields->mysqlSchema = values.mysqlSchema;
+    if (values.hasMysqlUser)
+        fields->mysqlUser = values.mysqlUser;
+    if (values.hasMysqlPassword)
+        fields->mysqlPassword = values.mysqlPassword;
+    if (values.hasDsn)
+        fields->dsn = values.dsn;
     return true;
+}
+
+void overlayEnv(const char *name, QString *field)
+{
+    const QString value = nonEmptyEnv(name);
+    if (!value.isEmpty())
+        *field = value;
 }
 
 } // namespace
@@ -150,9 +265,7 @@ ConfigLoadResult loadConfig()
     ConfigLoadResult result;
     result.ok = true;
 
-    QString listen = QStringLiteral("127.0.0.1:8080");
-    QString dsn;
-    QString websocket;
+    IniFields fields;
 
     const QString overridePath = nonEmptyEnv("HOTEL_CONFIG");
     QString chosenPath;
@@ -178,34 +291,44 @@ ConfigLoadResult loadConfig()
 
     if (!chosenPath.isEmpty()) {
         QString error;
-        if (!readIniFile(chosenPath, &listen, &dsn, &websocket, &error)) {
+        if (!readIniFile(chosenPath, &fields, &error)) {
             fail(&result, error);
             return result;
         }
         result.configPath = QDir::toNativeSeparators(chosenPath);
     }
 
-    const QString envListen = nonEmptyEnv("HOTEL_LISTEN");
-    if (!envListen.isEmpty())
-        listen = envListen;
-    const QString envDsn = nonEmptyEnv("HOTEL_DSN");
-    if (!envDsn.isEmpty())
-        dsn = envDsn;
-    const QString envWebsocket = nonEmptyEnv("HOTEL_WS_LISTEN");
-    if (!envWebsocket.isEmpty())
-        websocket = envWebsocket;
+    overlayEnv("HOTEL_LISTEN", &fields.listen);
+    overlayEnv("HOTEL_WS_LISTEN", &fields.websocket);
+    overlayEnv("HOTEL_MYSQL_HOST", &fields.mysqlHost);
+    overlayEnv("HOTEL_MYSQL_PORT", &fields.mysqlPort);
+    overlayEnv("HOTEL_MYSQL_SCHEMA", &fields.mysqlSchema);
+    overlayEnv("HOTEL_MYSQL_USER", &fields.mysqlUser);
+    overlayEnv("HOTEL_MYSQL_PASSWORD", &fields.mysqlPassword);
+    overlayEnv("HOTEL_DSN", &fields.dsn);
 
     QString error;
-    if (!parseListen(listen, &result.config.http, &error, "HOTEL_LISTEN")) {
-        fail(&result, error);
-        return result;
-    }
-    if (!parseDsn(dsn, &result.config.database, &error)) {
+    if (!parseListen(fields.listen, &result.config.http, &error, "HOTEL_LISTEN")) {
         fail(&result, error);
         return result;
     }
 
-    const QString websocketTrimmed = websocket.trimmed();
+    DatabaseResolveInput databaseInput;
+    databaseInput.mysqlHost = fields.mysqlHost;
+    databaseInput.mysqlPort = fields.mysqlPort;
+    databaseInput.mysqlSchema = fields.mysqlSchema;
+    databaseInput.mysqlUser = fields.mysqlUser;
+    databaseInput.mysqlPassword = fields.mysqlPassword;
+    databaseInput.dsn = fields.dsn;
+    const DatabaseResolveResult database = resolveDatabaseTarget(databaseInput);
+    result.databaseNotice = database.notice;
+    if (!database.ok) {
+        fail(&result, database.error);
+        return result;
+    }
+    result.config.database = database.target;
+
+    const QString websocketTrimmed = fields.websocket.trimmed();
     if (!websocketTrimmed.isEmpty()) {
         if (!parseListen(websocketTrimmed, &result.config.websocket, &error, "HOTEL_WS_LISTEN")) {
             fail(&result, error);

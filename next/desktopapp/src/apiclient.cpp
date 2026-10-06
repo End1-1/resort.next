@@ -42,38 +42,21 @@ QString networkUserMessage(QNetworkReply::NetworkError err)
     return QCoreApplication::translate("ApiClient", "Server unavailable.");
 }
 
-QString loginUserMessage(int httpStatus, const QString &code)
+QString databaseDownPhrase(const QString &dbError)
 {
-    if (httpStatus == 401 || code == QLatin1String("unauthorized"))
-        return QCoreApplication::translate("ApiClient", "Incorrect login or password.");
-    if (code == QLatin1String("database_not_configured")) {
-        return QCoreApplication::translate(
-            "ApiClient",
-            "The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.");
-    }
-    if (code == QLatin1String("session_store_unavailable")) {
-        return QCoreApplication::translate(
-            "ApiClient",
-            "The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.");
-    }
-    if (code == QLatin1String("driver_not_loaded")) {
-        return QCoreApplication::translate("ApiClient",
-                                            "The database driver is not loaded on the server (driver_not_loaded).");
-    }
-    if (code == QLatin1String("database_unavailable"))
-        return QCoreApplication::translate("ApiClient", "The database is unavailable (database_unavailable).");
-    if (httpStatus == 400 || code == QLatin1String("invalid_request"))
-        return QCoreApplication::translate("ApiClient", "Invalid request to the server.");
-    if (httpStatus == 404 || code == QLatin1String("not_found"))
-        return QCoreApplication::translate("ApiClient", "The server did not find the sign-in address.");
-    if (httpStatus == 503)
-        return QCoreApplication::translate("ApiClient", "The server is temporarily unavailable (503).");
-    if (httpStatus != 0) {
-        if (code.isEmpty())
-            return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1.").arg(httpStatus);
-        return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1 (%2).").arg(httpStatus).arg(code);
-    }
-    return QCoreApplication::translate("ApiClient", "Server unavailable.");
+    if (dbError == QLatin1String("access_denied"))
+        return QCoreApplication::translate("ApiClient", "access denied (down, access_denied)");
+    if (dbError == QLatin1String("unknown_database"))
+        return QCoreApplication::translate("ApiClient", "database not found (down, unknown_database)");
+    if (dbError == QLatin1String("cannot_connect"))
+        return QCoreApplication::translate("ApiClient", "no connection (down, cannot_connect)");
+    if (dbError == QLatin1String("driver_not_loaded"))
+        return QCoreApplication::translate("ApiClient", "driver not loaded (down, driver_not_loaded)");
+    if (dbError == QLatin1String("connection_failed"))
+        return QCoreApplication::translate("ApiClient", "unavailable (down, connection_failed)");
+    if (dbError.isEmpty())
+        return QCoreApplication::translate("ApiClient", "unavailable (down)");
+    return QCoreApplication::translate("ApiClient", "unavailable (down, %1)").arg(dbError);
 }
 
 QJsonObject objectFrom(const QByteArray &body)
@@ -137,7 +120,7 @@ SessionResult parseLoginReply(QNetworkReply *reply)
     const QJsonObject object = objectFrom(body);
     result.error.code = object.value(QStringLiteral("error")).toString();
     if (result.error.httpStatus != 200) {
-        result.error.userMessage = loginUserMessage(result.error.httpStatus, result.error.code);
+        result.error.userMessage = loginErrorMessage(result.error.httpStatus, result.error.code);
         result.error.technical = result.error.code.isEmpty()
                                       ? QStringLiteral("HTTP %1").arg(result.error.httpStatus)
                                       : result.error.code;
@@ -177,11 +160,8 @@ QString databasePhrase(const HealthStatus &status)
         return QCoreApplication::translate("ApiClient", "available (up)");
     if (status.dbState == QLatin1String("skipped"))
         return QCoreApplication::translate("ApiClient", "not configured (skipped)");
-    if (status.dbState == QLatin1String("down")) {
-        if (status.dbError.isEmpty())
-            return QCoreApplication::translate("ApiClient", "unavailable (down)");
-        return QCoreApplication::translate("ApiClient", "unavailable (down, %1)").arg(status.dbError);
-    }
+    if (status.dbState == QLatin1String("down"))
+        return databaseDownPhrase(status.dbError);
     if (!status.dbState.isEmpty())
         return status.dbState;
     return QString();
@@ -189,13 +169,63 @@ QString databasePhrase(const HealthStatus &status)
 
 } // namespace
 
+QString loginErrorMessage(int httpStatus, const QString &code)
+{
+    if (httpStatus == 401 || code == QLatin1String("unauthorized"))
+        return QCoreApplication::translate("ApiClient", "Incorrect login or password.");
+    if (code == QLatin1String("database_not_configured")) {
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.");
+    }
+    if (code == QLatin1String("session_store_unavailable")) {
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.");
+    }
+    if (code == QLatin1String("driver_not_loaded")) {
+        return QCoreApplication::translate("ApiClient",
+                                            "The database driver is not loaded on the server (driver_not_loaded).");
+    }
+    if (code == QLatin1String("access_denied")) {
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The server refused the database login (access_denied). The MariaDB account was not accepted for this host.");
+    }
+    if (code == QLatin1String("unknown_database")) {
+        return QCoreApplication::translate("ApiClient", "The database was not found on the server (unknown_database).");
+    }
+    if (code == QLatin1String("cannot_connect")) {
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.");
+    }
+    if (code == QLatin1String("connection_failed")) {
+        return QCoreApplication::translate("ApiClient", "The database connection failed (connection_failed).");
+    }
+    if (code == QLatin1String("database_unavailable"))
+        return QCoreApplication::translate("ApiClient", "The database is unavailable (database_unavailable).");
+    if (httpStatus == 400 || code == QLatin1String("invalid_request"))
+        return QCoreApplication::translate("ApiClient", "Invalid request to the server.");
+    if (httpStatus == 404 || code == QLatin1String("not_found"))
+        return QCoreApplication::translate("ApiClient", "The server did not find the sign-in address.");
+    if (httpStatus == 503)
+        return QCoreApplication::translate("ApiClient", "The server is temporarily unavailable (503).");
+    if (httpStatus != 0) {
+        if (code.isEmpty())
+            return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1.").arg(httpStatus);
+        return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1 (%2).").arg(httpStatus).arg(code);
+    }
+    return QCoreApplication::translate("ApiClient", "Server unavailable.");
+}
+
 QString userMessageFor(const ApiError &error)
 {
     if (error.reparseBaseUrl)
         return error.userMessage;
     if (error.httpStatus == 0)
         return networkUserMessage(static_cast<QNetworkReply::NetworkError>(error.networkError));
-    return loginUserMessage(error.httpStatus, error.code);
+    return loginErrorMessage(error.httpStatus, error.code);
 }
 
 QString healthSummary(const HealthStatus &status)

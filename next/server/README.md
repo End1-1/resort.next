@@ -36,14 +36,14 @@ The service binary is `/tmp/hotel-next-build/server/hotel-api`. Building `next/s
 
 ## Run
 
-Default listen address is loopback. No database is contacted until a DSN is set in `hotel-api.ini` or in a non-empty `HOTEL_DSN`.
+Default listen address is loopback. No database is contacted until `mysql_host` and `mysql_schema` are set in `hotel-api.ini` or by non-empty `HOTEL_MYSQL_HOST` and `HOTEL_MYSQL_SCHEMA`.
 
 ```bash
 /tmp/hotel-next-build/server/hotel-api
 curl -sS http://127.0.0.1:8080/health
 ```
 
-`GET /health` with no DSN returns 200 and `"db":{"configured":false,"state":"skipped"}`. With a DSN, the process opens `QMYSQL` (3 second connect timeout) and returns 200 `"state":"up"` or 503 `"state":"down"`. The JSON and the log do not include the URL or the password. Startup logs the config path, or `hotel-api config none`.
+`GET /health` with no database configured returns 200 and `"db":{"configured":false,"state":"skipped"}`. With `mysql_host` and `mysql_schema`, the process opens `QMYSQL` (3 second connect, read, and write timeout) and returns 200 `"state":"up"` or 503 `"state":"down"`. The JSON never includes the password, the host, or the driver text. A failed open logs the MySQL native code and the driver text with the password scrubbed, and sets `db.error` to `access_denied` (1045), `unknown_database` (1049), `cannot_connect` (2002/2003), or `connection_failed`. Startup logs the config path, or `hotel-api config none`, and `hotel-api database 127.0.0.1:3306/hotelnext user=root` (never the password).
 
 | Method and path | Now |
 |-----------------|-----|
@@ -99,19 +99,25 @@ Search order:
 3. On Linux only, `/etc/hotel-api/hotel-api.ini`.
 4. If none of those files exist, built-in defaults: listen `127.0.0.1:8080`, no database, WebSocket off. The log line is `hotel-api config none`.
 
-When a file is read, the log line is `hotel-api config` plus that path. The line never includes the DSN or the password.
+When a file is read, the log line is `hotel-api config` plus that path. The line never includes the password.
 
-The first existing file wins. An unreadable file aborts startup instead of skipping to the next candidate. CMake copies `config/hotel-api.ini.example` next to the built executable under that same example name. Rename or copy it to `hotel-api.ini` in that directory before filling it in. `hotel-api.ini` is gitignored under `next/`. Do not commit a real DSN.
+The first existing file wins. An unreadable file aborts startup instead of skipping to the next candidate. CMake copies `config/hotel-api.ini.example` next to the built executable under that same example name. Rename or copy it to `hotel-api.ini` in that directory before filling it in. `hotel-api.ini` is gitignored under `next/`. Do not commit a real password.
 
 | Key | Environment override | Meaning |
 |-----|----------------------|---------|
 | `listen` | `HOTEL_LISTEN` | `<ip>:<port>` or a bare port (then `127.0.0.1`). Default `127.0.0.1:8080` when the key is absent. Host must be numeric. |
-| `dsn` | `HOTEL_DSN` | `mysql://USER:PASSWORD@HOST:3306/DATABASE`, or empty. Percent-encode `@` and `:` inside the user or password. |
+| `mysql_host` | `HOTEL_MYSQL_HOST` | MariaDB host. Together with `mysql_schema`, this turns the database on. |
+| `mysql_port` | `HOTEL_MYSQL_PORT` | Optional. Default `3306`. |
+| `mysql_schema` | `HOTEL_MYSQL_SCHEMA` | Database name. |
+| `mysql_user` | `HOTEL_MYSQL_USER` | Required once the host and schema are set. Missing user aborts startup. |
+| `mysql_password` | `HOTEL_MYSQL_PASSWORD` | Literal password. `@`, `:`, `%`, `#`, and `;` are not encoded. Never logged. |
 | `ws_listen` | `HOTEL_WS_LISTEN` | Same shape as `listen`. Absent or empty: WebSocket stays off. |
 
-An environment variable overrides the ini key only when it is set and not empty (after trimming). `HOTEL_DSN=` does not clear a `dsn` written in the ini. That keeps a file-first setup working when a shell, Qt Creator kit, or `EnvironmentFile` exports the variable as empty. To ignore the ini database, remove the `dsn` key or point `HOTEL_CONFIG` at a different file. A non-empty variable still wins, including `HOTEL_LISTEN=127.0.0.1:8080` in the env example.
+An environment variable overrides the matching ini key only when it is set and not empty (after trimming). `HOTEL_MYSQL_PASSWORD=` does not clear a password written in the ini. That keeps a file-first setup working when a shell, Qt Creator kit, or `EnvironmentFile` exports the variable as empty. To leave the database off, leave `mysql_host` and `mysql_schema` empty or point `HOTEL_CONFIG` at a different file. A non-empty variable still wins, including `HOTEL_LISTEN=127.0.0.1:8080` in the env example.
 
-A malformed DSN aborts startup. The error text does not repeat the URL.
+Spaces around `=` are allowed (`mysql_user = root`). A value may be wrapped in double quotes when it needs leading or trailing spaces. A missing `mysql_user` while the host and schema are set aborts startup with `mysql_user is required`. The error text does not include the password.
+
+A legacy `dsn` key, or `HOTEL_DSN`, is still accepted when no `mysql_*` value is set, and startup logs `dsn is deprecated`. If both are present, `mysql_*` wins and startup logs `mysql_* overrides dsn`. New files should not use `dsn`.
 
 ## Linux daemon
 
@@ -124,7 +130,7 @@ Compiled only into the Windows binary:
 - Started by the Service Control Manager: service name `HotelApi`, display name `Hotel API`.
 - `hotel-api --install` registers that service (elevated). `hotel-api --uninstall` removes it. Stop it before uninstall.
 - `hotel-api --console`, or any start that is not the SCM, runs the same listeners in the foreground.
-- The service looks for `hotel-api.ini` next to `hotel-api.exe`. It does not look in `System32`. A non-empty `HOTEL_CONFIG` replaces that path. A non-empty `HOTEL_LISTEN`, `HOTEL_DSN`, or `HOTEL_WS_LISTEN` in the system environment overrides the matching ini key.
+- The service looks for `hotel-api.ini` next to `hotel-api.exe`. It does not look in `System32`. A non-empty `HOTEL_CONFIG` replaces that path. A non-empty `HOTEL_LISTEN`, `HOTEL_WS_LISTEN`, or `HOTEL_MYSQL_HOST` / `HOTEL_MYSQL_PORT` / `HOTEL_MYSQL_SCHEMA` / `HOTEL_MYSQL_USER` / `HOTEL_MYSQL_PASSWORD` in the system environment overrides the matching ini key.
 
 ## Contract
 

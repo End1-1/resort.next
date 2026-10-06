@@ -29,7 +29,7 @@
 | Весь новый код миграции только в `next/`: `server`, `desktopapp`, `webport`, `docs`, `dbdump`. `Resort/`, `Server/`, `smarthotel/`, `DB/` не переписывать попутно. | [next/README.md](../README.md) |
 | Схема с нуля, все таблицы с префиксом `nx_`. DDL: [`next/dbdump/migrations/0002_nx_core.sql`](../dbdump/migrations/0002_nx_core.sql). Карта имён: [nx-schema.md](nx-schema.md). Старые таблицы — только образец поведения. Expand/contract из аудита §2.4, который оставлял `f_reservation` / `m_register` хранилищем для `next/`, на этот API не действует. | [nx-schema.md](nx-schema.md) |
 | `next/webport` начинается после того, как `next/desktopapp` реально работает. Каталога `webport/` в дереве нет. | ADR |
-| Конфиг сервера: `hotel-api.ini` рядом с exe, на Linux ещё `/etc/hotel-api/hotel-api.ini`, либо полный путь в `HOTEL_CONFIG`. `HOTEL_LISTEN`, `HOTEL_DSN`, `HOTEL_WS_LISTEN` перекрывают ключ ini только если после обрезки пробелов не пустые. | [server-config.md](server-config.md) |
+| Конфиг сервера: `hotel-api.ini` рядом с exe, на Linux ещё `/etc/hotel-api/hotel-api.ini`, либо полный путь в `HOTEL_CONFIG`. Ключи базы: `mysql_host`, `mysql_port` (необязателен, по умолчанию 3306), `mysql_schema`, `mysql_user`, `mysql_password`. Пароль буквальный, без percent-encoding. База включена, когда заданы хост и схема; без пользователя старт с ошибкой. `HOTEL_LISTEN`, `HOTEL_WS_LISTEN` и `HOTEL_MYSQL_HOST` / `PORT` / `SCHEMA` / `USER` / `PASSWORD` перекрывают ключ ini только если после обрезки пробелов не пустые. Старый `dsn` / `HOTEL_DSN` принимается только если нет ни одного непустого `mysql_*`, и в лог пишется deprecation; если заданы оба, побеждают `mysql_*`. | [server-config.md](server-config.md) |
 | Конфиг десктоп-клиента: личный INI, не рядом с exe и не в реестре (ни HKLM, ни HKCU). Windows: `%APPDATA%\Resort\hotel-desktop\hotel-desktop.ini`. Linux: `~/.config/Resort/hotel-desktop/hotel-desktop.ini` (или `$XDG_CONFIG_HOME/...`). Рядом с exe допустим только необязательный `hotel-desktop.ini` на чтение, и только пока личного файла нет. Ключи: `base_url`, `websocket_url`, `last_login`, `language` (`hy` / `en` / `ru`; пусто — язык системы, если он из этих трёх, иначе `ru`). DSN и пароль MariaDB клиенту не выдаются. Пароль и bearer в файл не писать. Комментарий в этом ini — только `;`. | `next/desktopapp/src/appconfig.cpp`, [next/desktopapp/README.md](../desktopapp/README.md) |
 | Языки UI с первого дня: армянский (`hy`), английский (`en`), русский (`ru`). Это обязательно для всех клиентов: десктоп сейчас, `webport` позже. Исходные строки в коде английские. Сервер отдаёт языконезависимые коды ошибок (`database_not_configured` и другие); фразу показывает клиент. Имена справочников (типы номеров и т.п.) в одной колонке `name` для трёх языков не годятся — рекомендация, без смены DDL: [nx-schema.md](nx-schema.md). Идентификаторы, ключи конфига и пути — английские. | этот файл; [nx-schema.md](nx-schema.md) |
 
@@ -66,7 +66,7 @@
 
 Поведение **сейчас** (логин — как после #5, таблица `nx_user`, не `users`; ini сервера — #8; окна клиента — #10):
 
-- `GET /health` — без сессии. Нет DSN: `200`, `db.state=skipped`. DSN есть: проба `QMYSQL` (таймаут 3 с), `200` `up` или `503` `down`. Тело и лог без DSN и пароля.
+- `GET /health` — без сессии. Нет `mysql_host` и `mysql_schema`: `200`, `db.state=skipped`. Ключи заданы: проба `QMYSQL` (таймаут 3 с), `200` `up` или `503` `down`. Тело без пароля. Лог старта называет хост, порт, базу и пользователя, пароль не пишет.
 - `GET /api/v1` — маркер `status=partial`.
 - `POST /api/v1/sessions` — читает `nx_user`, пишет `nx_session`. Пароль в MariaDB не уходит. `password_scheme` должен быть `md5`, хеш — 32 hex MD5 от UTF-8. Таблицу `users` запрос не трогает, хеш не обновляет. Токен в ответе — 64 hex, в базе SHA-256, срок 12 часов UTC. `commands_allowed` ложен, если у роли нет строки `nx_role_permission`; токен всё равно выдаётся. Маршрута команд нет.
 - Bearer на маршрутах **не проверяется**. Клиент умеет слать `Authorization: Bearer`, сервер заголовок не читает. Эндпоинта выхода нет: меню «Выход» только стирает токен из памяти. Строка `nx_session` живёт до срока (12 часов).
@@ -93,7 +93,7 @@
 Агент это не делает сам.
 
 1. Сменить пароли MariaDB на серверах (учётка приложения — не `root`). Раздать станциям новый профиль соединения. Старый пароль из истории git после ротации бесполезен только если он больше нигде не действует.
-2. Прописать DSN в `hotel-api.ini` на машине (или `/etc/hotel-api/`), не в git.
+2. Прописать `mysql_host`, `mysql_schema`, `mysql_user` и `mysql_password` в `hotel-api.ini` на машине (или `/etc/hotel-api/`), не в git. Пароль писать как есть, без `%40`.
 3. Убедиться, что старый UDP-сервер на порту **33110** больше не отвечает паролем. Исходник в дереве уже молчит; живой процесс мог остаться старым бинарником.
 4. Переписывание истории git (force-push, чтобы вычистить секреты из коммитов) — только после отдельного явного согласия. Пока согласия нет.
 
@@ -136,7 +136,7 @@ cmake --build /tmp/hotel-next-build
 curl -sS http://127.0.0.1:8080/health
 ```
 
-Без DSN health отвечает `200` и `db.state=skipped`. Это нормально. Боевой ini в репозиторий не класть: скопировать `hotel-api.ini.example` в `hotel-api.ini` рядом с бинарником и заполнить на машине. Подробности Windows (Qt Creator, служба, `qsqlmysql.dll`, `libmariadb.dll`) — в [server-config.md](server-config.md).
+Без `mysql_host` и `mysql_schema` health отвечает `200` и `db.state=skipped`. Это нормально. Боевой ini в репозиторий не класть: скопировать `hotel-api.ini.example` в `hotel-api.ini` рядом с бинарником и заполнить на машине. Подробности Windows (Qt Creator, служба, `qsqlmysql.dll`, `libmariadb.dll`) — в [server-config.md](server-config.md).
 
 Оконный клиент и консольная заготовка (сначала поднять `hotel-api`):
 

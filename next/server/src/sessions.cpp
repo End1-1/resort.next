@@ -186,7 +186,7 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
     if (!target.configured) {
         return fail(503,
                     "database_not_configured",
-                    "no database configured; set dsn in hotel-api.ini or HOTEL_DSN");
+                    "no database configured; set mysql_host and mysql_schema in hotel-api.ini");
     }
     if (login.isEmpty() || password.isEmpty() || password.size() > kMaxPasswordChars) {
         qInfo("session denied");
@@ -197,13 +197,18 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
 
     MysqlConnection connection(target, connectTimeoutSec);
     if (!connection.opened) {
-        const QString code = connection.failure.isEmpty()
-                                 ? QStringLiteral("database_unavailable")
-                                 : connection.failure;
-        qWarning("session login failed: %s", qPrintable(code));
-        if (code == QLatin1String("driver_not_loaded")) {
+        const QString failure = connection.failure;
+        qWarning("session login failed: %s", qPrintable(failure));
+        // The JSON code is a fixed token. Host, user, and driver text stay in
+        // the connect log written by MysqlConnection, not in this body.
+        if (failure == QLatin1String("driver_not_loaded"))
             return fail(503, "driver_not_loaded", "QMYSQL is not loaded");
-        }
+        if (failure == QLatin1String("access_denied"))
+            return fail(503, "access_denied", "MariaDB refused the configured account");
+        if (failure == QLatin1String("unknown_database"))
+            return fail(503, "unknown_database", "MariaDB database was not found");
+        if (failure == QLatin1String("cannot_connect"))
+            return fail(503, "cannot_connect", "MariaDB did not accept the connection");
         return fail(503, "database_unavailable", "MariaDB did not accept the connection");
     }
 

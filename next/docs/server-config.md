@@ -14,7 +14,7 @@
 
 Комментарий — целая строка: первый непробельный символ `#` или `;`. Знак `#` или `;` внутри значения не отрезается, иначе пароль с этими символами обрежется.
 
-Значение берётся буквально. `%40` не превращается в `@` на этом шаге: это сделает разбор DSN. Если всё значение в двойных кавычках, одна пара кавычек снимается: `"127.0.0.1:8080"` и `127.0.0.1:8080` — одно и то же.
+Значение берётся буквально. `%40` остаётся четырьмя символами `%`, `4`, `0`: пароль больше не кодируется как URL. Если всё значение в двойных кавычках, одна пара кавычек снимается, пробелы внутри сохраняются: `" p@ss "` — это пароль из пробела, `p@ss` и пробела.
 
 Блокнот в режиме «Юникод» пишет UTF-16 (BOM `FF FE` или `FE FF`). Такой файл не читается, в логе:
 
@@ -33,13 +33,13 @@ file is UTF-16; save as UTF-8: D:\build.6.10.2\resort.next\debug\server\hotel-ap
 3. Только Linux: `/etc/hotel-api/hotel-api.ini`.
 4. Ни одного файла нет. Лог: `hotel-api config none`. Слушать `127.0.0.1:8080`, база не настроена, WebSocket выключен.
 
-В логе при успехе одна строка `hotel-api config` и абсолютный путь. В этой строке нет DSN и пароля.
+В логе при успехе одна строка `hotel-api config` и абсолютный путь. В этой строке нет пароля.
 
 ### Qt Creator, Debug, Windows
 
 Рабочий каталог запуска в Kits может быть каталогом исходников. На настройки это не влияет: читается файл рядом с `hotel-api.exe`.
 
-Каталог exe — выход сборки, не `next/server/config/`. У MSVC это обычно папка `Debug` или `Release` внутри build. CMake копирует туда `hotel-api.ini.example` (не боевой ini). Скопируйте его в `hotel-api.ini` в ту же папку и впишите `dsn`.
+Каталог exe — выход сборки, не `next/server/config/`. У MSVC это обычно папка `Debug` или `Release` внутри build. CMake копирует туда `hotel-api.ini.example` (не боевой ini). Скопируйте его в `hotel-api.ini` в ту же папку и впишите `mysql_host`, `mysql_schema`, `mysql_user` и `mysql_password`.
 
 Пока рядом с exe нет `hotel-api.ini` и `HOTEL_CONFIG` пуст, лог будет `hotel-api config none` и `hotel-api database not configured`. `GET /health` при этом отвечает `200` и `"db":{"configured":false,"state":"skipped"}`. Это не обрыв связи с MariaDB.
 
@@ -57,24 +57,27 @@ file is UTF-16; save as UTF-8: D:\build.6.10.2\resort.next\debug\server\hotel-ap
 
 ## Пример
 
-Боевой файл. Пароль сюда подставляется на сервере, в git он не коммитится.
+Боевой файл. Пароль сюда подставляется на сервере, в git он не коммитится. Пробелы вокруг `=` можно ставить, как у `mysql_user`.
 
 ```ini
-# next/docs/server-config.md
 listen=127.0.0.1:8080
 
-# Пароль p@ss:word записан как p%40ss%3Aword
-dsn=mysql://hotel_api:p%40ss%3Aword@127.0.0.1:3306/resort
+mysql_host=127.0.0.1
+mysql_schema=hotelnext
+mysql_user = root
+mysql_password=secret
 
-# Пусто — сокет не поднимается. Порт не должен совпадать с listen.
-ws_listen=
+ws_listen=8081
 ```
 
-Тот же смысл с выключенной базой (health не ходит в MariaDB):
+`ws_listen=8081` — то же, что `127.0.0.1:8081`. `mysql_port` в примере нет, значит порт MariaDB `3306`. Пароль `secret` записан как есть: знаки `@`, `:`, `%`, `#`, `;` в пароле кодировать не нужно.
+
+Тот же смысл с выключенной базой (health не ходит в MariaDB): не пишите `mysql_host` и `mysql_schema`, либо оставьте их пустыми.
 
 ```ini
 listen=127.0.0.1:8080
-dsn=
+mysql_host=
+mysql_schema=
 ws_listen=
 ```
 
@@ -101,51 +104,31 @@ ws_listen=
 
 `0.0.0.0` открывает порт наружу. Для приёмной машины без отдельного файрвола оставляйте `127.0.0.1`.
 
-## Ключ `dsn`
+## Ключи MariaDB
 
-Строка подключения MariaDB. Переменная перекрытия: `HOTEL_DSN`.
+База настроена, когда после обрезки пробелов непусты и `mysql_host`, и `mysql_schema`. Тогда обязателен и `mysql_user`: без него процесс не слушает порт. `mysql_password` может быть пустым. `mysql_port` необязателен, пустое значение и отсутствие ключа значат `3306`.
 
-Пустая строка и отсутствующий ключ значат одно: база не настроена. `GET /health` даёт `200`, `db.state=skipped`. `POST /api/v1/sessions` даёт `503` и `error` `database_not_configured`. В логе: `hotel-api database not configured`.
+| Ключ | Переменная | Смысл |
+|------|------------|--------|
+| `mysql_host` | `HOTEL_MYSQL_HOST` | Хост MariaDB, как его видит процесс. Для TCP на этой машине обычно `127.0.0.1`. |
+| `mysql_port` | `HOTEL_MYSQL_PORT` | Порт от 1 до 65535. Нет ключа — `3306`. |
+| `mysql_schema` | `HOTEL_MYSQL_SCHEMA` | Имя базы, например `hotelnext`. |
+| `mysql_user` | `HOTEL_MYSQL_USER` | Пользователь MariaDB. |
+| `mysql_password` | `HOTEL_MYSQL_PASSWORD` | Пароль буквально. В лог не пишется. |
 
-Формат:
+Значение не проходит через URL. Пароль `p@ss:w%rd#;x` в файле выглядит так же. `#` и `;` внутри значения не начинают комментарий: комментарий — только целая строка. Пробелы по краям пароля сохраняются, если значение в кавычках: `mysql_password=" p@ss "`.
 
-```text
-mysql://USER:PASSWORD@HOST:PORT/DATABASE
-```
+Пустые `mysql_host` и `mysql_schema` (или ключей нет) — база не настроена. `GET /health` даёт `200`, `db.state=skipped`. `POST /api/v1/sessions` даёт `503` и `error` `database_not_configured`. В логе: `hotel-api database not configured`.
 
-Схема только `mysql`. Порт можно не писать, тогда он `3306`. Имя базы — один сегмент пути, без второго `/`. Знаки `?` и `#` запрещены: `HOTEL_DSN must not include a query or fragment`.
+Если задан хост или схема, а второго нет, старт обрывается: `mysql_host is required` или `mysql_schema is required`. Нет пользователя при заданных хосте и схеме: `mysql_user is required`. Порт не число или вне 1…65535: `mysql_port has an invalid port`. В тексте ошибки нет пароля.
 
-Разбор обрывает процесс до открытия порта. Текст ошибки не содержит введённую строку.
-
-| Запись | Результат |
-|--------|-----------|
-| `mysql://hotel_api:secret@127.0.0.1:3306/resort` | хост `127.0.0.1`, порт `3306`, база `resort` |
-| `mysql://hotel_api:secret@127.0.0.1/resort` | порт по умолчанию `3306` |
-| `mysql://127.0.0.1:3306/resort` | синтаксис принят, пользователь пустой; MariaDB ответит отказом уже на соединении |
-| пусто | база выключена, это не ошибка разбора |
-| `mariadb://user:secret@127.0.0.1/resort` | `HOTEL_DSN must be mysql://USER:PASSWORD@HOST:PORT/DATABASE` |
-| `mysql://user:secret@/resort` | `HOTEL_DSN is missing a host` |
-| `mysql://user:secret@127.0.0.1:3306` | `HOTEL_DSN is missing a database name` |
-| `mysql://user:secret@127.0.0.1:3306/resort/extra` | `HOTEL_DSN is missing a database name` |
-| `mysql://user:secret@127.0.0.1:3306/resort?charset=utf8mb4` | `HOTEL_DSN must not include a query or fragment` |
-| `mysql://user:secret@127.0.0.1:99999/resort` | `HOTEL_DSN has an invalid port` |
-
-### Знаки `@` и `:` в логине и пароле
-
-`@` отделяет пользователя от хоста, `:` отделяет пользователя от пароля. Сырой пароль `p@ss:word` ломает разбор. Эти два знака в `USER` и `PASSWORD` записываются так:
-
-| Символ | В DSN |
-|--------|-------|
-| `@` | `%40` |
-| `:` | `%3A` |
-
-Пароль `p@ss:word` в файле выглядит как `p%40ss%3Aword`:
+Удачный старт с базой:
 
 ```text
-mysql://hotel_api:p%40ss%3Aword@127.0.0.1:3306/resort
+hotel-api database 127.0.0.1:3306/hotelnext user=root
 ```
 
-Так же кодируются знаки, которые режут URL, если они встречаются в логине или пароле: `/` → `%2F`, `?` → `%3F`, `#` → `%23`, пробел → `%20`, сам знак процента → `%25`. Хост и имя базы пишутся как есть.
+В этой строке есть хост, порт, имя базы и пользователь. Пароля нет. Строка не значит, что MariaDB уже ответила: это только то, что прочитано из ini. Ответ базы виден в `GET /health`.
 
 ## Ключ `ws_listen`
 
@@ -171,10 +154,14 @@ hotel-api websocket 127.0.0.1 8081 path /api/v1/ws
 |------------|------|-----------------|
 | `HOTEL_CONFIG` | путь к файлу, не ключ | поиск по каталогу exe и, на Linux, `/etc` |
 | `HOTEL_LISTEN` | `listen` | остаётся значение из ini или `127.0.0.1:8080` |
-| `HOTEL_DSN` | `dsn` | не стирает `dsn` из ini |
+| `HOTEL_MYSQL_HOST` | `mysql_host` | не стирает хост из ini |
+| `HOTEL_MYSQL_PORT` | `mysql_port` | не стирает порт из ini |
+| `HOTEL_MYSQL_SCHEMA` | `mysql_schema` | не стирает имя базы из ini |
+| `HOTEL_MYSQL_USER` | `mysql_user` | не стирает пользователя из ini |
+| `HOTEL_MYSQL_PASSWORD` | `mysql_password` | не стирает пароль из ini |
 | `HOTEL_WS_LISTEN` | `ws_listen` | не включает и не выключает сокет поверх ini |
 
-`HOTEL_DSN=` в окружении Qt Creator или в systemd `EnvironmentFile` больше не обнуляет пароль, записанный в ini. Чтобы не ходить в базу, очистите ключ `dsn` или укажите другой файл в `HOTEL_CONFIG`.
+`HOTEL_MYSQL_PASSWORD=` в окружении Qt Creator или в systemd `EnvironmentFile` не обнуляет пароль, записанный в ini. Чтобы не ходить в базу, очистите `mysql_host` и `mysql_schema` или укажите другой файл в `HOTEL_CONFIG`.
 
 Непустое значение побеждает файл целиком по этому ключу. В `config/hotel-api.env.example` строка `HOTEL_LISTEN=127.0.0.1:8080` не пустая, поэтому при подключённом env-файле адрес берётся из неё, а не из ini.
 
@@ -190,21 +177,37 @@ hotel-api http 127.0.0.1 8080
 hotel-api database not configured
 ```
 
-Файл с DSN, сокет выключен:
+Файл с ключами MariaDB, сокет выключен:
 
 ```text
 hotel-api config C:\hotel-api\hotel-api.ini
 hotel-api http 127.0.0.1 8080
-hotel-api database configured
+hotel-api database 127.0.0.1:3306/hotelnext user=root
 ```
 
-На Linux путь будет вида `/etc/hotel-api/hotel-api.ini`. Слова `configured` / `not configured` говорят только о том, разобран ли DSN. Они не значат, что MariaDB ответила. Ответ базы виден в `GET /health`.
+На Linux путь будет вида `/etc/hotel-api/hotel-api.ini`. Строка `hotel-api database` называет хост, порт, базу и пользователя. Пароля в ней нет. Она не значит, что MariaDB ответила. Ответ базы виден в `GET /health`.
+
+### Старый ключ `dsn`
+
+Новый файл его не содержит. Если ключа `mysql_*` с непустым значением нет, непустой `dsn` или непустой `HOTEL_DSN` ещё принимается, и в лог пишется:
+
+```text
+hotel-api database: dsn is deprecated; use mysql_host, mysql_port, mysql_schema, mysql_user, mysql_password
+```
+
+Если заданы и ключи `mysql_*`, и `dsn` / `HOTEL_DSN`, побеждают `mysql_*`, а в логе:
+
+```text
+hotel-api database: mysql_* overrides dsn
+```
+
+Пароль в этих двух строках не печатается. В старом `dsn` знаки `@` и `:` в пароле по-прежнему надо было писать как `%40` и `%3A`. В `mysql_password` этого делать не нужно.
 
 ## Типичные сбои
 
-### Кривой DSN или `listen` — процесс не слушает порт
+### Кривые `listen` или ключи MariaDB — процесс не слушает порт
 
-В логе сначала путь файла (если файл открылся), затем одна строка ошибки из таблиц выше. Код выхода 1. HTTP нет, чинить нечего через `/health`. В тексте ошибки нет пароля и нет самой строки DSN.
+В логе сначала путь файла (если файл открылся), затем одна строка ошибки. Код выхода 1. HTTP нет, чинить нечего через `/health`. В тексте ошибки нет пароля.
 
 `HOTEL_CONFIG` указывает в пустоту:
 
@@ -255,19 +258,38 @@ line 5: unknown key "listn": C:\hotel-api\hotel-api.ini
 
 На Linux пакет `libqt6sql6-mysql` ставит `libqsqlmysql.so` в каталог плагинов Qt. Отдельный `libmariadb.dll` там не нужен; клиентская библиотека приходит из пакета. Без пакета `/health` даёт тот же `driver_not_loaded`.
 
-### База не ответила — `503`, `connection_failed`
+### База не ответила — `503`
 
-Плагин есть, DSN разобран, соединение не открылось. Таймаут 3 секунды.
+Плагин есть, ключи MariaDB прочитаны, `db.open()` не прошёл. Таймаут подключения, чтения и записи — 3 секунды (`MYSQL_OPT_CONNECT_TIMEOUT`, `MYSQL_OPT_READ_TIMEOUT`, `MYSQL_OPT_WRITE_TIMEOUT`). Эти опции понимает MariaDB Connector/C 10.x и 11.x, в том числе на Windows. `MYSQL_SET_CHARSET_NAME` в опции не ставится: драйвер Qt её игнорирует, кодировка включается командой `SET NAMES utf8mb4` уже после успешного открытия.
 
-`/health`:
+Соединение создаётся на потоке HTTP-обработчика, с уникальным именем `mysql-<uuid>`, и снимается в деструкторе. Это не общая «default connection» и не чужой поток. Такое имя само по себе `connection_failed` не даёт.
 
-```json
-{"status":"degraded","service":"hotel-api","version":"0.3.0","db":{"configured":true,"state":"down","error":"connection_failed"}}
+В лог пишется номер ошибки MariaDB и текст драйвера. Пароль в эту строку не попадает: если он встретился в тексте, на его месте `***`. Хост, порт, имя базы и пользователь в логе есть. В JSON их нет — только короткий код.
+
+Пример строки при отказе в доступе (1045):
+
+```text
+database connect failed: code=access_denied native=1045 host=127.0.0.1 port=3306 database=hotelnext user=hotel_api driver=Access denied for user 'hotel_api'@'127.0.0.1' (using password: YES) server=Access denied for user 'hotel_api'@'127.0.0.1' (using password: YES)
+database probe failed: access_denied
 ```
 
-`POST /api/v1/sessions` в этом состоянии: `503`, `error` `database_unavailable`.
+`/health` в том же случае:
 
-Сюда попадает недоступный хост, неверный порт, отказ в пароле, несуществующая база, файрвол. Тело ответа и лог не печатают DSN, поэтому по тексту не отличить «неверный пароль» от «порт закрыт». Проверка — `mariadb` с той же учётной записью с этой машины.
+```json
+{"status":"degraded","service":"hotel-api","version":"0.3.0","db":{"configured":true,"state":"down","error":"access_denied"}}
+```
+
+`POST /api/v1/sessions` отвечает `503` с тем же машинным кодом в поле `error` (`access_denied`, `unknown_database` или `cannot_connect`). Текст `message` общий, без хоста и без пароля. Номер, которому нет отдельного кода, по-прежнему даёт в `/health` `connection_failed`, а на входе `database_unavailable`.
+
+| Номер MariaDB | Код в `/health` и во входе | Что проверить |
+|---------------|----------------------------|---------------|
+| 1045 | `access_denied` | Учётка и хост. `'hotel_api'@'127.0.0.1'` и `'hotel_api'@'localhost'` — разные пользователи. Права, выданные на `localhost` (сокет или именованный канал), TCP на `127.0.0.1` не покрывают. Другие программы при этом могут входить, а этот хост получает Access denied. Нужен пользователь именно для `mysql_host`, с правом на базу `mysql_schema`. |
+| 1049 | `unknown_database` | Базы из `mysql_schema` нет. Создать её и применить `next/dbdump/migrations/0002_nx_core.sql`. |
+| 2003 | `cannot_connect` | До порта никто не принял TCP: служба не запущена, слушает только сокет или именованный канал, другой порт, файрвол. |
+| 2002 | `cannot_connect` | Клиент не открыл локальный сокет или канал. Для хоста `127.0.0.1` обычно приходит 2003, не 2002. |
+| другой | `connection_failed` в `/health`, `database_unavailable` на входе | Смотреть `native=` и `driver=` в логе. |
+
+Строка Windows `nlansp_c.dll` с кодом `8007277C` («No such service is known») — это Winsock NLA (Network Location Awareness), Win32 `WSASERVICE_NOT_FOUND` (10108). Так бывает, когда служба NLA не запущена и провайдер имён не загрузился. Это не номер MariaDB и не причина `connection_failed`.
 
 Пока в базе нет таблиц `nx_user` / `nx_session`, health может быть `up`, а логин отвечает `503` `session_store_unavailable`. Это уже схема, не ini. Миграция: `next/dbdump/migrations/0002_nx_core.sql`.
 
@@ -284,4 +306,4 @@ sudo chmod 640 /etc/hotel-api/hotel-api.ini
 
 Владелец читает и пишет, группа `hotel-api` читает, остальные не видят пароль. Каталог `/etc/hotel-api` должен пускать эту группу на чтение и вход (`chmod 750`, группа `hotel-api`).
 
-Windows-служба по умолчанию — LocalSystem. Этой учётке нужны чтение exe, ini, `libmariadb.dll` и `sqldrivers\qsqlmysql.dll`. Если вход в службу сменён на доменную или локальную учётку, те же права чтения выдаются ей, и MariaDB должна принимать соединение с этой машины под пользователем из `dsn`. Пароль в ini лежит открытым текстом: каталог сборки Qt Creator для службы не используется, а сам файл не синхронизируется в git.
+Windows-служба по умолчанию — LocalSystem. Этой учётке нужны чтение exe, ini, `libmariadb.dll` и `sqldrivers\qsqlmysql.dll`. Если вход в службу сменён на доменную или локальную учётку, те же права чтения выдаются ей, и MariaDB должна принимать соединение с этой машины под пользователем из `mysql_user`. Пароль в ini лежит открытым текстом: каталог сборки Qt Creator для службы не используется, а сам файл не синхронизируется в git.

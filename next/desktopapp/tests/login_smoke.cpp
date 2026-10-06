@@ -62,6 +62,7 @@ private slots:
     void emptyLoginDoesNotCallServer();
     void unreachableServerMessage();
     void loginShowsDatabaseNotConfigured();
+    void mapsDatabaseConnectCodes();
 };
 
 void LoginSmoke::initTestCase()
@@ -313,12 +314,18 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     QTemporaryDir configDir;
     QVERIFY(configDir.isValid());
     const QString iniPath = configDir.filePath(QStringLiteral("hotel-api.ini"));
-    QVERIFY(writeText(iniPath, "listen=127.0.0.1:18080\ndsn=\nws_listen=127.0.0.1:18081\n"));
+    QVERIFY(writeText(iniPath,
+                      "listen=127.0.0.1:18080\nmysql_host=\nmysql_schema=\nws_listen=127.0.0.1:18081\n"));
 
     QProcess server;
     server.setProcessChannelMode(QProcess::SeparateChannels);
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.remove(QStringLiteral("HOTEL_DSN"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_HOST"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_PORT"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_SCHEMA"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_USER"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_PASSWORD"));
     env.remove(QStringLiteral("HOTEL_WS_LISTEN"));
     env.insert(QStringLiteral("HOTEL_CONFIG"), iniPath);
     env.insert(QStringLiteral("HOTEL_LISTEN"), QStringLiteral("127.0.0.1:18080"));
@@ -540,6 +547,39 @@ void LoginSmoke::armenianTextIsNotBoxes()
         QFont ui = QApplication::font();
         QVERIFY(paint(ui) != paint(broken));
     }
+}
+
+void LoginSmoke::mapsDatabaseConnectCodes()
+{
+    HotelLocale::applyCode(QStringLiteral("ru"));
+    const QString denied = loginErrorMessage(503, QStringLiteral("access_denied"));
+    QVERIFY(denied.contains(QStringLiteral("access_denied")));
+    QVERIFY(denied.contains(QStringLiteral("Отказ в доступе")));
+
+    const QString missing = loginErrorMessage(503, QStringLiteral("unknown_database"));
+    QVERIFY(missing.contains(QStringLiteral("unknown_database")));
+    QVERIFY(missing.contains(QStringLiteral("не найдена")));
+
+    const QString offline = loginErrorMessage(503, QStringLiteral("cannot_connect"));
+    QVERIFY(offline.contains(QStringLiteral("cannot_connect")));
+    QVERIFY(offline.contains(QStringLiteral("не подключился")));
+
+    QVERIFY(loginErrorMessage(503, QStringLiteral("database_unavailable")).contains(QStringLiteral("недоступна")));
+    QVERIFY(loginErrorMessage(503, QStringLiteral("connection_failed")).contains(QStringLiteral("connection_failed")));
+
+    HealthStatus health;
+    health.reachable = true;
+    health.httpStatus = 503;
+    health.service = QStringLiteral("hotel-api");
+    health.serviceStatus = QStringLiteral("degraded");
+    health.dbConfigured = true;
+    health.dbState = QStringLiteral("down");
+    health.dbError = QStringLiteral("access_denied");
+    const QString summary = healthSummary(health);
+    QVERIFY2(summary.contains(QStringLiteral("отказ в доступе")), qPrintable(summary));
+    QVERIFY(summary.contains(QStringLiteral("access_denied")));
+    QVERIFY(!summary.contains(QStringLiteral("password")));
+    HotelLocale::applyCode(QStringLiteral("en"));
 }
 
 int main(int argc, char **argv)

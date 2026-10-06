@@ -103,7 +103,7 @@ Do not commit `HOTEL_PASSWORD`.
 
 На Linux при заданном `XDG_CONFIG_HOME` каталог начинается с него, а не с `~/.config`. Имя организации для `QSettings` — `Resort`, имя приложения — `hotel-desktop`. Формат файла всё равно INI по полному пути: на Windows это не `HKCU` и не `HKLM`.
 
-Окно «Настройки подключения» показывает этот путь целиком. Кнопка «Проверить соединение» вызывает `GET /health` по адресу из полей (ещё не обязательно сохранённому) и пишет состояние сервера и базы: `up`, `down`, `skipped`, `driver_not_loaded`.
+Окно «Настройки подключения» показывает этот путь целиком. Кнопка «Проверить соединение» вызывает `GET /health` по адресу из полей (ещё не обязательно сохранённому) и пишет состояние сервера и базы: `up`, `down`, `skipped`, `driver_not_loaded`, `access_denied`, `unknown_database`, `cannot_connect`, `connection_failed`.
 
 Комментарий в рукописном ini — целая строка с `;`. На Qt 6.10 `QSettings` не считает `#` комментарием, и файл с такой строкой не читается (тот же дефект, из‑за которого сервер ушёл с `QSettings`). Файл, который программа записывает сама, комментариев не содержит.
 
@@ -139,7 +139,7 @@ Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedde
 3. **Сессия → Выход.** Токен стирается из памяти, снова окно входа. Метода logout в `hotel-api` пока нет: строка `nx_session` живёт до срока (12 часов) или пока её не уберут на сервере. Закрытие окна завершает процесс и тоже теряет токен.
 4. Смена адреса сервера в настройках, пока сеанс открыт, тоже стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
 
-Сообщения входа:
+Сообщения входа (код с сервера, фраза на языке окна):
 
 | Ответ | Код | Смысл |
 |-------|-----|--------|
@@ -148,13 +148,17 @@ Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedde
 | 503 | `database_not_configured` | база не настроена |
 | 503 | `session_store_unavailable` | хранилище сессий недоступно |
 | 503 | `driver_not_loaded` | драйвер базы не загружен |
+| 503 | `access_denied` | учётная запись MariaDB не принята для этого хоста |
+| 503 | `unknown_database` | база на сервере не найдена |
+| 503 | `cannot_connect` | сервер не дождался MariaDB на порту |
+| 503 | `connection_failed` | соединение с базой не установлено |
 | 503 | `database_unavailable` | база недоступна |
 
-Фраза зависит от языка окна. Пустой `HOTEL_DSN` даёт код `database_not_configured`: `/health` при этом `db.state=skipped`, а вход — 503.
+Фраза зависит от языка окна. Пустые `mysql_host` и `mysql_schema` на сервере дают код `database_not_configured`: `/health` при этом `db.state=skipped`, а вход — 503.
 
 ## Smoke test
 
-`hotel-desktop-login-smoke` checks address parsing, the INI rules, the main-window menu, that the `hy` and `ru` catalogs have no unfinished strings and that all three `.qm` files load, and (when `HOTEL_API_BIN` is set) a real login against `hotel-api` with an empty DSN. The test points `XDG_CONFIG_HOME` at a temp directory so it does not write your settings. Offscreen is the default platform when `QT_QPA_PLATFORM` is unset.
+`hotel-desktop-login-smoke` checks address parsing, the INI rules, the main-window menu, that the `hy` and `ru` catalogs have no unfinished strings and that all three `.qm` files load, and (when `HOTEL_API_BIN` is set) a real login against `hotel-api` with empty `mysql_host` and `mysql_schema`. The test points `XDG_CONFIG_HOME` at a temp directory so it does not write your settings. Offscreen is the default platform when `QT_QPA_PLATFORM` is unset.
 
 ```bash
 cmake -S next -B /tmp/hotel-next-build -G Ninja
