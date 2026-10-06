@@ -2,6 +2,7 @@
 
 #include "urlutil.h"
 
+#include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
@@ -18,57 +19,61 @@ QString networkUserMessage(QNetworkReply::NetworkError err)
     switch (err) {
     case QNetworkReply::TimeoutError:
     case QNetworkReply::OperationCanceledError:
-        return QStringLiteral("Превышено время ожидания ответа сервера.");
+        return QCoreApplication::translate("ApiClient", "Timed out waiting for the server.");
     case QNetworkReply::ConnectionRefusedError:
-        return QStringLiteral("Сервер недоступен: соединение отклонено.");
+        return QCoreApplication::translate("ApiClient", "Server unavailable: connection refused.");
     case QNetworkReply::HostNotFoundError:
-        return QStringLiteral("Сервер недоступен: адрес не найден.");
+        return QCoreApplication::translate("ApiClient", "Server unavailable: address not found.");
     case QNetworkReply::RemoteHostClosedError:
-        return QStringLiteral("Сервер недоступен: соединение закрыто.");
+        return QCoreApplication::translate("ApiClient", "Server unavailable: connection closed.");
     case QNetworkReply::SslHandshakeFailedError:
-        return QStringLiteral("Не удалось установить защищённое соединение (TLS).");
+        return QCoreApplication::translate("ApiClient", "Could not establish a secure connection (TLS).");
     case QNetworkReply::ProxyConnectionRefusedError:
     case QNetworkReply::ProxyNotFoundError:
     case QNetworkReply::ProxyTimeoutError:
-        return QStringLiteral("Сервер недоступен: ошибка прокси.");
+        return QCoreApplication::translate("ApiClient", "Server unavailable: proxy error.");
     case QNetworkReply::TemporaryNetworkFailureError:
     case QNetworkReply::NetworkSessionFailedError:
     case QNetworkReply::UnknownNetworkError:
-        return QStringLiteral("Сервер недоступен.");
+        return QCoreApplication::translate("ApiClient", "Server unavailable.");
     default:
         break;
     }
-    return QStringLiteral("Сервер недоступен.");
+    return QCoreApplication::translate("ApiClient", "Server unavailable.");
 }
 
 QString loginUserMessage(int httpStatus, const QString &code)
 {
     if (httpStatus == 401 || code == QLatin1String("unauthorized"))
-        return QStringLiteral("Неверный логин или пароль.");
+        return QCoreApplication::translate("ApiClient", "Incorrect login or password.");
     if (code == QLatin1String("database_not_configured")) {
-        return QStringLiteral(
-            "База не настроена (database_not_configured). Вход невозможен, пока на сервере не задано подключение к MariaDB.");
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.");
     }
     if (code == QLatin1String("session_store_unavailable")) {
-        return QStringLiteral(
-            "Хранилище сессий недоступно (session_store_unavailable). На сервере нет таблиц nx_user и nx_session или сессия не записалась.");
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.");
     }
-    if (code == QLatin1String("driver_not_loaded"))
-        return QStringLiteral("Драйвер базы данных не загружен на сервере (driver_not_loaded).");
+    if (code == QLatin1String("driver_not_loaded")) {
+        return QCoreApplication::translate("ApiClient",
+                                            "The database driver is not loaded on the server (driver_not_loaded).");
+    }
     if (code == QLatin1String("database_unavailable"))
-        return QStringLiteral("База данных недоступна (database_unavailable).");
+        return QCoreApplication::translate("ApiClient", "The database is unavailable (database_unavailable).");
     if (httpStatus == 400 || code == QLatin1String("invalid_request"))
-        return QStringLiteral("Некорректный запрос к серверу.");
+        return QCoreApplication::translate("ApiClient", "Invalid request to the server.");
     if (httpStatus == 404 || code == QLatin1String("not_found"))
-        return QStringLiteral("Сервер не нашёл адрес входа.");
+        return QCoreApplication::translate("ApiClient", "The server did not find the sign-in address.");
     if (httpStatus == 503)
-        return QStringLiteral("Сервер временно недоступен (503).");
+        return QCoreApplication::translate("ApiClient", "The server is temporarily unavailable (503).");
     if (httpStatus != 0) {
         if (code.isEmpty())
-            return QStringLiteral("Ошибка входа, HTTP %1.").arg(httpStatus);
-        return QStringLiteral("Ошибка входа, HTTP %1 (%2).").arg(httpStatus).arg(code);
+            return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1.").arg(httpStatus);
+        return QCoreApplication::translate("ApiClient", "Sign-in failed, HTTP %1 (%2).").arg(httpStatus).arg(code);
     }
-    return QStringLiteral("Сервер недоступен.");
+    return QCoreApplication::translate("ApiClient", "Server unavailable.");
 }
 
 QJsonObject objectFrom(const QByteArray &body)
@@ -84,6 +89,7 @@ ApiError transportError(QNetworkReply *reply)
 {
     ApiError error;
     error.transportFailure = true;
+    error.networkError = int(reply->error());
     error.timedOut = reply->error() == QNetworkReply::TimeoutError
         || reply->error() == QNetworkReply::OperationCanceledError;
     error.userMessage = networkUserMessage(reply->error());
@@ -141,7 +147,7 @@ SessionResult parseLoginReply(QNetworkReply *reply)
     const QString token = object.value(QStringLiteral("token")).toString();
     const QJsonValue userValue = object.value(QStringLiteral("user"));
     if (token.isEmpty() || !userValue.isObject()) {
-        result.error.userMessage = QStringLiteral("Сервер вернул неожиданный ответ.");
+        result.error.userMessage = QCoreApplication::translate("ApiClient", "The server returned an unexpected response.");
         result.error.technical = QStringLiteral("session response missing token or user");
         return result;
     }
@@ -168,13 +174,13 @@ SessionResult parseLoginReply(QNetworkReply *reply)
 QString databasePhrase(const HealthStatus &status)
 {
     if (status.dbState == QLatin1String("up"))
-        return QStringLiteral("доступна (up)");
+        return QCoreApplication::translate("ApiClient", "available (up)");
     if (status.dbState == QLatin1String("skipped"))
-        return QStringLiteral("не настроена (skipped)");
+        return QCoreApplication::translate("ApiClient", "not configured (skipped)");
     if (status.dbState == QLatin1String("down")) {
         if (status.dbError.isEmpty())
-            return QStringLiteral("недоступна (down)");
-        return QStringLiteral("недоступна (down, %1)").arg(status.dbError);
+            return QCoreApplication::translate("ApiClient", "unavailable (down)");
+        return QCoreApplication::translate("ApiClient", "unavailable (down, %1)").arg(status.dbError);
     }
     if (!status.dbState.isEmpty())
         return status.dbState;
@@ -183,28 +189,46 @@ QString databasePhrase(const HealthStatus &status)
 
 } // namespace
 
+QString userMessageFor(const ApiError &error)
+{
+    if (error.reparseBaseUrl)
+        return error.userMessage;
+    if (error.httpStatus == 0)
+        return networkUserMessage(static_cast<QNetworkReply::NetworkError>(error.networkError));
+    return loginUserMessage(error.httpStatus, error.code);
+}
+
 QString healthSummary(const HealthStatus &status)
 {
     if (!status.reachable) {
+        if (status.error.reparseBaseUrl && !status.error.userMessage.isEmpty())
+            return status.error.userMessage;
+        if (status.error.transportFailure || status.error.networkError != 0)
+            return userMessageFor(status.error);
         if (!status.error.userMessage.isEmpty())
             return status.error.userMessage;
-        return QStringLiteral("Сервер недоступен.");
+        return QCoreApplication::translate("ApiClient", "Server unavailable.");
     }
 
     const QString db = databasePhrase(status);
     if (db.isEmpty() && status.serviceStatus.isEmpty()) {
-        if (status.httpStatus != 0)
-            return QStringLiteral("Сервер ответил HTTP %1, состояние базы неизвестно.").arg(status.httpStatus);
-        return QStringLiteral("Сервер ответил неожиданным телом.");
+        if (status.httpStatus != 0) {
+            return QCoreApplication::translate("ApiClient", "Server replied HTTP %1; the database state is unknown.")
+                .arg(status.httpStatus);
+        }
+        return QCoreApplication::translate("ApiClient", "Server replied with an unexpected body.");
     }
 
-    QString head = QStringLiteral("Сервер");
+    QString head = QCoreApplication::translate("ApiClient", "Server");
     if (!status.service.isEmpty())
         head += QLatin1Char(' ') + status.service;
-    const QString state = status.serviceStatus.isEmpty() ? QStringLiteral("ответил") : status.serviceStatus;
-    QString text = QStringLiteral("%1: работает (%2). База: %3").arg(head, state, db.isEmpty() ? QStringLiteral("неизвестно") : db);
+    const QString state = status.serviceStatus.isEmpty()
+                              ? QCoreApplication::translate("ApiClient", "responded")
+                              : status.serviceStatus;
+    const QString dbText = db.isEmpty() ? QCoreApplication::translate("ApiClient", "unknown") : db;
+    QString text = QCoreApplication::translate("ApiClient", "%1: running (%2). Database: %3").arg(head, state, dbText);
     if (!status.version.isEmpty())
-        text += QStringLiteral(". Версия %1").arg(status.version);
+        text += QCoreApplication::translate("ApiClient", ". Version %1").arg(status.version);
     return text;
 }
 
@@ -320,6 +344,7 @@ void ApiClient::requestHealth(int timeoutMs)
     if (!reply) {
         HealthStatus status;
         status.error.transportFailure = true;
+        status.error.reparseBaseUrl = true;
         status.error.userMessage = userMessage;
         status.error.technical = technical;
         QTimer::singleShot(0, this, [this, generation, status]() { finishHealth(generation, status); });
@@ -346,6 +371,7 @@ void ApiClient::requestLogin(const QString &login, const QString &password, int 
     if (!reply) {
         SessionResult result;
         result.error.transportFailure = true;
+        result.error.reparseBaseUrl = true;
         result.error.userMessage = userMessage;
         result.error.technical = technical;
         QTimer::singleShot(0, this, [this, generation, result]() { finishLogin(generation, result); });

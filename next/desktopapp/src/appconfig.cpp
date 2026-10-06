@@ -1,5 +1,7 @@
 #include "appconfig.h"
 
+#include "uilanguage.h"
+
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
@@ -29,7 +31,7 @@ void readInto(DesktopConfig *config, const QString &path, QString *warning)
     settings.setFallbacksEnabled(false);
     if (settings.status() != QSettings::NoError) {
         if (warning) {
-            *warning = QStringLiteral("Не удалось прочитать файл настроек: %1")
+            *warning = QCoreApplication::translate("AppConfig", "Could not read the settings file: %1")
                            .arg(QDir::toNativeSeparators(path));
         }
         return;
@@ -40,6 +42,8 @@ void readInto(DesktopConfig *config, const QString &path, QString *warning)
         config->webSocketUrl = settings.value(QStringLiteral("websocket_url")).toString().trimmed();
     if (settings.contains(QStringLiteral("last_login")))
         config->lastLogin = settings.value(QStringLiteral("last_login")).toString().trimmed();
+    if (settings.contains(QStringLiteral("language")))
+        config->language = HotelLocale::normalizeStored(settings.value(QStringLiteral("language")).toString());
 }
 
 } // namespace
@@ -101,7 +105,7 @@ bool AppConfig::saveTo(const QString &userPath, const DesktopConfig &config, QSt
     const QString directory = info.absolutePath();
     if (directory.isEmpty() || !QDir().mkpath(directory)) {
         if (error) {
-            *error = QStringLiteral("Не удалось создать каталог настроек: %1")
+            *error = QCoreApplication::translate("AppConfig", "Could not create the settings directory: %1")
                          .arg(QDir::toNativeSeparators(directory));
         }
         return false;
@@ -112,11 +116,12 @@ bool AppConfig::saveTo(const QString &userPath, const DesktopConfig &config, QSt
     settings.setValue(QStringLiteral("base_url"), config.baseUrl);
     settings.setValue(QStringLiteral("websocket_url"), config.webSocketUrl);
     settings.setValue(QStringLiteral("last_login"), config.lastLogin);
+    settings.setValue(QStringLiteral("language"), config.language);
     stripSecrets(&settings);
     settings.sync();
     if (settings.status() != QSettings::NoError) {
         if (error) {
-            *error = QStringLiteral("Не удалось записать файл настроек: %1")
+            *error = QCoreApplication::translate("AppConfig", "Could not write the settings file: %1")
                          .arg(QDir::toNativeSeparators(info.absoluteFilePath()));
         }
         return false;

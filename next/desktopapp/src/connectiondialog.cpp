@@ -5,6 +5,7 @@
 
 #include <QDialogButtonBox>
 #include <QDir>
+#include <QEvent>
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QLabel>
@@ -19,7 +20,6 @@ ConnectionDialog::ConnectionDialog(const DesktopConfig &current, QWidget *parent
     , m_initial(current)
     , m_result(current)
 {
-    setWindowTitle(QStringLiteral("Настройки подключения"));
     setMinimumWidth(520);
 
     auto *layout = new QVBoxLayout(this);
@@ -30,29 +30,29 @@ ConnectionDialog::ConnectionDialog(const DesktopConfig &current, QWidget *parent
     m_baseEdit->setPlaceholderText(QStringLiteral("127.0.0.1:8080"));
     m_baseEdit->setClearButtonEnabled(true);
 
-    auto *baseHint = new QLabel(QStringLiteral(
-        "Хост и порт или URL. Сейчас сервер говорит по http; адрес https можно сохранить заранее."));
-    baseHint->setWordWrap(true);
+    m_baseHint = new QLabel;
+    m_baseHint->setWordWrap(true);
 
     m_webSocketEdit = new QLineEdit(current.webSocketUrl);
     m_webSocketEdit->setObjectName(QStringLiteral("webSocketUrlEdit"));
     m_webSocketEdit->setPlaceholderText(QStringLiteral("ws://127.0.0.1:8081"));
     m_webSocketEdit->setClearButtonEnabled(true);
 
-    auto *wsHint = new QLabel(QStringLiteral(
-        "Необязательно. Пусто — состояние только из GET /health. Если путь не указан, подставляется /api/v1/ws."));
-    wsHint->setWordWrap(true);
+    m_wsHint = new QLabel;
+    m_wsHint->setWordWrap(true);
 
-    form->addRow(QStringLiteral("Адрес сервера"), m_baseEdit);
-    form->addRow(QString(), baseHint);
-    form->addRow(QStringLiteral("Адрес WebSocket"), m_webSocketEdit);
-    form->addRow(QString(), wsHint);
+    m_baseLabel = new QLabel;
+    m_wsLabel = new QLabel;
+    form->addRow(m_baseLabel, m_baseEdit);
+    form->addRow(QString(), m_baseHint);
+    form->addRow(m_wsLabel, m_webSocketEdit);
+    form->addRow(QString(), m_wsHint);
 
-    m_checkButton = new QPushButton(QStringLiteral("Проверить соединение"));
+    m_checkButton = new QPushButton;
     m_checkButton->setObjectName(QStringLiteral("checkButton"));
     m_checkButton->setAutoDefault(false);
 
-    m_probeStatus = new QLabel(QStringLiteral("Нажмите «Проверить соединение», чтобы запросить GET /health."));
+    m_probeStatus = new QLabel;
     m_probeStatus->setObjectName(QStringLiteral("probeStatusLabel"));
     m_probeStatus->setWordWrap(true);
     m_probeStatus->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -67,14 +67,12 @@ ConnectionDialog::ConnectionDialog(const DesktopConfig &current, QWidget *parent
     m_hintLabel->setWordWrap(true);
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
-    QPushButton *saveButton = buttons->button(QDialogButtonBox::Save);
-    saveButton->setObjectName(QStringLiteral("saveButton"));
-    saveButton->setText(QStringLiteral("Сохранить"));
-    saveButton->setDefault(true);
-    QPushButton *cancelButton = buttons->button(QDialogButtonBox::Cancel);
-    cancelButton->setObjectName(QStringLiteral("cancelButton"));
-    cancelButton->setText(QStringLiteral("Отмена"));
-    cancelButton->setAutoDefault(false);
+    m_saveButton = buttons->button(QDialogButtonBox::Save);
+    m_saveButton->setObjectName(QStringLiteral("saveButton"));
+    m_saveButton->setDefault(true);
+    m_cancelButton = buttons->button(QDialogButtonBox::Cancel);
+    m_cancelButton->setObjectName(QStringLiteral("cancelButton"));
+    m_cancelButton->setAutoDefault(false);
 
     layout->addLayout(form);
     layout->addWidget(m_checkButton);
@@ -83,11 +81,11 @@ ConnectionDialog::ConnectionDialog(const DesktopConfig &current, QWidget *parent
     layout->addWidget(m_hintLabel);
     layout->addWidget(buttons);
 
-    refreshPathHint();
-
     connect(m_checkButton, &QPushButton::clicked, this, &ConnectionDialog::checkConnection);
     connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+    retranslateUi();
 }
 
 DesktopConfig ConnectionDialog::settings() const
@@ -99,19 +97,18 @@ void ConnectionDialog::refreshPathHint()
 {
     const QString userPath = AppConfig::userFilePath();
     const QString bundledPath = AppConfig::bundledDefaultsPath();
-    m_pathLabel->setText(QStringLiteral("Файл настроек: %1").arg(QDir::toNativeSeparators(userPath)));
+    m_pathLabel->setText(tr("Settings file: %1").arg(QDir::toNativeSeparators(userPath)));
 
-    QString hint = QStringLiteral("Пароль в этот файл не записывается.");
+    const QString passwordHint = tr("The password is not written to this file.");
+    QString hint = passwordHint;
     if (!QFileInfo::exists(userPath)) {
         if (QFileInfo::exists(bundledPath)) {
-            hint = QStringLiteral(
-                       "Личный файл ещё не создан. Начальные значения прочитаны из %1. "
-                       "Этот файл программа не изменяет. Сохранение запишет личный файл выше. %2")
-                       .arg(QDir::toNativeSeparators(bundledPath), hint);
+            hint = tr("The personal file does not exist yet. Initial values were read from %1. "
+                      "The program does not change that file. Saving writes the personal file shown above. %2")
+                       .arg(QDir::toNativeSeparators(bundledPath), passwordHint);
         } else {
-            hint = QStringLiteral(
-                       "Личный файл ещё не создан и будет записан по пути выше при сохранении. %1")
-                       .arg(hint);
+            hint = tr("The personal file does not exist yet and will be written to the path above when you save. %1")
+                       .arg(passwordHint);
         }
     }
     m_hintLabel->setText(hint);
@@ -140,12 +137,18 @@ void ConnectionDialog::checkConnection()
     QString error;
     DesktopConfig draft;
     if (!takeForm(&draft, &error)) {
+        m_urlError = true;
+        m_haveHealth = false;
+        m_checking = false;
         m_probeStatus->setText(error);
         return;
     }
 
+    m_checking = true;
+    m_urlError = false;
+    m_haveHealth = false;
     m_checkButton->setEnabled(false);
-    m_probeStatus->setText(QStringLiteral("Проверка…"));
+    m_probeStatus->setText(tr("Checking…"));
     const int probeId = ++m_probeId;
 
     auto *client = new ApiClient(this);
@@ -164,7 +167,12 @@ void ConnectionDialog::checkConnection()
 
 void ConnectionDialog::showProbe(const HealthStatus &status)
 {
+    m_checking = false;
+    m_urlError = false;
+    m_haveHealth = true;
+    m_lastHealth = status;
     m_checkButton->setEnabled(true);
+    m_checkButton->setText(tr("Check connection"));
     m_probeStatus->setText(healthSummary(status));
 }
 
@@ -175,21 +183,51 @@ void ConnectionDialog::accept()
     if (!takeForm(&next, &error)) {
         QMessageBox box(this);
         box.setIcon(QMessageBox::Warning);
-        box.setWindowTitle(QStringLiteral("Настройки подключения"));
+        box.setWindowTitle(tr("Connection settings"));
         box.setText(error);
-        box.addButton(QStringLiteral("Закрыть"), QMessageBox::AcceptRole);
+        box.addButton(tr("Close"), QMessageBox::AcceptRole);
         box.exec();
         return;
     }
     if (!AppConfig::save(next, &error)) {
         QMessageBox box(this);
         box.setIcon(QMessageBox::Warning);
-        box.setWindowTitle(QStringLiteral("Настройки подключения"));
+        box.setWindowTitle(tr("Connection settings"));
         box.setText(error);
-        box.addButton(QStringLiteral("Закрыть"), QMessageBox::AcceptRole);
+        box.addButton(tr("Close"), QMessageBox::AcceptRole);
         box.exec();
         return;
     }
     m_result = next;
     QDialog::accept();
+}
+
+void ConnectionDialog::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange)
+        retranslateUi();
+    QDialog::changeEvent(event);
+}
+
+void ConnectionDialog::retranslateUi()
+{
+    setWindowTitle(tr("Connection settings"));
+    m_baseLabel->setText(tr("Server address"));
+    m_baseHint->setText(tr("Host and port, or a URL. The server speaks http today; an https address can be saved in advance."));
+    m_wsLabel->setText(tr("WebSocket address"));
+    m_wsHint->setText(tr("Optional. Empty means status comes only from GET /health. If the path is omitted, /api/v1/ws is used."));
+    m_checkButton->setText(m_checking ? tr("Checking…") : tr("Check connection"));
+    m_saveButton->setText(tr("Save"));
+    m_cancelButton->setText(tr("Cancel"));
+    refreshPathHint();
+    if (m_haveHealth)
+        m_probeStatus->setText(healthSummary(m_lastHealth));
+    else if (m_urlError) {
+        QString error;
+        DesktopConfig draft;
+        if (!takeForm(&draft, &error))
+            m_probeStatus->setText(error);
+    } else if (!m_checking) {
+        m_probeStatus->setText(tr("Press \"Check connection\" to request GET /health."));
+    }
 }

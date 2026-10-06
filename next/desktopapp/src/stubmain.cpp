@@ -41,7 +41,7 @@ Result waitFor(ApiClient *client, Signal signal, int timeoutMs, const std::funct
         loop.exec();
     if (!done) {
         result.error.transportFailure = true;
-        result.error.userMessage = QStringLiteral("Превышено время ожидания ответа сервера.");
+        result.error.userMessage = QStringLiteral("Timed out waiting for the server.");
         result.error.technical = QStringLiteral("timed out waiting for a response");
     }
     return result;

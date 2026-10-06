@@ -10,7 +10,7 @@ endif()
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Network Widgets WebSockets)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Widgets WebSockets LinguistTools)
 
 function(hotel_desktop_warnings target)
     if(MSVC)
@@ -39,11 +39,15 @@ add_library(hotel-desktop-ui STATIC
     src/connectiondialog.h
     src/healthmonitor.cpp
     src/healthmonitor.h
+    src/uilanguage.cpp
+    src/uilanguage.h
     src/loginwindow.cpp
     src/loginwindow.h
     src/mainwindow.cpp
     src/mainwindow.h
+    resources/flags.qrc
 )
+set_target_properties(hotel-desktop-ui PROPERTIES AUTORCC ON)
 target_include_directories(hotel-desktop-ui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(hotel-desktop-ui PUBLIC hotel-desktop-api Qt6::Widgets Qt6::WebSockets)
 hotel_desktop_warnings(hotel-desktop-ui)
@@ -56,6 +60,37 @@ qt_add_executable(hotel-desktop WIN32
 target_link_libraries(hotel-desktop PRIVATE hotel-desktop-ui)
 hotel_desktop_warnings(hotel-desktop)
 set_target_properties(hotel-desktop PROPERTIES WIN32_EXECUTABLE TRUE)
+
+# Qt 6.4 and 6.10 both accept TS_FILES / SOURCES / RESOURCE_PREFIX.
+# lupdate is the hotel-desktop_lupdate target (not every build). lrelease
+# embeds hotel-desktop_<lang>.qm under :/i18n/.
+set(HOTEL_DESKTOP_TS_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/translations/hotel-desktop_en.ts
+    ${CMAKE_CURRENT_SOURCE_DIR}/translations/hotel-desktop_ru.ts
+    ${CMAKE_CURRENT_SOURCE_DIR}/translations/hotel-desktop_hy.ts
+)
+set(HOTEL_DESKTOP_I18N_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/apiclient.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/appconfig.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/appcontroller.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/connectiondialog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/healthmonitor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uilanguage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/loginwindow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/mainwindow.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/urlutil.cpp
+)
+qt_add_translations(hotel-desktop
+    TS_FILES ${HOTEL_DESKTOP_TS_FILES}
+    SOURCES ${HOTEL_DESKTOP_I18N_SOURCES}
+    RESOURCE_PREFIX "/i18n"
+)
+set(hotel_desktop_qm_files
+    ${CMAKE_CURRENT_BINARY_DIR}/hotel-desktop_en.qm
+    ${CMAKE_CURRENT_BINARY_DIR}/hotel-desktop_ru.qm
+    ${CMAKE_CURRENT_BINARY_DIR}/hotel-desktop_hy.qm
+)
 
 add_executable(hotel-desktop-stub
     src/stubmain.cpp
@@ -82,5 +117,11 @@ if(BUILD_TESTING)
     )
     target_link_libraries(hotel-desktop-login-smoke PRIVATE hotel-desktop-ui Qt6::Test)
     hotel_desktop_warnings(hotel-desktop-login-smoke)
+    qt_add_resources(hotel-desktop-login-smoke hotel_desktop_i18n_test
+        PREFIX "/i18n"
+        BASE "${CMAKE_CURRENT_BINARY_DIR}"
+        FILES ${hotel_desktop_qm_files}
+    )
+    add_dependencies(hotel-desktop-login-smoke hotel-desktop_lrelease)
     add_test(NAME hotel-desktop-login-smoke COMMAND hotel-desktop-login-smoke)
 endif()

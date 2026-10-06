@@ -15,4 +15,6 @@ A new agent starts at [HANDOFF.md](HANDOFF.md) (Russian). It is the self-contain
 
 [nx-schema.md](nx-schema.md) records the later owner override on the database: new `nx_` tables, not expand/contract that keeps `f_reservation` / `m_register` as the store for `next/`.
 
+Every client — `hotel-desktop` now, `webport` later — is Armenian (`hy`), English (`en`), and Russian (`ru`). The server stays language-neutral: JSON `error` is a code, and the client maps it to a sentence. Dictionary names (room types and the like) need a translation table when those endpoints appear; the recommendation is in [nx-schema.md](nx-schema.md), and this pass does not change the DDL.
+
 [server-config.md](server-config.md) describes `hotel-api.ini`: where the file is read from, each key, and the startup errors. Written in Russian.
