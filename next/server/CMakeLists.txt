@@ -60,5 +60,16 @@ else()
     target_compile_options(hotel-api PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+# Example only. The process looks for hotel-api.ini, never this filename.
+add_custom_command(TARGET hotel-api POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/config/hotel-api.ini.example"
+        "$<TARGET_FILE_DIR:hotel-api>/hotel-api.ini.example"
+    VERBATIM
+)
+
 include(GNUInstallDirs)
 install(TARGETS hotel-api RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES config/hotel-api.ini.example
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RENAME hotel-api.ini.example)

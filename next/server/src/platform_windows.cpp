@@ -112,8 +112,11 @@ int installService()
 
     CloseServiceHandle(service);
     CloseServiceHandle(manager);
-    std::fputs("hotel-api: installed service HotelApi (auto start). Set HOTEL_* in the system environment\n"
-               "or HOTEL_CONFIG to an ini outside the repository, then start the service.\n",
+    std::fputs("hotel-api: installed service HotelApi (auto start).\n"
+               "Place hotel-api.ini next to the executable. The service working directory is\n"
+               "System32, so the ini is read from the executable directory, not the current directory.\n"
+               "A non-empty HOTEL_CONFIG replaces that path. A non-empty HOTEL_LISTEN, HOTEL_DSN,\n"
+               "or HOTEL_WS_LISTEN overrides the matching ini key.\n",
                stdout);
     return 0;
 }
@@ -164,7 +167,9 @@ void printHelp()
         "  --console     force the foreground, do not contact the SCM\n"
         "  --install     register HotelApi (elevated prompt)\n"
         "  --uninstall   remove HotelApi (elevated prompt; stop it first)\n"
-        "  Config: HOTEL_LISTEN, HOTEL_DSN, HOTEL_WS_LISTEN, HOTEL_CONFIG\n"
+        "  Config file: hotel-api.ini next to the executable (not the working directory).\n"
+        "  HOTEL_CONFIG replaces that path when set and non-empty.\n"
+        "  HOTEL_LISTEN, HOTEL_DSN, HOTEL_WS_LISTEN override ini keys when non-empty.\n"
         "  The service process sees the system environment, not a user shell profile.\n",
         stdout);
 }

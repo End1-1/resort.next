@@ -186,7 +186,7 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
     if (!target.configured) {
         return fail(503,
                     "database_not_configured",
-                    "HOTEL_DSN is empty; login needs MariaDB");
+                    "no database configured; set dsn in hotel-api.ini or HOTEL_DSN");
     }
     if (login.isEmpty() || password.isEmpty() || password.size() > kMaxPasswordChars) {
         qInfo("session denied");

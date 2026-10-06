@@ -19,7 +19,7 @@ SmartHotel is a thick Qt/C++ client. Operational rules live in widgets and write
 - Windows runs it as service `HotelApi` (`--install`, `--uninstall`). `--console` forces a foreground process for debugging. The Service Control Manager entry is a separate translation unit and is compiled only on Windows, so Linux CI does not need a Windows SDK.
 - Public contract: HTTP, JSON, prefix `/api/v1`, description in `next/server/openapi.yaml`. Clients, including the future web UI, use that contract. They do not receive a MariaDB DSN.
 - WebSocket (`/api/v1/ws`, separate listen address `HOTEL_WS_LISTEN`) is for events after a commit. The payload is an id and a type. The client re-reads the resource with HTTP. WebSocket is off unless `HOTEL_WS_LISTEN` is set. It is not a second API.
-- Configuration comes from the environment, optionally seeded by an INI file (`HOTEL_CONFIG`). Names used now: `HOTEL_LISTEN` (default `127.0.0.1:8080`), `HOTEL_DSN` (unset means `/health` does not touch a database), `HOTEL_WS_LISTEN`. Example files have empty secrets. Nothing in `next/` hard-codes a password.
+- Configuration is `hotel-api.ini` next to the executable, then `/etc/hotel-api/hotel-api.ini` on Linux. A non-empty `HOTEL_CONFIG` replaces that search. `HOTEL_LISTEN`, `HOTEL_DSN`, and `HOTEL_WS_LISTEN` override ini keys only when non-empty. No database in that result means `/health` does not open MariaDB. Example files have empty secrets. Nothing in `next/` hard-codes a password. The Windows service reads the ini from the executable directory, not from `System32`.
 - Layout:
 
   | Path | Contents |
@@ -45,7 +45,7 @@ Not done, on purpose:
 - switching the reception desktop off direct SQL
 - a web client
 
-`/health` returns 200 when no DSN is configured (`db.state = skipped`). When `HOTEL_DSN` is set it opens `QMYSQL` with a short timeout and returns 503 if the driver is missing or the server does not answer. The body never includes the DSN or the password.
+`/health` returns 200 when no DSN is configured (`db.state = skipped`). When a DSN is configured it opens `QMYSQL` with a short timeout and returns 503 if the driver is missing or the server does not answer. The body never includes the DSN or the password.
 
 ## Consequences
 

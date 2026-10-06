@@ -1,5 +1,12 @@
-# Copy outside the repository and point HOTEL_CONFIG at the copy.
-# Environment variables override these keys. Do not put a production password here.
+# Copy to hotel-api.ini. The server reads that name, not this .example file.
+#
+# Search when HOTEL_CONFIG is unset or empty:
+#   1. hotel-api.ini in the executable's directory (not the process working directory)
+#   2. /etc/hotel-api/hotel-api.ini on Linux
+# A non-empty HOTEL_CONFIG replaces that search.
+# HOTEL_LISTEN, HOTEL_DSN, and HOTEL_WS_LISTEN override these keys only when
+# they are set and non-empty. An empty variable does not clear the ini.
+# Do not commit hotel-api.ini. Do not put a production password in git.
 
 listen=127.0.0.1:8080
 
