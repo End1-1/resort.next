@@ -49,8 +49,12 @@ paths:
         The DSN comes from hotel-api.ini beside the executable, or from
         /etc/hotel-api/hotel-api.ini on Linux. A non-empty HOTEL_CONFIG
         selects a different file. A non-empty HOTEL_DSN overrides the file's
-        dsn. The body does not contain the DSN or the password. No DSN does
-        not fail /health; POST /api/v1/sessions returns 503
+        dsn.         The body does not contain the DSN, the password, the host, the user,
+        or the driver text. When the probe fails, db.error is a short code:
+        driver_not_loaded, access_denied (MySQL 1045), unknown_database
+        (1049), cannot_connect (2002 or 2003), or connection_failed.
+        The server log has the native code and the scrubbed driver text.
+        No DSN does not fail /health; POST /api/v1/sessions returns 503
         database_not_configured in that case.
       responses:
         '200':
@@ -87,9 +91,13 @@ paths:
         Active users only (state = active) whose password_scheme is md5.
         Unknown user, disabled user, a non-md5 scheme, and a wrong password are
         all 401 with the same body. The password, the MD5 hash, and the DSN are
-        not written to the log or the response. No configured DSN is 503
-        database_not_configured. Missing nx_user or nx_session is 503
-        session_store_unavailable.
+        not written to the log or the response.         No configured DSN is 503
+        database_not_configured. A refused MariaDB account is 503
+        access_denied, a missing database is 503 unknown_database, and a
+        failure to reach the port is 503 cannot_connect. Other connect
+        failures stay 503 database_unavailable. The body does not include
+        the driver text, host, user, or password. Missing nx_user or
+        nx_session is 503 session_store_unavailable.
       requestBody:
         required: true
         content:
@@ -117,9 +125,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: |
-            No database DSN is configured, QMYSQL is missing, MariaDB did not
-            answer, or nx_user / nx_session are missing or the session row
-            could not be stored.
+            No database DSN is configured, QMYSQL is missing, MariaDB refused
+            the account (access_denied), the database is missing
+            (unknown_database), the port could not be reached (cannot_connect),
+            the connection failed for another reason (database_unavailable),
+            or nx_user / nx_session are missing or the session row could not
+            be stored. The body has no driver text and no password.
           content:
             application/json:
               schema:
@@ -165,8 +176,15 @@ components:
           enum: [skipped, up, down]
         error:
           type: string
-          description: Present when state=down. A short code, never a DSN.
-          enum: [driver_not_loaded, connection_failed]
+          description: |
+            Present when state=down. A short code mapped from the MySQL native
+            error number. Never a DSN, host, user, driver text, or password.
+          enum:
+            - driver_not_loaded
+            - access_denied
+            - unknown_database
+            - cannot_connect
+            - connection_failed
     ApiRoot:
       type: object
       required: [service, api, status, version]
@@ -249,6 +267,9 @@ components:
             - unauthorized
             - database_not_configured
             - driver_not_loaded
+            - access_denied
+            - unknown_database
+            - cannot_connect
             - database_unavailable
             - session_store_unavailable
             - not_found

@@ -41,34 +41,21 @@ QString networkUserMessage(QNetworkReply::NetworkError err)
     return QStringLiteral("Сервер недоступен.");
 }
 
-QString loginUserMessage(int httpStatus, const QString &code)
+QString databaseDownPhrase(const QString &dbError)
 {
-    if (httpStatus == 401 || code == QLatin1String("unauthorized"))
-        return QStringLiteral("Неверный логин или пароль.");
-    if (code == QLatin1String("database_not_configured")) {
-        return QStringLiteral(
-            "База не настроена (database_not_configured). Вход невозможен, пока на сервере не задано подключение к MariaDB.");
-    }
-    if (code == QLatin1String("session_store_unavailable")) {
-        return QStringLiteral(
-            "Хранилище сессий недоступно (session_store_unavailable). На сервере нет таблиц nx_user и nx_session или сессия не записалась.");
-    }
-    if (code == QLatin1String("driver_not_loaded"))
-        return QStringLiteral("Драйвер базы данных не загружен на сервере (driver_not_loaded).");
-    if (code == QLatin1String("database_unavailable"))
-        return QStringLiteral("База данных недоступна (database_unavailable).");
-    if (httpStatus == 400 || code == QLatin1String("invalid_request"))
-        return QStringLiteral("Некорректный запрос к серверу.");
-    if (httpStatus == 404 || code == QLatin1String("not_found"))
-        return QStringLiteral("Сервер не нашёл адрес входа.");
-    if (httpStatus == 503)
-        return QStringLiteral("Сервер временно недоступен (503).");
-    if (httpStatus != 0) {
-        if (code.isEmpty())
-            return QStringLiteral("Ошибка входа, HTTP %1.").arg(httpStatus);
-        return QStringLiteral("Ошибка входа, HTTP %1 (%2).").arg(httpStatus).arg(code);
-    }
-    return QStringLiteral("Сервер недоступен.");
+    if (dbError == QLatin1String("access_denied"))
+        return QStringLiteral("отказ в доступе (down, access_denied)");
+    if (dbError == QLatin1String("unknown_database"))
+        return QStringLiteral("база не найдена (down, unknown_database)");
+    if (dbError == QLatin1String("cannot_connect"))
+        return QStringLiteral("нет соединения (down, cannot_connect)");
+    if (dbError == QLatin1String("driver_not_loaded"))
+        return QStringLiteral("драйвер не загружен (down, driver_not_loaded)");
+    if (dbError == QLatin1String("connection_failed"))
+        return QStringLiteral("недоступна (down, connection_failed)");
+    if (dbError.isEmpty())
+        return QStringLiteral("недоступна (down)");
+    return QStringLiteral("недоступна (down, %1)").arg(dbError);
 }
 
 QJsonObject objectFrom(const QByteArray &body)
@@ -131,7 +118,7 @@ SessionResult parseLoginReply(QNetworkReply *reply)
     const QJsonObject object = objectFrom(body);
     result.error.code = object.value(QStringLiteral("error")).toString();
     if (result.error.httpStatus != 200) {
-        result.error.userMessage = loginUserMessage(result.error.httpStatus, result.error.code);
+        result.error.userMessage = loginErrorMessage(result.error.httpStatus, result.error.code);
         result.error.technical = result.error.code.isEmpty()
                                       ? QStringLiteral("HTTP %1").arg(result.error.httpStatus)
                                       : result.error.code;
@@ -171,17 +158,54 @@ QString databasePhrase(const HealthStatus &status)
         return QStringLiteral("доступна (up)");
     if (status.dbState == QLatin1String("skipped"))
         return QStringLiteral("не настроена (skipped)");
-    if (status.dbState == QLatin1String("down")) {
-        if (status.dbError.isEmpty())
-            return QStringLiteral("недоступна (down)");
-        return QStringLiteral("недоступна (down, %1)").arg(status.dbError);
-    }
+    if (status.dbState == QLatin1String("down"))
+        return databaseDownPhrase(status.dbError);
     if (!status.dbState.isEmpty())
         return status.dbState;
     return QString();
 }
 
 } // namespace
+
+QString loginErrorMessage(int httpStatus, const QString &code)
+{
+    if (httpStatus == 401 || code == QLatin1String("unauthorized"))
+        return QStringLiteral("Неверный логин или пароль.");
+    if (code == QLatin1String("database_not_configured")) {
+        return QStringLiteral(
+            "База не настроена (database_not_configured). Вход невозможен, пока на сервере не задано подключение к MariaDB.");
+    }
+    if (code == QLatin1String("session_store_unavailable")) {
+        return QStringLiteral(
+            "Хранилище сессий недоступно (session_store_unavailable). На сервере нет таблиц nx_user и nx_session или сессия не записалась.");
+    }
+    if (code == QLatin1String("driver_not_loaded"))
+        return QStringLiteral("Драйвер базы данных не загружен на сервере (driver_not_loaded).");
+    if (code == QLatin1String("access_denied")) {
+        return QStringLiteral(
+            "Отказ в доступе к базе на сервере (access_denied). Учётная запись MariaDB не принята для этого хоста.");
+    }
+    if (code == QLatin1String("unknown_database"))
+        return QStringLiteral("База на сервере не найдена (unknown_database).");
+    if (code == QLatin1String("cannot_connect")) {
+        return QStringLiteral(
+            "Сервер не подключился к MariaDB (cannot_connect). Проверьте, что служба слушает порт.");
+    }
+    if (code == QLatin1String("database_unavailable") || code == QLatin1String("connection_failed"))
+        return QStringLiteral("База данных недоступна (database_unavailable).");
+    if (httpStatus == 400 || code == QLatin1String("invalid_request"))
+        return QStringLiteral("Некорректный запрос к серверу.");
+    if (httpStatus == 404 || code == QLatin1String("not_found"))
+        return QStringLiteral("Сервер не нашёл адрес входа.");
+    if (httpStatus == 503)
+        return QStringLiteral("Сервер временно недоступен (503).");
+    if (httpStatus != 0) {
+        if (code.isEmpty())
+            return QStringLiteral("Ошибка входа, HTTP %1.").arg(httpStatus);
+        return QStringLiteral("Ошибка входа, HTTP %1 (%2).").arg(httpStatus).arg(code);
+    }
+    return QStringLiteral("Сервер недоступен.");
+}
 
 QString healthSummary(const HealthStatus &status)
 {

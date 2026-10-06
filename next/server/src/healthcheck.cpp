@@ -1,6 +1,7 @@
 #include "healthcheck.h"
 
 #include "db.h"
+#include "dberror.h"
 #include "version.h"
 
 #include <QDebug>
@@ -42,15 +43,14 @@ HealthReport probeHealth(const DatabaseTarget &target, int connectTimeoutSec)
         return report;
     }
 
-    const QString code = connection.failure == QLatin1String("driver_not_loaded")
-                             ? QStringLiteral("driver_not_loaded")
-                             : QStringLiteral("connection_failed");
+    const QString code = probeDatabaseError(connection.failure);
     report.httpStatus = 503;
     report.body = baseBody("degraded", target);
     QJsonObject db = report.body.value(QStringLiteral("db")).toObject();
     db.insert(QStringLiteral("error"), code);
     report.body.insert(QStringLiteral("db"), db);
-    // QSqlError text can echo the user name. Keep it out of the response and the log.
+    // Driver text is logged once in MysqlConnection, with the password removed.
+    // This line is only the machine code.
     qWarning("database probe failed: %s", qPrintable(code));
     return report;
 }

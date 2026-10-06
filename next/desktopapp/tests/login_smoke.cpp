@@ -47,6 +47,7 @@ private slots:
     void emptyLoginDoesNotCallServer();
     void unreachableServerMessage();
     void loginShowsDatabaseNotConfigured();
+    void mapsDatabaseConnectCodes();
 };
 
 void LoginSmoke::initTestCase()
@@ -358,6 +359,36 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     QVERIFY(!api.hasToken());
 
     stopServer();
+}
+
+void LoginSmoke::mapsDatabaseConnectCodes()
+{
+    const QString denied = loginErrorMessage(503, QStringLiteral("access_denied"));
+    QVERIFY(denied.contains(QStringLiteral("access_denied")));
+    QVERIFY(denied.contains(QStringLiteral("Отказ в доступе")));
+
+    const QString missing = loginErrorMessage(503, QStringLiteral("unknown_database"));
+    QVERIFY(missing.contains(QStringLiteral("unknown_database")));
+    QVERIFY(missing.contains(QStringLiteral("не найдена")));
+
+    const QString offline = loginErrorMessage(503, QStringLiteral("cannot_connect"));
+    QVERIFY(offline.contains(QStringLiteral("cannot_connect")));
+    QVERIFY(offline.contains(QStringLiteral("не подключился")));
+
+    QVERIFY(loginErrorMessage(503, QStringLiteral("database_unavailable")).contains(QStringLiteral("недоступна")));
+
+    HealthStatus health;
+    health.reachable = true;
+    health.httpStatus = 503;
+    health.service = QStringLiteral("hotel-api");
+    health.serviceStatus = QStringLiteral("degraded");
+    health.dbConfigured = true;
+    health.dbState = QStringLiteral("down");
+    health.dbError = QStringLiteral("access_denied");
+    const QString summary = healthSummary(health);
+    QVERIFY2(summary.contains(QStringLiteral("отказ в доступе")), qPrintable(summary));
+    QVERIFY(summary.contains(QStringLiteral("access_denied")));
+    QVERIFY(!summary.contains(QStringLiteral("password")));
 }
 
 int main(int argc, char **argv)

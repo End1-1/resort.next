@@ -62,6 +62,9 @@ struct SessionResult {
     ApiError error;
 };
 
+// Plain Russian. This client has no translation catalog yet.
+QString loginErrorMessage(int httpStatus, const QString &code);
+
 QString healthSummary(const HealthStatus &status);
 
 UserSnapshot userSnapshotFrom(const SessionResult &result);
