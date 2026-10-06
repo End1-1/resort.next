@@ -181,7 +181,7 @@ mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
 | 2 | [#19](https://github.com/End1-1/resort.next/pull/19) | `cursor/nx-dictionaries-cd9c` | 0.5.0 | Справочники номеров. Миграция `0003_nx_label.sql`. ADR [adr-0002-nx-label.md](adr-0002-nx-label.md). Сид `next/dbdump/seed/nx_demo_rooms.example.sql`. |
 | 3 | [#20](https://github.com/End1-1/resort.next/pull/20) | `cursor/rack-chart-cd9c` | 0.6.0 | `GET /api/v1/rack` и виджет шахматки. |
 | 4 | [#21](https://github.com/End1-1/resort.next/pull/21) | `cursor/reservations-cd9c` | 0.7.0 | Список, карточка, создание и правка брони. Миграция `0004_nx_audit.sql`. Фолио нет. |
-| 5 | этот PR | `cursor/ws-events-cd9c` | 0.8.0 | Аутентифицированный WebSocket и живое обновление шахматки и списка. Схема: [ws-events.md](ws-events.md). База PR: `cursor/reservations-cd9c`. |
+| 5 | [#22](https://github.com/End1-1/resort.next/pull/22) | `cursor/ws-events-cd9c` | 0.8.0 | Аутентифицированный WebSocket и живое обновление шахматки и списка. Схема: [ws-events.md](ws-events.md). База PR: `cursor/reservations-cd9c`. |
 
 Миграции, которые владелец применяет сам (не на бой без явного «да»; каждый файл безопасен при повторном запуске):
 
