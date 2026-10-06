@@ -90,6 +90,8 @@ curl -sS -H 'Content-Type: application/json' \
 
 The process reads `hotel-api.ini` by itself. It does not read a `.env` file. systemd `EnvironmentFile=` can still inject variables; see `deploy/hotel-api.service` and `config/hotel-api.env.example`.
 
+Field-by-field format, search order, Windows DLL layout, and the error text are in [next/docs/server-config.md](../docs/server-config.md) (Russian).
+
 Search order:
 
 1. `HOTEL_CONFIG`, when the variable is set and the value is not empty. A missing file aborts startup. The path is not combined with the steps below.

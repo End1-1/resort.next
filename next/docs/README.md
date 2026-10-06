@@ -11,3 +11,5 @@ Notes for the migration into `next/`. The audit stays the plan:
 [adr-0001-qt-cpp-server.md](adr-0001-qt-cpp-server.md) records the owner override: the service is Qt/C++ with CMake, not the Go process suggested in audit §3.2. Where the audit says `backend/` or Go, read `next/server`.
 
 [nx-schema.md](nx-schema.md) records the later owner override on the database: new `nx_` tables, not expand/contract that keeps `f_reservation` / `m_register` as the store for `next/`.
+
+[server-config.md](server-config.md) describes `hotel-api.ini`: where the file is read from, each key, and the startup errors. Written in Russian.
