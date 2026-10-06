@@ -1,0 +1,17 @@
+# Личный файл программа создаёт сама: %APPDATA%\Resort\hotel-desktop\hotel-desktop.ini
+# (Linux: ~/.config/Resort/hotel-desktop/hotel-desktop.ini). Этот .example она не читает.
+#
+# hotel-desktop.ini рядом с exe — только начальные значения, и только если личного
+# файла ещё нет. Программа его не перезаписывает. Пароль не писать: ключ password
+# игнорируется и при сохранении личного файла удаляется.
+# Куда кладётся личный файл: next/desktopapp/README.md
+
+# HTTP hotel-api. host:port или http(s)://host:port, без пути.
+base_url=http://127.0.0.1:8080
+
+# Необязательно. Пусто — только GET /health.
+# Без пути подставится /api/v1/ws. wss:// можно указать заранее.
+websocket_url=
+
+# Последний логин. Пароль здесь не хранится.
+last_login=

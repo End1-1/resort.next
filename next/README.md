@@ -9,7 +9,7 @@ Owner decision, which overrides the Go recommendation in `docs/audit/03-celevaya
 | Path | Role |
 |------|------|
 | `server/` | `hotel-api`. Qt/C++ HTTP service. Linux: foreground process under systemd. Windows: Windows service. |
-| `desktopapp/` | New Qt client pieces that call the API. No `QMYSQL` here. |
+| `desktopapp/` | Windowed `hotel-desktop` (Qt Widgets) and headless `hotel-desktop-stub`. No `QMYSQL`. |
 | `docs/` | Migration notes. They extend `docs/audit/`; they do not replace it. |
 | `dbdump/` | DDL and migration SQL only. Core tables are `nx_*` in `dbdump/migrations/0002_nx_core.sql`. No guest data, no password hashes, no production dump. |
 

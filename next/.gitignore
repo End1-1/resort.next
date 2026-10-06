@@ -9,6 +9,7 @@ cmake-build-*/
 *.key
 secrets/
 hotel-api.ini
+hotel-desktop.ini
 
 # Full database dumps. Hand-written DDL may live in dbdump/migrations/.
 dbdump/*.sql
