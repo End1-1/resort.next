@@ -3,7 +3,8 @@
 #include <QString>
 
 // Machine code for HTTP JSON, mapped only from the MySQL native error number.
-// 1045 -> access_denied, 1049 -> unknown_database, 2002 and 2003 -> cannot_connect.
+// 1045 -> access_denied, 1049 -> unknown_database, 2002 and 2003 -> cannot_connect,
+// 2026 -> tls_error.
 // Any other number, including empty, is connection_failed.
 // Never returns driver text, a host, a user, or a password.
 QString publicDatabaseErrorCode(const QString &nativeErrorCode);
@@ -27,5 +28,7 @@ QString formatConnectFailureLog(const QString &publicCode,
 QString scrubDatabaseMessage(const QString &text, const QString &password);
 
 // Semicolon-separated QMYSQL connect options. Timeouts are seconds.
-// MariaDB Connector/C 10.x and 11.x honor these on Windows before real_connect.
-QString mysqlConnectOptions(int connectTimeoutSec);
+// sslMode is off, preferred, required, or verify (empty means preferred).
+// sslCa is sent only for required and verify. It must not contain ';'.
+// See mysqlConnectOptions() for which token each Qt 6.10 client library applies.
+QString mysqlConnectOptions(int connectTimeoutSec, const QString &sslMode, const QString &sslCa);

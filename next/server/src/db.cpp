@@ -29,7 +29,7 @@ MysqlConnection::MysqlConnection(const DatabaseTarget &target, int connectTimeou
     // and is ignored). SET NAMES below is the charset switch. Host 127.0.0.1
     // is TCP; on Windows "localhost" can be a named pipe and a different
     // MariaDB account. The options string does not change that.
-    db.setConnectOptions(mysqlConnectOptions(connectTimeoutSec));
+    db.setConnectOptions(mysqlConnectOptions(connectTimeoutSec, target.sslMode, target.sslCa));
     opened = db.open();
     if (!opened) {
         // Capture the error before close(). close() can drop lastError().

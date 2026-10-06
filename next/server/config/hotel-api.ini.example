@@ -30,6 +30,16 @@ mysql_user=
 ; Пароль в шаблоне пустой. Боевой пароль в этот .example не писать.
 mysql_password=
 
+# TLS. Нет ключа — preferred: шифрование, если сервер его предлагает, иначе обычное
+# соединение без проверки сертификата. Так локальная MariaDB без TLS открывается
+# с MariaDB Connector/C 3.4 (иначе native 2026, SSL is required).
+# off — не требовать TLS. required — TLS обязателен. verify — TLS и проверка
+# сертификата по mysql_ssl_ca (или системному хранилищу).
+# mysql_ssl=preferred
+# mysql_ssl_ca=
+mysql_ssl=
+mysql_ssl_ca=
+
 # WebSocket /api/v1/ws. Пусто — сокет выключен.
 # Те же правила адреса, что у listen. Порт другой, не тот же, что listen.
 # Один порт значит 127.0.0.1 и этот порт. Пример: 8081

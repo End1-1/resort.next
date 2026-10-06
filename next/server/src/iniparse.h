@@ -19,6 +19,10 @@ struct HotelIniValues {
     QString mysqlUser;
     bool hasMysqlPassword = false;
     QString mysqlPassword;
+    bool hasMysqlSsl = false;
+    QString mysqlSsl;
+    bool hasMysqlSslCa = false;
+    QString mysqlSslCa;
     bool hasDsn = false;
     QString dsn;
     bool hasWsListen = false;

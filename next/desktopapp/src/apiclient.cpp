@@ -49,6 +49,8 @@ QString databaseDownPhrase(const QString &dbError)
         return QStringLiteral("база не найдена (down, unknown_database)");
     if (dbError == QLatin1String("cannot_connect"))
         return QStringLiteral("нет соединения (down, cannot_connect)");
+    if (dbError == QLatin1String("tls_error"))
+        return QStringLiteral("ошибка TLS (down, tls_error)");
     if (dbError == QLatin1String("driver_not_loaded"))
         return QStringLiteral("драйвер не загружен (down, driver_not_loaded)");
     if (dbError == QLatin1String("connection_failed"))
@@ -190,6 +192,10 @@ QString loginErrorMessage(int httpStatus, const QString &code)
     if (code == QLatin1String("cannot_connect")) {
         return QStringLiteral(
             "Сервер не подключился к MariaDB (cannot_connect). Проверьте, что служба слушает порт.");
+    }
+    if (code == QLatin1String("tls_error")) {
+        return QStringLiteral(
+            "Сервер не договорился о TLS с MariaDB (tls_error). Для локальной базы без TLS задайте mysql_ssl=preferred или off.");
     }
     if (code == QLatin1String("database_unavailable") || code == QLatin1String("connection_failed"))
         return QStringLiteral("База данных недоступна (database_unavailable).");

@@ -136,6 +136,7 @@ last_login=
 | 503 `access_denied` | «Отказ в доступе к базе на сервере…» |
 | 503 `unknown_database` | «База на сервере не найдена…» |
 | 503 `cannot_connect` | «Сервер не подключился к MariaDB…» |
+| 503 `tls_error` | «Сервер не договорился о TLS с MariaDB…» |
 | 503 `database_unavailable` | «База данных недоступна…» |
 
 Пустые `mysql_host` и `mysql_schema` на сервере как раз дают «База не настроена»: `/health` при этом `db.state=skipped`, а вход — 503.
