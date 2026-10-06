@@ -49,7 +49,7 @@
 
 ## 4. Что уже влито в `main`
 
-Версия контракта: `0.4.0` (`openapi.yaml`, `HOTEL_API_VERSION`). Корневой `README.md` — changelog старого клиента `1.8.19.787`, не инструкция.
+Версия контракта: `0.5.0` (`openapi.yaml`, `HOTEL_API_VERSION`). Корневой `README.md` — changelog старого клиента `1.8.19.787`, не инструкция.
 
 | PR | Статус | Что сделано |
 |----|--------|-------------|
@@ -71,9 +71,10 @@
 - `POST /api/v1/sessions` — читает `nx_user`, пишет `nx_session`. Пароль в MariaDB не уходит. `password_scheme` должен быть `md5`, хеш — 32 hex MD5 от UTF-8. Таблицу `users` запрос не трогает, хеш не обновляет. Токен в ответе — 64 hex, в базе SHA-256, срок 12 часов UTC. `commands_allowed` ложен, если у роли нет строки `nx_role_permission`; токен всё равно выдаётся. Маршрута команд нет.
 - Bearer проверяется на каждом `/api/v1/*`, кроме `POST /api/v1/sessions`. `GET /health` открыт. Токен — 64 hex, в базе SHA-256 (`nx_session.token_hash`). Нет токена, битый, чужой или отозванный: `401` `unauthorized`. Срок вышел: `401` `session_expired`. `nx_user.state` не `active`: `401` `user_disabled`. Изменяющий маршрут при `commands_allowed=false` — `403` `commands_not_allowed` (самого такого маршрута, кроме выхода, ещё нет; выход флаг не требует). `DELETE /api/v1/sessions` ставит `revoked_at`. `GET /api/v1/sessions/current` отдаёт пользователя без токена.
 - Меню «Выход» вызывает `DELETE` и затем стирает токен из памяти. `401` на уже открытом сеансе возвращает на вход с переведённой фразой (`hy` / `en` / `ru`), не с текстом про неверный пароль.
+- Справочники только на чтение: `GET /api/v1/rooms`, `/room-types`, `/buildings`, `/room-statuses`. Имена типов и корпусов — таблица `nx_label` ([adr-0002-nx-label.md](adr-0002-nx-label.md), миграция `0003_nx_label.sql`, `0002` не менять). Коды статуса номера переводит клиент. В главном окне список номеров. Пример сида: `next/dbdump/seed/nx_demo_rooms.example.sql`.
 - WebSocket `/api/v1/ws` поднимается только при непустом `ws_listen`. Кадр hello, событий PMS нет.
 - `nx_folio` и `nx_posting` есть в DDL. HTTP-маршрута фолио нет.
-- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с, hello по WebSocket). Рабочая область пустая (`MainWindow::setWorkspacePage`). UI: `hy` / `en` / `ru`, переключение без перезапуска. Токен только в памяти. Коды ошибок сервера клиент переводит сам.
+- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с, hello по WebSocket). Рабочая область — список номеров (`DictionariesPage` через `MainWindow::setWorkspacePage`). UI: `hy` / `en` / `ru`, переключение без перезапуска. Токен только в памяти. Коды ошибок сервера клиент переводит сам.
 - Конфиг клиента — пути из §2. Ключ `password` при сохранении удаляется. Образец `hotel-desktop.ini.example` программа не открывает; на `main` его комментарии всё ещё `#` (см. §5).
 - `hotel-desktop-stub` — консоль без окон: `GET /health`, опционально один логин. Ini клиента не читает. Это не UI ресепшена.
 - `0001_hotel_api_session.sql` не применять. Сервис таблицу `hotel_api_session` не читает.

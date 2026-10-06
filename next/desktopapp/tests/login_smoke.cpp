@@ -26,6 +26,7 @@
 #include <QPushButton>
 #include <QRawFont>
 #include <QSignalSpy>
+#include <QTableWidget>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
@@ -133,6 +134,11 @@ private:
                     "{\"token_type\":\"Bearer\",\"expires_at\":\"2099-01-01T00:00:00Z\",\"commands_allowed\":true,"
                     "\"user\":{\"id\":1,\"login\":\"ivan\",\"name\":\"Ivan\",\"role_id\":1,\"group\":1}}");
             }
+        } else if (method == "GET" && path == "/api/v1/rooms") {
+            body = QByteArrayLiteral(
+                "{\"lang\":\"en\",\"items\":[{\"id\":1,\"code\":\"101\",\"floor\":1,\"phone\":null,"
+                "\"status_code\":\"vacant_ready\",\"room_type\":{\"id\":1,\"code\":\"STD\",\"name\":\"Standard\"},"
+                "\"building\":{\"id\":1,\"code\":\"MAIN\",\"name\":\"Main building\"}}]}");
         } else if (method == "DELETE" && path == "/api/v1/sessions") {
             ++sessionDeletes;
             lastDeleteAuthorization = authorization;
@@ -787,6 +793,12 @@ void LoginSmoke::logoutSendsBearerAndReturnsToLogin()
     QTRY_VERIFY_WITH_TIMEOUT(visibleMain() != nullptr, 8000);
     QTRY_VERIFY_WITH_TIMEOUT(api.currentGets >= 1, 8000);
     QVERIFY(visibleLogin() == nullptr);
+    auto *rooms = visibleMain()->findChild<QTableWidget *>(QStringLiteral("roomsTable"));
+    QVERIFY(rooms);
+    QTRY_VERIFY_WITH_TIMEOUT(rooms->rowCount() == 1, 8000);
+    QCOMPARE(rooms->item(0, 0)->text(), QStringLiteral("101"));
+    QCOMPARE(rooms->item(0, 2)->text(), QStringLiteral("Standard"));
+    QCOMPARE(rooms->item(0, 4)->text(), QStringLiteral("Ready"));
 
     auto *logout = visibleMain()->findChild<QAction *>(QStringLiteral("logoutAction"));
     QVERIFY(logout);

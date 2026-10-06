@@ -2,6 +2,7 @@
 
 #include "auth.h"
 #include "config.h"
+#include "dictionaries.h"
 #include "healthcheck.h"
 #include "sessions.h"
 #include "version.h"
@@ -70,14 +71,30 @@ QHttpServerResponse::StatusCode toStatus(int httpStatus)
 }
 
 // Qt 6.4 stores headers as a list and exposes value(). Qt 6.8+ returns QHttpHeaders.
-QByteArray authorizationHeader(const QHttpServerRequest &request)
+QByteArray headerValue(const QHttpServerRequest &request, const QByteArray &name)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
-    const auto view = request.headers().value(QByteArrayLiteral("authorization"));
+    const auto view = request.headers().value(name);
     return QByteArray(view.data(), static_cast<qsizetype>(view.size()));
 #else
-    return request.value(QByteArrayLiteral("authorization"));
+    return request.value(name);
 #endif
+}
+
+QByteArray authorizationHeader(const QHttpServerRequest &request)
+{
+    return headerValue(request, QByteArrayLiteral("authorization"));
+}
+
+QString requestLocale(const QHttpServerRequest &request)
+{
+    return localeFromRequest(request.query().queryItemValue(QStringLiteral("lang")),
+                             headerValue(request, QByteArrayLiteral("accept-language")));
+}
+
+AuthOutcome requireUser(const AppConfig &config, const QHttpServerRequest &request, RouteAccess access)
+{
+    return authenticate(config.database, config.dbConnectTimeoutSec, authorizationHeader(request), access);
 }
 
 } // namespace
@@ -141,6 +158,29 @@ HttpApi::HttpApi(AppConfig config)
                        if (!auth.allowed)
                            return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
                        return jsonResponse(currentSessionBody(auth.principal), QHttpServerResponse::StatusCode::Ok);
+                   });
+
+    const auto dictionaryRoute = [this](auto handler) {
+        return [this, handler](const QHttpServerRequest &request) {
+            const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Session);
+            if (!auth.allowed)
+                return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+            const QString locale = requestLocale(request);
+            const ApiResult result = handler(m_config.database, m_config.dbConnectTimeoutSec, auth.principal.propertyId, locale);
+            return jsonResponse(result.body, toStatus(result.httpStatus));
+        };
+    };
+    m_server.route(QStringLiteral("/api/v1/rooms"), QHttpServerRequest::Method::Get, dictionaryRoute(listRooms));
+    m_server.route(QStringLiteral("/api/v1/room-types"), QHttpServerRequest::Method::Get, dictionaryRoute(listRoomTypes));
+    m_server.route(QStringLiteral("/api/v1/buildings"), QHttpServerRequest::Method::Get, dictionaryRoute(listBuildings));
+    m_server.route(QStringLiteral("/api/v1/room-statuses"),
+                   QHttpServerRequest::Method::Get,
+                   [this](const QHttpServerRequest &request) {
+                       const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Session);
+                       if (!auth.allowed)
+                           return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                       const ApiResult result = listRoomStatuses(requestLocale(request));
+                       return jsonResponse(result.body, toStatus(result.httpStatus));
                    });
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)

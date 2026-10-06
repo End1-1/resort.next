@@ -1,6 +1,7 @@
 #include "appcontroller.h"
 
 #include "connectiondialog.h"
+#include "dictionariespage.h"
 #include "uilanguage.h"
 
 #include <QCoreApplication>
@@ -25,6 +26,9 @@ AppController::AppController(QObject *parent)
     connect(&m_monitor, &HealthMonitor::statusChanged, this, &AppController::refreshStatus);
     connect(&m_api, &ApiClient::responseFinished, this, &AppController::onApiResponse);
     connect(&m_api, &ApiClient::sessionRejected, this, &AppController::onSessionRejected);
+
+    m_rooms = new DictionariesPage(&m_api, &m_main);
+    m_main.setWorkspacePage(m_rooms);
 }
 
 void AppController::start()
@@ -56,6 +60,8 @@ void AppController::onLogin(const UserSnapshot &user)
     m_main.raise();
     m_main.activateWindow();
     m_login.hide();
+    if (m_rooms)
+        m_rooms->reload();
     m_api.request(HttpVerb::Get,
                   QStringLiteral("/api/v1/sessions/current"),
                   QUrlQuery(),

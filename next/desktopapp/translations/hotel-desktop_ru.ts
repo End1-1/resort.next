@@ -37,8 +37,8 @@
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
         <location filename="../src/apiclient.cpp" line="245"/>
-        <location filename="../src/apiclient.cpp" line="282"/>
-        <location filename="../src/apiclient.cpp" line="303"/>
+        <location filename="../src/apiclient.cpp" line="287"/>
+        <location filename="../src/apiclient.cpp" line="308"/>
         <source>Server unavailable.</source>
         <translation>Сервер недоступен.</translation>
     </message>
@@ -188,42 +188,47 @@
         <translation>Войдите снова. Сессия больше не действует.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="280"/>
+        <location filename="../src/apiclient.cpp" line="272"/>
+        <source>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</source>
+        <translation>На сервере нет таблицы (schema_outdated). Примените миграции nx_, включая 0003_nx_label.sql.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="285"/>
         <source>Request failed, HTTP %1 (%2).</source>
         <translation>Запрос не выполнен, HTTP %1 (%2).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="309"/>
+        <location filename="../src/apiclient.cpp" line="314"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Сервер ответил HTTP %1, состояние базы неизвестно.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="312"/>
+        <location filename="../src/apiclient.cpp" line="317"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Сервер ответил неожиданным телом.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="315"/>
+        <location filename="../src/apiclient.cpp" line="320"/>
         <source>Server</source>
         <translation>Сервер</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="319"/>
+        <location filename="../src/apiclient.cpp" line="324"/>
         <source>responded</source>
         <translation>ответил</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="321"/>
+        <location filename="../src/apiclient.cpp" line="326"/>
         <source>unknown</source>
         <translation>неизвестно</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="322"/>
+        <location filename="../src/apiclient.cpp" line="327"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1: работает (%2). База: %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="324"/>
+        <location filename="../src/apiclient.cpp" line="329"/>
         <source>. Version %1</source>
         <translation>. Версия %1</translation>
     </message>
@@ -249,17 +254,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="139"/>
+        <location filename="../src/appcontroller.cpp" line="145"/>
         <source>Could not remember the login. %1</source>
         <translation>Не удалось запомнить логин. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="151"/>
+        <location filename="../src/appcontroller.cpp" line="157"/>
         <source>Could not save the language. %1</source>
         <translation>Не удалось сохранить язык. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="184"/>
+        <location filename="../src/appcontroller.cpp" line="190"/>
         <source>The server address changed. Sign in again.</source>
         <translation>Адрес сервера изменён. Войдите снова.</translation>
     </message>
@@ -345,6 +350,94 @@
         <location filename="../src/connectiondialog.cpp" line="231"/>
         <source>Press &quot;Check connection&quot; to request GET /health.</source>
         <translation>Нажмите «Проверить соединение», чтобы запросить GET /health.</translation>
+    </message>
+</context>
+<context>
+    <name>DictionariesPage</name>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="69"/>
+        <source>Loading rooms…</source>
+        <translation>Загрузка номеров…</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="87"/>
+        <source>Rooms</source>
+        <translation>Номера</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Room</source>
+        <translation>Номер</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Floor</source>
+        <translation>Этаж</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Type</source>
+        <translation>Тип</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Building</source>
+        <translation>Корпус</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Status</source>
+        <translation>Состояние</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="90"/>
+        <source>The room list loads after sign-in.</source>
+        <translation>Список номеров загружается после входа.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="104"/>
+        <source>Ready</source>
+        <translation>Готов</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="106"/>
+        <source>Occupied</source>
+        <translation>Занят</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="108"/>
+        <source>Dirty</source>
+        <translation>Грязный</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="110"/>
+        <source>Out of order</source>
+        <translation>На ремонте</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="112"/>
+        <source>House use</source>
+        <translation>Служебный</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="114"/>
+        <source>Complimentary</source>
+        <translation>Комплиментарный</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="116"/>
+        <source>Out of inventory</source>
+        <translation>Выведен из фонда</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="151"/>
+        <source>No rooms.</source>
+        <translation>Номеров нет.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="153"/>
+        <source>%1 rooms</source>
+        <translation>Номеров: %1</translation>
     </message>
 </context>
 <context>

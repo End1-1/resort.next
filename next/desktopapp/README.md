@@ -15,6 +15,7 @@ Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake
 | `src/appconfig.*` | Per-user INI. Never stores a password or a token. |
 | `src/connectiondialog.*` | Address, WebSocket, «Проверить соединение». |
 | `src/loginwindow.*` | Login form. |
+| `src/dictionariespage.*` | Room list in the workspace. `GET /api/v1/rooms?lang=`. |
 | `src/mainwindow.*` | Session summary, menus, `QStackedWidget` workspace. |
 | `src/healthmonitor.*` | Periodic `/health` and optional WebSocket hello. |
 | `src/appcontroller.*` | Shows login, then the main window. |
@@ -135,7 +136,7 @@ Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedde
 ## Окна
 
 1. **Вход.** Логин, пароль, «Войти», «Настройки подключения». Логин запоминается, пароль нет. Сеть не блокирует интерфейс (`QNetworkAccessManager`, таймаут около 8 секунд на вход и 5 секунд на `/health`). Строка состояния — последний `/health` и WebSocket.
-2. **После входа.** Имя, логин, `role_id`, `commands_allowed`, адрес сервера, живое состояние (опрос `/health` раз в 15 секунд; если WebSocket задан — ещё кадр hello). Центр пустой: «шахматка, бронирования». Токен только в памяти процесса, на экран не выводится.
+2. **После входа.** Имя, логин, `role_id`, `commands_allowed`, адрес сервера, живое состояние (опрос `/health` раз в 15 секунд; если WebSocket задан — ещё кадр hello). В рабочей области список номеров (`GET /api/v1/rooms`). Статус номера переводит клиент. Токен только в памяти процесса, на экран не выводится.
 3. **Сессия → Выход.** Клиент вызывает `DELETE /api/v1/sessions` с `Authorization: Bearer` и только потом стирает токен из памяти. Сервер ставит `nx_session.revoked_at`. Если сервер не ответил, окно входа всё равно открывается и пишет, что выход на сервере не подтверждён. Закрытие окна завершает процесс и тоже теряет токен (строка на сервере при этом остаётся до срока, если выход не вызывали).
 4. Смена адреса сервера в настройках, пока сеанс открыт, сначала шлёт тот же `DELETE` на старый адрес, затем стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
 5. После входа клиент читает `GET /api/v1/sessions/current`. Ответ `401` (`unauthorized`, `session_expired`, `user_disabled`) возвращает на вход с фразой на языке окна, а не с текстом «неверный пароль».

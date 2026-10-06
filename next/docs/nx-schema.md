@@ -64,7 +64,7 @@ mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
 
 Клиенты (`hotel-desktop` сейчас, `webport` позже) показывают интерфейс на `hy`, `en` и `ru`. Сервер при этом не собирает фразы: поле `error` в JSON — код (`database_not_configured`, `unauthorized`, …), а текст рисует клиент.
 
-Колонка `name` у `nx_room_type`, `nx_building`, `nx_role`, `nx_permission`, `nx_voucher`, `nx_property` — одна строка на сущность. Для трёх языков этого мало. Схему в этой итерации не менять. Когда появятся read-эндпоинты шахматки и броней, имена справочников лучше вынести отдельной миграцией, а не плодить `name_hy` / `name_en` / `name_ru` на каждой таблице.
+Колонка `name` у `nx_room_type`, `nx_building`, `nx_role`, `nx_permission`, `nx_voucher`, `nx_property` — одна строка на сущность. Для трёх языков этого мало. Решение зафиксировано в [adr-0002-nx-label.md](adr-0002-nx-label.md): отдельная таблица `nx_label` в `0003_nx_label.sql`. Файл `0002` не редактируется.
 
 Рекомендация: узкая таблица перевода, одна строка на сущность и язык.
 

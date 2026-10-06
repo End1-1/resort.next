@@ -37,8 +37,8 @@
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
         <location filename="../src/apiclient.cpp" line="245"/>
-        <location filename="../src/apiclient.cpp" line="282"/>
-        <location filename="../src/apiclient.cpp" line="303"/>
+        <location filename="../src/apiclient.cpp" line="287"/>
+        <location filename="../src/apiclient.cpp" line="308"/>
         <source>Server unavailable.</source>
         <translation>Սերվերն անհասանելի է։</translation>
     </message>
@@ -188,42 +188,47 @@
         <translation>Մտեք նորից։ Սեսիան այլևս վավեր չէ։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="280"/>
+        <location filename="../src/apiclient.cpp" line="272"/>
+        <source>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</source>
+        <translation>Սերվերում աղյուսակ չկա (schema_outdated)։ Կիրառեք nx_ միգրացիաները, այդ թվում 0003_nx_label.sql։</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="285"/>
         <source>Request failed, HTTP %1 (%2).</source>
         <translation>Հարցումը չկատարվեց, HTTP %1 (%2)։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="309"/>
+        <location filename="../src/apiclient.cpp" line="314"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Սերվերը պատասխանեց HTTP %1, բազայի վիճակն անհայտ է։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="312"/>
+        <location filename="../src/apiclient.cpp" line="317"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Սերվերը պատասխանեց անսպասելի տվյալներով։</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="315"/>
+        <location filename="../src/apiclient.cpp" line="320"/>
         <source>Server</source>
         <translation>Սերվեր</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="319"/>
+        <location filename="../src/apiclient.cpp" line="324"/>
         <source>responded</source>
         <translation>պատասխանեց</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="321"/>
+        <location filename="../src/apiclient.cpp" line="326"/>
         <source>unknown</source>
         <translation>անհայտ</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="322"/>
+        <location filename="../src/apiclient.cpp" line="327"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1՝ աշխատում է (%2)։ Բազա՝ %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="324"/>
+        <location filename="../src/apiclient.cpp" line="329"/>
         <source>. Version %1</source>
         <translation>։ Տարբերակ %1</translation>
     </message>
@@ -249,17 +254,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="139"/>
+        <location filename="../src/appcontroller.cpp" line="145"/>
         <source>Could not remember the login. %1</source>
         <translation>Չհաջողվեց հիշել մուտքանունը։ %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="151"/>
+        <location filename="../src/appcontroller.cpp" line="157"/>
         <source>Could not save the language. %1</source>
         <translation>Չհաջողվեց պահպանել լեզուն։ %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="184"/>
+        <location filename="../src/appcontroller.cpp" line="190"/>
         <source>The server address changed. Sign in again.</source>
         <translation>Սերվերի հասցեն փոխվել է։ Մուտք գործեք նորից։</translation>
     </message>
@@ -345,6 +350,94 @@
         <location filename="../src/connectiondialog.cpp" line="231"/>
         <source>Press &quot;Check connection&quot; to request GET /health.</source>
         <translation>Սեղմեք «Ստուգել կապը», որպեսզի հարցվի GET /health։</translation>
+    </message>
+</context>
+<context>
+    <name>DictionariesPage</name>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="69"/>
+        <source>Loading rooms…</source>
+        <translation>Սենյակների բեռնում…</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="87"/>
+        <source>Rooms</source>
+        <translation>Սենյակներ</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Room</source>
+        <translation>Սենյակ</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Floor</source>
+        <translation>Հարկ</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Type</source>
+        <translation>Տեսակ</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Building</source>
+        <translation>Շենք</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Status</source>
+        <translation>Վիճակ</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="90"/>
+        <source>The room list loads after sign-in.</source>
+        <translation>Սենյակների ցանկը բեռնվում է մուտքից հետո։</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="104"/>
+        <source>Ready</source>
+        <translation>Պատրաստ</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="106"/>
+        <source>Occupied</source>
+        <translation>Զբաղված</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="108"/>
+        <source>Dirty</source>
+        <translation>Կեղտոտ</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="110"/>
+        <source>Out of order</source>
+        <translation>Վերանորոգման</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="112"/>
+        <source>House use</source>
+        <translation>Ծառայողական</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="114"/>
+        <source>Complimentary</source>
+        <translation>Կոմպլիմենտար</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="116"/>
+        <source>Out of inventory</source>
+        <translation>Դուրս է ֆոնդից</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="151"/>
+        <source>No rooms.</source>
+        <translation>Սենյակներ չկան։</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="153"/>
+        <source>%1 rooms</source>
+        <translation>%1 սենյակ</translation>
     </message>
 </context>
 <context>

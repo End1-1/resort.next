@@ -52,6 +52,8 @@ curl -sS http://127.0.0.1:8080/health
 | `POST /api/v1/sessions` | Login. JSON `login` + `password`. No bearer. No DSN is 503 `database_not_configured`. Wrong password is 401. |
 | `GET /api/v1/sessions/current` | Current user, `commands_allowed`, `expires_at`. No token in the body. |
 | `DELETE /api/v1/sessions` | Logout. Sets `nx_session.revoked_at`. Does not require `commands_allowed`. |
+| `GET /api/v1/rooms`, `/room-types`, `/buildings` | Bearer. Names from `nx_label` (`?lang=` or `Accept-Language`). |
+| `GET /api/v1/room-statuses` | Bearer. Codes only; the client translates them. |
 | anything else under `/api/v1` | `401` without a bearer, otherwise `404` JSON |
 | WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Hello frame, no PMS events. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
 
@@ -80,7 +82,9 @@ The JSON user object includes `role_id` (`nx_role.id`, or null). `group` is the 
 
 `GET /health` stays unauthenticated. Every other `/api/v1` route reads `Authorization: Bearer <64 hex>`. The lookup key is SHA-256 of those bytes (`nx_session.token_hash`). Unknown or revoked is `401` `unauthorized`. Past `expires_at` (compared with `UTC_TIMESTAMP()`) is `401` `session_expired`. `nx_user.state` other than `active` is `401` `user_disabled`. A well-formed token with no database configured is `503` `database_not_configured`. The token is not logged.
 
-`DELETE /api/v1/sessions` sets `revoked_at` on that row. `GET /api/v1/sessions/current` returns the user, `commands_allowed`, and `expires_at`, and does not repeat the token. Folio and reservation routes are not registered.
+`DELETE /api/v1/sessions` sets `revoked_at` on that row. `GET /api/v1/sessions/current` returns the user, `commands_allowed`, and `expires_at`, and does not repeat the token.
+
+Room, room-type, and building reads are registered. Apply `0003_nx_label.sql` after `0002`. A missing `nx_label` is `503` `schema_outdated`. Example rooms: `next/dbdump/seed/nx_demo_rooms.example.sql`. Folio and reservation routes are not registered.
 
 ```bash
 curl -sS -H 'Content-Type: application/json' \

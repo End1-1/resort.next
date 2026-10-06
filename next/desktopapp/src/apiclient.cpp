@@ -268,6 +268,11 @@ QString apiErrorMessage(int httpStatus, const QString &code)
     }
     if (httpStatus == 403 || code == QLatin1String("commands_not_allowed"))
         return sessionEndedMessage(QStringLiteral("commands_not_allowed"));
+    if (code == QLatin1String("schema_outdated")) {
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.");
+    }
     if (code == QLatin1String("database_not_configured") || code == QLatin1String("session_store_unavailable")
         || code == QLatin1String("driver_not_loaded") || code == QLatin1String("access_denied")
         || code == QLatin1String("unknown_database") || code == QLatin1String("cannot_connect")

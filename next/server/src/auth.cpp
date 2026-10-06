@@ -7,6 +7,16 @@
 #include <QSqlQuery>
 #include <QtGlobal>
 
+ApiResult apiError(int status, const char *code, const char *message)
+{
+    ApiResult result;
+    result.httpStatus = status;
+    result.body.insert(QStringLiteral("error"), QLatin1String(code));
+    if (message && message[0] != '\0')
+        result.body.insert(QStringLiteral("message"), QLatin1String(message));
+    return result;
+}
+
 namespace {
 
 const char kSchemaMessage[] =
@@ -17,34 +27,24 @@ bool missingTable(const QSqlError &error)
     return error.nativeErrorCode() == QLatin1String("1146");
 }
 
-ApiResult fail(int status, const char *code, const char *message)
-{
-    ApiResult result;
-    result.httpStatus = status;
-    result.body.insert(QStringLiteral("error"), QLatin1String(code));
-    if (message && message[0] != '\0')
-        result.body.insert(QStringLiteral("message"), QLatin1String(message));
-    return result;
-}
-
 ApiResult databaseFailure(const QString &failure, bool schemaMissing)
 {
     if (schemaMissing)
-        return fail(503, "session_store_unavailable", kSchemaMessage);
+        return apiError(503, "session_store_unavailable", kSchemaMessage);
     if (failure == QLatin1String("driver_not_loaded"))
-        return fail(503, "driver_not_loaded", "QMYSQL is not loaded");
+        return apiError(503, "driver_not_loaded", "QMYSQL is not loaded");
     if (failure == QLatin1String("access_denied"))
-        return fail(503, "access_denied", "MariaDB refused the configured account");
+        return apiError(503, "access_denied", "MariaDB refused the configured account");
     if (failure == QLatin1String("unknown_database"))
-        return fail(503, "unknown_database", "MariaDB database was not found");
+        return apiError(503, "unknown_database", "MariaDB database was not found");
     if (failure == QLatin1String("cannot_connect"))
-        return fail(503, "cannot_connect", "MariaDB did not accept the connection");
+        return apiError(503, "cannot_connect", "MariaDB did not accept the connection");
     if (failure == QLatin1String("database_not_configured")) {
-        return fail(503,
+        return apiError(503,
                     "database_not_configured",
                     "no database configured; set mysql_host and mysql_schema in hotel-api.ini");
     }
-    return fail(503, "database_unavailable", "MariaDB did not accept the query");
+    return apiError(503, "database_unavailable", "MariaDB did not accept the query");
 }
 
 bool hexChar(unsigned char c)
@@ -126,7 +126,7 @@ AuthOutcome authenticate(const DatabaseTarget &target,
     AuthOutcome outcome;
     const QByteArray token = bearerTokenFromHeader(authorization);
     if (token.isEmpty()) {
-        outcome.result = fail(401, "unauthorized", nullptr);
+        outcome.result = apiError(401, "unauthorized", nullptr);
         return outcome;
     }
     if (!target.configured) {
@@ -167,7 +167,7 @@ AuthOutcome authenticate(const DatabaseTarget &target,
     }
     if (!query.next()) {
         const AccessDecision decision = decideAccess(false, false, false, false, false, false);
-        outcome.result = fail(decision.httpStatus, decision.code, nullptr);
+        outcome.result = apiError(decision.httpStatus, decision.code, nullptr);
         return outcome;
     }
 
@@ -192,7 +192,7 @@ AuthOutcome authenticate(const DatabaseTarget &target,
                                                  principal.commandsAllowed,
                                                  access == RouteAccess::Command);
     if (decision.httpStatus != 200) {
-        outcome.result = fail(decision.httpStatus, decision.code, nullptr);
+        outcome.result = apiError(decision.httpStatus, decision.code, nullptr);
         return outcome;
     }
 
