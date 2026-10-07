@@ -36,8 +36,9 @@
     <message>
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
-        <location filename="../src/apiclient.cpp" line="219"/>
-        <location filename="../src/apiclient.cpp" line="240"/>
+        <location filename="../src/apiclient.cpp" line="252"/>
+        <location filename="../src/apiclient.cpp" line="311"/>
+        <location filename="../src/apiclient.cpp" line="332"/>
         <source>Server unavailable.</source>
         <translation>Server unavailable.</translation>
     </message>
@@ -58,141 +59,230 @@
     </message>
     <message>
         <location filename="../src/apiclient.cpp" line="54"/>
+        <source>TLS error (down, tls_error)</source>
+        <translation>TLS error (down, tls_error)</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="56"/>
         <source>driver not loaded (down, driver_not_loaded)</source>
         <translation>driver not loaded (down, driver_not_loaded)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="56"/>
+        <location filename="../src/apiclient.cpp" line="58"/>
         <source>unavailable (down, connection_failed)</source>
         <translation>unavailable (down, connection_failed)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="175"/>
+        <location filename="../src/apiclient.cpp" line="203"/>
         <source>Incorrect login or password.</source>
         <translation>Incorrect login or password.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="177"/>
+        <location filename="../src/apiclient.cpp" line="205"/>
         <source>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</source>
         <translation>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="182"/>
+        <location filename="../src/apiclient.cpp" line="210"/>
         <source>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</source>
         <translation>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="187"/>
+        <location filename="../src/apiclient.cpp" line="215"/>
         <source>The database driver is not loaded on the server (driver_not_loaded).</source>
         <translation>The database driver is not loaded on the server (driver_not_loaded).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="191"/>
+        <location filename="../src/apiclient.cpp" line="219"/>
         <source>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</source>
         <translation>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="196"/>
+        <location filename="../src/apiclient.cpp" line="224"/>
         <source>The database was not found on the server (unknown_database).</source>
         <translation>The database was not found on the server (unknown_database).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="199"/>
+        <location filename="../src/apiclient.cpp" line="227"/>
         <source>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</source>
         <translation>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="204"/>
+        <location filename="../src/apiclient.cpp" line="232"/>
+        <source>The server could not negotiate TLS with MariaDB (tls_error). For a local database without TLS set mysql_ssl=preferred or off.</source>
+        <translation>The server could not negotiate TLS with MariaDB (tls_error). For a local database without TLS set mysql_ssl=preferred or off.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="237"/>
         <source>The database connection failed (connection_failed).</source>
         <translation>The database connection failed (connection_failed).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="207"/>
+        <location filename="../src/apiclient.cpp" line="240"/>
         <source>The database is unavailable (database_unavailable).</source>
         <translation>The database is unavailable (database_unavailable).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="209"/>
+        <location filename="../src/apiclient.cpp" line="242"/>
         <source>Invalid request to the server.</source>
         <translation>Invalid request to the server.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="211"/>
+        <location filename="../src/apiclient.cpp" line="244"/>
         <source>The server did not find the sign-in address.</source>
         <translation>The server did not find the sign-in address.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="213"/>
+        <location filename="../src/apiclient.cpp" line="246"/>
         <source>The server is temporarily unavailable (503).</source>
         <translation>The server is temporarily unavailable (503).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="216"/>
+        <location filename="../src/apiclient.cpp" line="249"/>
         <source>Sign-in failed, HTTP %1.</source>
         <translation>Sign-in failed, HTTP %1.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="217"/>
+        <location filename="../src/apiclient.cpp" line="250"/>
         <source>Sign-in failed, HTTP %1 (%2).</source>
         <translation>Sign-in failed, HTTP %1 (%2).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="133"/>
+        <location filename="../src/apiclient.cpp" line="279"/>
+        <source>That room already has a stay on those nights.</source>
+        <translation>That room already has a stay on those nights.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="281"/>
+        <source>That status change is not allowed.</source>
+        <translation>That status change is not allowed.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="283"/>
+        <source>The reservation was changed. Reload it and try again.</source>
+        <translation>The reservation was changed. Reload it and try again.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="285"/>
+        <source>Check the guest out before canceling the reservation.</source>
+        <translation>Check the guest out before canceling the reservation.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="287"/>
+        <source>Dates and room cannot change while the guest is in house or checked out.</source>
+        <translation>Dates and room cannot change while the guest is in house or checked out.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="289"/>
+        <source>The room was not found.</source>
+        <translation>The room was not found.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="291"/>
+        <source>The guest was not found.</source>
+        <translation>The guest was not found.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="293"/>
+        <source>The reservation was not found.</source>
+        <translation>The reservation was not found.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="295"/>
+        <source>The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.</source>
+        <translation>The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="135"/>
         <source>The server returned an unexpected response.</source>
         <translation>The server returned an unexpected response.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="160"/>
+        <location filename="../src/apiclient.cpp" line="162"/>
         <source>available (up)</source>
         <translation>available (up)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="162"/>
+        <location filename="../src/apiclient.cpp" line="164"/>
         <source>not configured (skipped)</source>
         <translation>not configured (skipped)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="58"/>
+        <location filename="../src/apiclient.cpp" line="60"/>
         <source>unavailable (down)</source>
         <translation>unavailable (down)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="59"/>
+        <location filename="../src/apiclient.cpp" line="61"/>
         <source>unavailable (down, %1)</source>
         <translation>unavailable (down, %1)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="246"/>
+        <location filename="../src/apiclient.cpp" line="258"/>
+        <source>Your session has expired. Sign in again.</source>
+        <translation>Your session has expired. Sign in again.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="260"/>
+        <source>This account is disabled. Sign in again.</source>
+        <translation>This account is disabled. Sign in again.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="262"/>
+        <source>Signed out on this computer. The server did not confirm logout.</source>
+        <translation>Signed out on this computer. The server did not confirm logout.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="266"/>
+        <source>You do not have permission to change data.</source>
+        <translation>You do not have permission to change data.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="267"/>
+        <source>Sign in again. The session is no longer valid.</source>
+        <translation>Sign in again. The session is no longer valid.</translation>
+    </message>
+    <message>
+        <source>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</source>
+        <translation type="vanished">The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="309"/>
+        <source>Request failed, HTTP %1 (%2).</source>
+        <translation>Request failed, HTTP %1 (%2).</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="338"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Server replied HTTP %1; the database state is unknown.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="249"/>
+        <location filename="../src/apiclient.cpp" line="341"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Server replied with an unexpected body.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="252"/>
+        <location filename="../src/apiclient.cpp" line="344"/>
         <source>Server</source>
         <translation>Server</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="256"/>
+        <location filename="../src/apiclient.cpp" line="348"/>
         <source>responded</source>
         <translation>responded</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="258"/>
+        <location filename="../src/apiclient.cpp" line="350"/>
         <source>unknown</source>
         <translation>unknown</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="259"/>
+        <location filename="../src/apiclient.cpp" line="351"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1: running (%2). Database: %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="261"/>
+        <location filename="../src/apiclient.cpp" line="353"/>
         <source>. Version %1</source>
         <translation>. Version %1</translation>
     </message>
@@ -218,17 +308,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="71"/>
+        <location filename="../src/appcontroller.cpp" line="151"/>
         <source>Could not remember the login. %1</source>
         <translation>Could not remember the login. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="83"/>
+        <location filename="../src/appcontroller.cpp" line="163"/>
         <source>Could not save the language. %1</source>
         <translation>Could not save the language. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="105"/>
+        <location filename="../src/appcontroller.cpp" line="196"/>
         <source>The server address changed. Sign in again.</source>
         <translation>The server address changed. Sign in again.</translation>
     </message>
@@ -317,46 +407,139 @@
     </message>
 </context>
 <context>
+    <name>DictionariesPage</name>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="69"/>
+        <source>Loading rooms…</source>
+        <translation>Loading rooms…</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="87"/>
+        <source>Rooms</source>
+        <translation>Rooms</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Room</source>
+        <translation>Room</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Floor</source>
+        <translation>Floor</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Type</source>
+        <translation>Type</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Building</source>
+        <translation>Building</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="90"/>
+        <source>The room list loads after sign-in.</source>
+        <translation>The room list loads after sign-in.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="104"/>
+        <source>Ready</source>
+        <translation>Ready</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="106"/>
+        <source>Occupied</source>
+        <translation>Occupied</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="108"/>
+        <source>Dirty</source>
+        <translation>Dirty</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="110"/>
+        <source>Out of order</source>
+        <translation>Out of order</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="112"/>
+        <source>House use</source>
+        <translation>House use</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="114"/>
+        <source>Complimentary</source>
+        <translation>Complimentary</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="116"/>
+        <source>Out of inventory</source>
+        <translation>Out of inventory</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="151"/>
+        <source>No rooms.</source>
+        <translation>No rooms.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="153"/>
+        <source>%1 rooms</source>
+        <translation>%1 rooms</translation>
+    </message>
+</context>
+<context>
     <name>HealthMonitor</name>
     <message>
         <location filename="../src/healthmonitor.cpp" line="23"/>
-        <location filename="../src/healthmonitor.cpp" line="118"/>
+        <location filename="../src/healthmonitor.cpp" line="120"/>
         <source>Checking connection…</source>
         <translation>Checking connection…</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="133"/>
-        <location filename="../src/healthmonitor.cpp" line="147"/>
+        <location filename="../src/healthmonitor.cpp" line="135"/>
+        <location filename="../src/healthmonitor.cpp" line="151"/>
         <source>WebSocket: not configured</source>
         <translation>WebSocket: not configured</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="135"/>
+        <location filename="../src/healthmonitor.cpp" line="137"/>
         <source>WebSocket: connecting…</source>
         <translation>WebSocket: connecting…</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="137"/>
+        <location filename="../src/healthmonitor.cpp" line="139"/>
         <source>WebSocket: invalid address</source>
         <translation>WebSocket: invalid address</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="139"/>
+        <location filename="../src/healthmonitor.cpp" line="141"/>
         <source>WebSocket: connected, waiting for hello</source>
         <translation>WebSocket: connected, waiting for hello</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="141"/>
+        <location filename="../src/healthmonitor.cpp" line="143"/>
+        <source>WebSocket: not signed in</source>
+        <translation>WebSocket: not signed in</translation>
+    </message>
+    <message>
+        <location filename="../src/healthmonitor.cpp" line="145"/>
         <source>WebSocket: connected (hello)</source>
         <translation>WebSocket: connected (hello)</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="143"/>
+        <location filename="../src/healthmonitor.cpp" line="147"/>
         <source>WebSocket: connected</source>
         <translation>WebSocket: connected</translation>
     </message>
     <message>
-        <location filename="../src/healthmonitor.cpp" line="145"/>
+        <location filename="../src/healthmonitor.cpp" line="149"/>
         <source>WebSocket: no connection</source>
         <translation>WebSocket: no connection</translation>
     </message>
@@ -365,62 +548,62 @@
     <name>LoginWindow</name>
     <message>
         <location filename="../src/loginwindow.cpp" line="118"/>
-        <location filename="../src/loginwindow.cpp" line="230"/>
+        <location filename="../src/loginwindow.cpp" line="240"/>
         <source>Server: %1</source>
         <translation>Server: %1</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="160"/>
-        <location filename="../src/loginwindow.cpp" line="241"/>
+        <location filename="../src/loginwindow.cpp" line="170"/>
+        <location filename="../src/loginwindow.cpp" line="251"/>
         <source>Enter your login and password.</source>
         <translation>Enter your login and password.</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="168"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="178"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Signing in…</source>
         <translation>Signing in…</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="179"/>
-        <location filename="../src/loginwindow.cpp" line="224"/>
+        <location filename="../src/loginwindow.cpp" line="189"/>
+        <location filename="../src/loginwindow.cpp" line="234"/>
         <source>Sign in</source>
         <comment>button</comment>
         <translation>Sign in</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="219"/>
+        <location filename="../src/loginwindow.cpp" line="229"/>
         <source>Sign in</source>
         <comment>window title</comment>
         <translation>Sign in</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="220"/>
+        <location filename="../src/loginwindow.cpp" line="230"/>
         <source>Hotel</source>
         <translation>Hotel</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="221"/>
+        <location filename="../src/loginwindow.cpp" line="231"/>
         <source>Login</source>
         <translation>Login</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="222"/>
+        <location filename="../src/loginwindow.cpp" line="232"/>
         <source>Password</source>
         <translation>Password</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="223"/>
+        <location filename="../src/loginwindow.cpp" line="233"/>
         <source>The login is remembered; the password is not.</source>
         <translation>The login is remembered; the password is not.</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="225"/>
+        <location filename="../src/loginwindow.cpp" line="235"/>
         <source>Connection settings</source>
         <translation>Connection settings</translation>
     </message>
     <message>
-        <location filename="../src/loginwindow.cpp" line="226"/>
+        <location filename="../src/loginwindow.cpp" line="236"/>
         <source>Language</source>
         <translation>Language</translation>
     </message>
@@ -525,6 +708,354 @@
     </message>
 </context>
 <context>
+    <name>RackPage</name>
+    <message>
+        <location filename="../src/rackpage.cpp" line="64"/>
+        <source>Reserved</source>
+        <translation>Reserved</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="66"/>
+        <source>In house</source>
+        <translation>In house</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="68"/>
+        <source>Checked out</source>
+        <translation>Checked out</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="70"/>
+        <source>Out of order</source>
+        <translation>Out of order</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="72"/>
+        <source>Out of inventory</source>
+        <translation>Out of inventory</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="145"/>
+        <location filename="../src/rackpage.cpp" line="160"/>
+        <source>No guest</source>
+        <translation>No guest</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="161"/>
+        <source>%1
+%2 – %3
+%4</source>
+        <translation>%1
+%2 – %3
+%4</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="256"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>The departure date must be after the arrival date.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="260"/>
+        <source>The rack window is at most 120 nights.</source>
+        <translation>The rack window is at most 120 nights.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="264"/>
+        <source>Loading the rack…</source>
+        <translation>Loading the rack…</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="284"/>
+        <source>Rack</source>
+        <translation>Rack</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="285"/>
+        <source>From</source>
+        <translation>From</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="286"/>
+        <source>To</source>
+        <translation>To</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="287"/>
+        <source>Show</source>
+        <translation>Show</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="289"/>
+        <source>The rack loads after sign-in.</source>
+        <translation>The rack loads after sign-in.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="331"/>
+        <source>No rooms.</source>
+        <translation>No rooms.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="333"/>
+        <source>%1 rooms, %2 nights</source>
+        <translation>%1 rooms, %2 nights</translation>
+    </message>
+</context>
+<context>
+    <name>ReservationDialog</name>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="24"/>
+        <source>Reserved</source>
+        <translation>Reserved</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="26"/>
+        <source>In house</source>
+        <translation>In house</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="28"/>
+        <source>Checked out</source>
+        <translation>Checked out</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="30"/>
+        <location filename="../src/reservationdialog.cpp" line="128"/>
+        <source>Canceled</source>
+        <translation>Canceled</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="109"/>
+        <source>Last name</source>
+        <translation>Last name</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="110"/>
+        <source>First name</source>
+        <translation>First name</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="111"/>
+        <source>Room</source>
+        <translation>Room</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="112"/>
+        <source>Arrival</source>
+        <translation>Arrival</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="113"/>
+        <source>Departure</source>
+        <translation>Departure</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="114"/>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="115"/>
+        <source>Remarks</source>
+        <translation>Remarks</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="116"/>
+        <source>Stay</source>
+        <translation>Stay</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="117"/>
+        <source>Check in</source>
+        <translation>Check in</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="118"/>
+        <source>Check out</source>
+        <translation>Check out</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="119"/>
+        <source>Cancel reservation</source>
+        <translation>Cancel reservation</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="120"/>
+        <source>Save</source>
+        <translation>Save</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="124"/>
+        <source>Tentative</source>
+        <translation>Tentative</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="125"/>
+        <source>Confirmed</source>
+        <translation>Confirmed</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="126"/>
+        <source>Guaranteed</source>
+        <translation>Guaranteed</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="127"/>
+        <source>Blocked</source>
+        <translation>Blocked</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <source>New reservation</source>
+        <translation>New reservation</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <source>Reservation %1</source>
+        <translation>Reservation %1</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="240"/>
+        <source>Last name is required.</source>
+        <translation>Last name is required.</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="244"/>
+        <source>Choose a room.</source>
+        <translation>Choose a room.</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationdialog.cpp" line="248"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>The departure date must be after the arrival date.</translation>
+    </message>
+</context>
+<context>
+    <name>ReservationsPage</name>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="95"/>
+        <source>The departure date must be after the arrival date.</source>
+        <translation>The departure date must be after the arrival date.</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="99"/>
+        <source>Loading reservations…</source>
+        <translation>Loading reservations…</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="138"/>
+        <source>Reservations</source>
+        <translation>Reservations</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="139"/>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Guest</source>
+        <translation>Guest</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="140"/>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Room</source>
+        <translation>Room</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="141"/>
+        <source>Show</source>
+        <translation>Show</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="142"/>
+        <source>New reservation</source>
+        <translation>New reservation</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Arrival</source>
+        <translation>Arrival</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Departure</source>
+        <translation>Departure</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="143"/>
+        <source>Stay</source>
+        <translation>Stay</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="146"/>
+        <source>Any status</source>
+        <translation>Any status</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="148"/>
+        <location filename="../src/reservationspage.cpp" line="171"/>
+        <source>Tentative</source>
+        <translation>Tentative</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="149"/>
+        <location filename="../src/reservationspage.cpp" line="173"/>
+        <source>Confirmed</source>
+        <translation>Confirmed</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="150"/>
+        <location filename="../src/reservationspage.cpp" line="175"/>
+        <source>Guaranteed</source>
+        <translation>Guaranteed</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="151"/>
+        <location filename="../src/reservationspage.cpp" line="177"/>
+        <source>Blocked</source>
+        <translation>Blocked</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="152"/>
+        <location filename="../src/reservationspage.cpp" line="179"/>
+        <location filename="../src/reservationspage.cpp" line="192"/>
+        <source>Canceled</source>
+        <translation>Canceled</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="159"/>
+        <source>Reservations load after sign-in.</source>
+        <translation>Reservations load after sign-in.</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="186"/>
+        <source>Reserved</source>
+        <translation>Reserved</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="188"/>
+        <source>In house</source>
+        <translation>In house</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="190"/>
+        <source>Checked out</source>
+        <translation>Checked out</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="229"/>
+        <source>No reservations.</source>
+        <translation>No reservations.</translation>
+    </message>
+    <message>
+        <location filename="../src/reservationspage.cpp" line="231"/>
+        <source>%1 reservations</source>
+        <translation>%1 reservations</translation>
+    </message>
+</context>
+<context>
     <name>UrlUtil</name>
     <message>
         <location filename="../src/urlutil.cpp" line="20"/>
@@ -585,6 +1116,24 @@
         <location filename="../src/urlutil.cpp" line="130"/>
         <source>Invalid WebSocket path.</source>
         <translation>Invalid WebSocket path.</translation>
+    </message>
+</context>
+<context>
+    <name>WorkspacePage</name>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="44"/>
+        <source>Rack</source>
+        <translation>Rack</translation>
+    </message>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="45"/>
+        <source>Reservations</source>
+        <translation>Reservations</translation>
+    </message>
+    <message>
+        <location filename="../src/workspacepage.cpp" line="46"/>
+        <source>Rooms</source>
+        <translation>Rooms</translation>
     </message>
 </context>
 </TS>

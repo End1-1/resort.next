@@ -1,8 +1,8 @@
 # next/desktopapp
 
-Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake only. The client speaks HTTP JSON (and an optional WebSocket hello). It does not link Qt Sql and it does not open MariaDB. Business rules stay in `next/server`.
+Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake only. The client speaks HTTP JSON and, after sign-in, an authenticated WebSocket for live refresh. It does not link Qt Sql and it does not open MariaDB. Business rules stay in `next/server`.
 
-`hotel-desktop` is the windowed program: connection settings, login, and an empty workspace where later screens (rack chart, reservations) will go. `hotel-desktop-stub` remains a console check of `GET /health` and, optionally, one login call. `Resort/` is unchanged and still writes SQL.
+`hotel-desktop` is the windowed program: connection settings, login, a rack chart, and a room list. `hotel-desktop-stub` remains a console check of `GET /health` and, optionally, one login call. `Resort/` is unchanged and still writes SQL.
 
 `next/webport` is still not in this tree. The window shell is usable; the reception screens are not.
 
@@ -10,13 +10,18 @@ Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake
 
 | Piece | Role |
 |-------|------|
-| `src/apiclient.*`, `src/urlutil.*` | Base URL, in-memory bearer token, async `GET /health` and `POST /api/v1/sessions`. Server error codes are mapped to the UI language here. No widgets. |
+| `src/apiclient.*`, `src/urlutil.*` | Base URL, in-memory bearer token, async `GET /health`, `POST /api/v1/sessions`, and authenticated `GET` / `POST` / `PATCH` / `DELETE`. `Authorization: Bearer` is sent when a token is set. A 401 on those calls is `sessionRejected`. Server error codes are mapped to the UI language here. No widgets. |
 | `src/uilanguage.*`, `translations/` | Armenian, English, and Russian (`hy` / `en` / `ru`). |
 | `src/appconfig.*` | Per-user INI. Never stores a password or a token. |
 | `src/connectiondialog.*` | Address, WebSocket, «Проверить соединение». |
 | `src/loginwindow.*` | Login form. |
+| `src/dictionariespage.*` | Room list tab. `GET /api/v1/rooms?lang=`. |
+| `src/rackpage.*` | Rack chart tab. Rooms as rows, nights as columns. `GET /api/v1/rack`. A block opens the reservation. |
+| `src/reservationspage.*` | Reservation search. `GET /api/v1/reservations`. |
+| `src/reservationdialog.*` | Create and edit. The server validates. |
+| `src/workspacepage.*` | Tabs passed to `MainWindow::setWorkspacePage`. |
 | `src/mainwindow.*` | Session summary, menus, `QStackedWidget` workspace. |
-| `src/healthmonitor.*` | Periodic `/health` and optional WebSocket hello. |
+| `src/healthmonitor.*` | Periodic `/health` and the authenticated WebSocket (reconnect with backoff). |
 | `src/appcontroller.*` | Shows login, then the main window. |
 | `hotel-desktop.ini.example` | Commented sample. The program does not read this filename. |
 
@@ -135,24 +140,29 @@ Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedde
 ## Окна
 
 1. **Вход.** Логин, пароль, «Войти», «Настройки подключения». Логин запоминается, пароль нет. Сеть не блокирует интерфейс (`QNetworkAccessManager`, таймаут около 8 секунд на вход и 5 секунд на `/health`). Строка состояния — последний `/health` и WebSocket.
-2. **После входа.** Имя, логин, `role_id`, `commands_allowed`, адрес сервера, живое состояние (опрос `/health` раз в 15 секунд; если WebSocket задан — ещё кадр hello). Центр пустой: «шахматка, бронирования». Токен только в памяти процесса, на экран не выводится.
-3. **Сессия → Выход.** Токен стирается из памяти, снова окно входа. Метода logout в `hotel-api` пока нет: строка `nx_session` живёт до срока (12 часов) или пока её не уберут на сервере. Закрытие окна завершает процесс и тоже теряет токен.
-4. Смена адреса сервера в настройках, пока сеанс открыт, тоже стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
+2. **После входа.** Имя, логин, `role_id`, `commands_allowed`, адрес сервера, живое состояние (опрос `/health` раз в 15 секунд). Если WebSocket задан, клиент открывает сокет только с токеном в памяти и шлёт `{"type":"auth","token"}`. Кадр `hello` значит, что канал жив. Кадры `reservation.*` и `room.status_changed` заново запрашивают шахматку и список броней. Обрыв — повтор через 1 с, затем 2, 4, 8, не чаще 30 с. Вкладки: шахматка, брони (поиск, «Новая бронь», двойной щелчок), номера. Клик по блоку шахматки открывает бронь. Токен только в памяти процесса, на экран не выводится.
+3. **Сессия → Выход.** Клиент вызывает `DELETE /api/v1/sessions` с `Authorization: Bearer` и только потом стирает токен из памяти. Сервер ставит `nx_session.revoked_at`. Если сервер не ответил, окно входа всё равно открывается и пишет, что выход на сервере не подтверждён. Закрытие окна завершает процесс и тоже теряет токен (строка на сервере при этом остаётся до срока, если выход не вызывали).
+4. Смена адреса сервера в настройках, пока сеанс открыт, сначала шлёт тот же `DELETE` на старый адрес, затем стирает токен и возвращает на вход. Смена только WebSocket сеанс не сбрасывает.
+5. После входа клиент читает `GET /api/v1/sessions/current`. Ответ `401` (`unauthorized`, `session_expired`, `user_disabled`) возвращает на вход с фразой на языке окна, а не с текстом «неверный пароль».
 
 Сообщения входа (код с сервера, фраза на языке окна):
 
-| Ответ | Текст |
-|-------|--------|
-| сеть, таймаут, хост не найден, отказ | «Сервер недоступен…» или «Превышено время ожидания ответа сервера.» |
-| 401 | «Неверный логин или пароль.» |
-| 503 `database_not_configured` | «База не настроена…» |
-| 503 `session_store_unavailable` | «Хранилище сессий недоступно…» |
-| 503 `driver_not_loaded` | «Драйвер базы данных не загружен…» |
-| 503 `access_denied` | «Отказ в доступе к базе на сервере…» |
-| 503 `unknown_database` | «База на сервере не найдена…» |
-| 503 `cannot_connect` | «Сервер не подключился к MariaDB…» |
-| 503 `tls_error` | «Сервер не договорился о TLS с MariaDB…» |
-| 503 `database_unavailable` | «База данных недоступна…» |
+| Ответ | Код | Смысл |
+|-------|-----|--------|
+| сеть, таймаут, хост не найден, отказ | — | сервер недоступен или время ожидания вышло |
+| 401 | `unauthorized` | на форме входа: неверный логин или пароль. В уже открытом сеансе: сессия больше не действует, снова вход |
+| 401 | `session_expired` | срок сессии истёк, снова вход |
+| 401 | `user_disabled` | учётная запись отключена, снова вход |
+| 403 | `commands_not_allowed` | нет права изменять данные |
+| 503 | `database_not_configured` | база не настроена |
+| 503 | `session_store_unavailable` | хранилище сессий недоступно |
+| 503 | `driver_not_loaded` | драйвер базы не загружен |
+| 503 | `access_denied` | учётная запись MariaDB не принята для этого хоста |
+| 503 | `unknown_database` | база на сервере не найдена |
+| 503 | `cannot_connect` | сервер не дождался MariaDB на порту |
+| 503 | `tls_error` | TLS не согласован; для локальной базы без TLS — `mysql_ssl=preferred` или `off` |
+| 503 | `connection_failed` | соединение с базой не установлено |
+| 503 | `database_unavailable` | база недоступна |
 
 Фраза зависит от языка окна. Пустые `mysql_host` и `mysql_schema` на сервере дают код `database_not_configured`: `/health` при этом `db.state=skipped`, а вход — 503.
 

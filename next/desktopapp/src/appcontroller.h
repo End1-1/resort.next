@@ -8,6 +8,8 @@
 
 #include <QObject>
 
+class WorkspacePage;
+
 class AppController : public QObject {
     Q_OBJECT
 
@@ -22,11 +24,18 @@ private slots:
     void onLanguage(const QString &code);
     void editSettings();
     void refreshStatus();
+    void onApiResponse(const ApiResponse &response);
+    void onSessionRejected(const QString &code);
 
 private:
+    void returnToLogin(const QString &sessionCode);
+
     ApiClient m_api;
     HealthMonitor m_monitor;
     DesktopConfig m_config;
     LoginWindow m_login;
     MainWindow m_main;
+    quint64 m_logoutId = 0;
+    bool m_leaving = false;
+    WorkspacePage *m_workspace = nullptr;
 };

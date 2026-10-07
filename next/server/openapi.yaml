@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Hotel API
-  version: 0.3.0
+  version: 0.8.0
   description: |
     Qt/C++ service in next/server (Qt 6.10 target; the same sources also build
     on Qt 6.4). The engine choice overrides docs/audit/03 §3.2 (that note suggested Go).
@@ -19,24 +19,55 @@ info:
     characters. The database stores SHA-256 of that token, not the token. The
     row expires after 12 hours (UTC). commands_allowed is false when role_id is
     null or nx_role_permission has no row for that role. Login still succeeds.
-    There is no command route yet; when one is added it must refuse that session.
     user.group repeats user.role_id.
 
-    GET /health does not require a session. Reservation and folio routes are not
-    implemented and return 404. nx_folio and nx_posting are schema only.
+    Every /api/v1 route except POST /api/v1/sessions requires
+    Authorization: Bearer <token>. The token is hashed with SHA-256 and looked
+    up in nx_session. Missing, malformed, unknown, and revoked tokens are 401
+    unauthorized. An expired row is 401 session_expired. A user whose state is
+    not active is 401 user_disabled. GET /health stays open. Mutating routes
+    (POST, PUT, PATCH, DELETE), other than DELETE /api/v1/sessions, also require
+    commands_allowed and otherwise return 403 commands_not_allowed. Logout is
+    DELETE /api/v1/sessions: it sets revoked_at and does not require
+    commands_allowed. GET /api/v1/sessions/current returns the same user object
+    without the token.
+
+    Read-only dictionaries: GET /api/v1/rooms, /room-types, /buildings, and
+    /room-statuses. Names are one string resolved from nx_label (see
+    next/docs/adr-0002-nx-label.md and migration 0003_nx_label.sql). Room
+    status codes are not translated by the server.
+
+    GET /api/v1/rack returns rooms and stay blocks for a night window
+    [from, to). to is exclusive. A stay occupies [arrival, departure).
+    Canceled stays and canceled reservations are omitted.
+
+    Reservations: GET /api/v1/reservations searches by dates, guest, status,
+    and room. GET /api/v1/reservations/{id} is the detail. POST creates one
+    stay. PATCH changes dates, room, guest, reservation status, or stay
+    state. The server rejects overlapping stays (row lock on nx_room), illegal
+    status changes, and a stale stay version. Writes require commands_allowed.
+    Audit columns are migration 0004_nx_audit.sql. Folio routes are not
+    implemented. nx_folio and nx_posting are schema only.
 
     Planned resources (rack, reservations, stays, folios, end of day, reports)
     are listed in docs/audit/03-celevaya-arhitektura.md §3.3.
 
     Realtime is a WebSocket hint, then an HTTP re-read. It does not replace
     this REST contract. The socket is served only when HOTEL_WS_LISTEN is set,
-    on that address, path /api/v1/ws.
+    on that address, path /api/v1/ws. The client authenticates with the same
+    session token (query token, or a first text frame {"type":"auth","token"}).
+    After that the server sends {"type":"hello"} and, after a successful
+    reservation commit, reservation.created, reservation.updated,
+    reservation.cancelled, and room.status_changed. See next/docs/ws-events.md.
 servers:
   - url: http://127.0.0.1:8080
     description: Default loopback bind (HOTEL_LISTEN).
 tags:
   - name: meta
   - name: auth
+  - name: dictionaries
+  - name: rack
+  - name: reservations
 paths:
   /health:
     get:
@@ -77,7 +108,15 @@ paths:
       tags: [meta]
       operationId: getApiRoot
       summary: Contract marker
+      security:
+        - bearerAuth: []
       responses:
+        '401':
+          description: Bearer missing, unknown, expired, revoked, or the user is disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '200':
           description: Service identity. No business data.
           content:
@@ -139,6 +178,395 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    delete:
+      tags: [auth]
+      operationId: deleteSession
+      summary: Revoke the bearer session
+      description: |
+        Requires Authorization: Bearer. Sets nx_session.revoked_at to the
+        database UTC time. Does not require commands_allowed. The token is
+        not accepted again. A missing or already revoked token is 401
+        unauthorized, the same as any other unknown token.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The row was revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResult'
+        '401':
+          description: Missing, malformed, unknown, revoked, expired, or disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Database or session tables are unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/sessions/current:
+    get:
+      tags: [auth]
+      operationId: getCurrentSession
+      summary: Describe the bearer session
+      description: |
+        Same user object as login, plus commands_allowed and expires_at.
+        The bearer token is not repeated. Requires a live session.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current session. No token field.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentSession'
+        '401':
+          description: Missing, malformed, unknown, revoked, expired, or disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Database or session tables are unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/reservations:
+    get:
+      tags: [reservations]
+      operationId: listReservations
+      summary: Search reservations for the signed-in property
+      description: |
+        Bearer required. `from` and `to` are optional and must be sent together
+        (YYYY-MM-DD, `to` exclusive). A reservation matches when one of its stays
+        overlaps that window. `guest` matches first or last name. `status` is
+        the reservation status. `room` is the room code. `room_id` is numeric.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          schema: {type: string, format: date}
+        - name: to
+          in: query
+          schema: {type: string, format: date}
+        - name: guest
+          in: query
+          schema: {type: string}
+        - name: status
+          in: query
+          schema: {type: string}
+        - name: room
+          in: query
+          schema: {type: string}
+        - name: room_id
+          in: query
+          schema: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Matching reservations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationList'
+        '400':
+          description: invalid_request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags: [reservations]
+      operationId: createReservation
+      summary: Create one reservation and one stay
+      description: |
+        Requires commands_allowed. status_code is tentative, confirmed,
+        guaranteed, or blocked (default confirmed). departure must be after
+        arrival. The stay starts as reserved. Overlap with reserved, in_house,
+        out_of_order, or out_of_inventory on the same room is 409 overlap.
+        The room row is locked for the transaction.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationWrite'
+      responses:
+        '201':
+          description: Created reservation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDetail'
+        '400':
+          description: invalid_request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: commands_not_allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: room_not_found or guest_not_found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: overlap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/reservations/{id}:
+    get:
+      tags: [reservations]
+      operationId: getReservation
+      summary: Reservation detail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Reservation and stays.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDetail'
+        '404':
+          description: reservation_not_found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags: [reservations]
+      operationId: updateReservation
+      summary: Change dates, room, guest, or status
+      description: |
+        Requires commands_allowed and the stay version. Reservation statuses
+        are tentative, confirmed, guaranteed, blocked, and canceled. Stay
+        states move reserved to in_house or canceled, in_house to checked_out,
+        and canceled back to reserved when the reservation is reinstated.
+        Check-in sets the room to occupied. Check-out sets it to vacant_dirty.
+        Dates and room cannot change while the stay is in_house or checked_out.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationPatch'
+      responses:
+        '200':
+          description: Updated reservation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDetail'
+        '403':
+          description: commands_not_allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: reservation_not_found, room_not_found, or guest_not_found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: overlap, invalid_transition, version_conflict, stay_in_house, or stay_locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/rack:
+    get:
+      tags: [rack]
+      operationId: getRack
+      summary: Room occupancy for a night window
+      description: |
+        Bearer required. Query `from` and `to` are YYYY-MM-DD. The window is
+        half-open: nights from `from` inclusive until `to` exclusive, at most
+        120 nights. Each room of the signed-in property is returned. A block
+        is a stay whose [arrival, departure) overlaps that window. Canceled
+        stays and stays on a canceled reservation are omitted, as are stays
+        with no room. guest_name is the primary stay guest, otherwise the
+        first guest (last name, then first name). type_name follows nx_label
+        the same way as GET /api/v1/rooms. state_code is not translated.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          description: Rooms and overlapping stay blocks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RackChart'
+        '400':
+          description: invalid_range or range_too_long.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Database unavailable or schema_outdated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/rooms:
+    get:
+      tags: [dictionaries]
+      operationId: listRooms
+      summary: Rooms for the signed-in property
+      description: |
+        Bearer required. `lang` query or Accept-Language selects hy, en, or ru
+        (default ru). Room type and building names come from nx_label, then ru,
+        then the name column, then code. status_code is not translated.
+        See next/docs/adr-0002-nx-label.md.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          description: Room rows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomList'
+        '401':
+          description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Database unavailable or nx_label / nx_room missing (schema_outdated).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/room-types:
+    get:
+      tags: [dictionaries]
+      operationId: listRoomTypes
+      summary: Room types for the signed-in property
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          description: Room types with one resolved name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedCodeList'
+        '401':
+          description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/buildings:
+    get:
+      tags: [dictionaries]
+      operationId: listBuildings
+      summary: Buildings for the signed-in property
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          description: Buildings with one resolved name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedCodeList'
+        '401':
+          description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/room-statuses:
+    get:
+      tags: [dictionaries]
+      operationId: listRoomStatuses
+      summary: Closed set of room status codes
+      description: |
+        Codes only. The client translates them. lang is echoed and does not
+        change the body. Not stored in nx_label.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          description: Status codes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeList'
+        '401':
+          description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/ws:
     get:
       tags: [meta]
@@ -146,13 +574,37 @@ paths:
       summary: WebSocket hint channel (not HTTP)
       description: |
         Not an HTTP GET. Clients open a WebSocket to ws://<HOTEL_WS_LISTEN>/api/v1/ws.
-        The first text frame is a hello object with events=not_implemented.
-        PMS events are not published yet. Any other path on that listener is closed.
+        Authenticate with ?token=<64 hex> or a first text frame
+        {"type":"auth","token":"<64 hex>"}. A bad token or a first frame that is
+        not auth closes the socket with 1008 and reason unauthorized. A silent
+        socket is not subscribed and receives no hello. After auth the server
+        sends {"type":"hello"}, then reservation.created, reservation.updated,
+        reservation.cancelled, and room.status_changed. Payload fields are in
+        next/docs/ws-events.md. Any other path on that listener is closed.
+        A browser Origin other than loopback is rejected.
       x-websocket: true
       responses:
         '101':
           description: Switching Protocols when the WebSocket listener is enabled.
 components:
+  parameters:
+    lang:
+      name: lang
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [hy, en, ru]
+      description: |
+        Preferred dictionary locale. Accept-Language is used when lang is
+        omitted or not one of hy, en, ru. Otherwise the server uses ru.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        64 hex characters from POST /api/v1/sessions. The server stores SHA-256
+        of this value in nx_session.token_hash.
   schemas:
     Health:
       type: object
@@ -166,7 +618,7 @@ components:
           example: hotel-api
         version:
           type: string
-          example: 0.3.0
+          example: 0.8.0
         db:
           $ref: '#/components/schemas/DatabaseProbe'
     DatabaseProbe:
@@ -204,7 +656,7 @@ components:
           example: partial
         version:
           type: string
-          example: 0.3.0
+          example: 0.8.0
     LoginRequest:
       type: object
       required: [login, password]
@@ -238,7 +690,8 @@ components:
           type: boolean
           description: |
             False when role_id is null or nx_role_permission has no row for that role.
-            Login still returns a token. Future command routes must reject it.
+            Login still returns a token. Mutating routes reject that session with
+            403 commands_not_allowed. Reading and logout do not.
     SessionUser:
       type: object
       required: [id, login, name, role_id, group]
@@ -261,6 +714,245 @@ components:
           format: int64
           nullable: true
           description: Same number as role_id. Present so a 0.2 client still sees the field.
+    CurrentSession:
+      type: object
+      required: [token_type, expires_at, user, commands_allowed]
+      properties:
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_at:
+          type: string
+          description: UTC, from nx_session.expires_at.
+        user:
+          $ref: '#/components/schemas/SessionUser'
+        commands_allowed:
+          type: boolean
+    NamedCode:
+      type: object
+      required: [id, code, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        code:
+          type: string
+        name:
+          type: string
+          description: Resolved for lang. Not three columns.
+    NamedCodeList:
+      type: object
+      required: [lang, items]
+      properties:
+        lang:
+          type: string
+          enum: [hy, en, ru]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedCode'
+    CodeList:
+      type: object
+      required: [lang, items]
+      properties:
+        lang:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+    ReservationList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [id, status_code]
+            properties:
+              id: {type: integer, format: int64}
+              status_code: {type: string}
+              arrival: {type: string, format: date, nullable: true}
+              departure: {type: string, format: date, nullable: true}
+              guest_name: {type: string}
+              room_code: {type: string, nullable: true}
+              stay_state: {type: string, nullable: true}
+              created_at: {type: string}
+              updated_at: {type: string, nullable: true}
+    ReservationDetail:
+      type: object
+      required: [id, status_code, stays]
+      properties:
+        id: {type: integer, format: int64}
+        status_code: {type: string}
+        remarks: {type: string, nullable: true}
+        created_at: {type: string}
+        created_by: {type: integer, format: int64, nullable: true}
+        updated_at: {type: string, nullable: true}
+        updated_by: {type: integer, format: int64, nullable: true}
+        stays:
+          type: array
+          items:
+            type: object
+            required: [id, arrival, departure, state_code, version]
+            properties:
+              id: {type: integer, format: int64}
+              room_id: {type: integer, format: int64, nullable: true}
+              room_code: {type: string, nullable: true}
+              arrival: {type: string, format: date}
+              departure: {type: string, format: date}
+              state_code: {type: string}
+              adults: {type: integer}
+              children: {type: integer}
+              version: {type: integer}
+              guest:
+                nullable: true
+                type: object
+                properties:
+                  id: {type: integer, format: int64}
+                  first_name: {type: string}
+                  last_name: {type: string}
+    ReservationWrite:
+      type: object
+      required: [room_id, arrival, departure]
+      properties:
+        status_code: {type: string}
+        room_id: {type: integer, format: int64}
+        arrival: {type: string, format: date}
+        departure: {type: string, format: date}
+        adults: {type: integer}
+        children: {type: integer}
+        remarks: {type: string}
+        guest_id: {type: integer, format: int64}
+        guest:
+          type: object
+          required: [last_name]
+          properties:
+            first_name: {type: string}
+            last_name: {type: string}
+    ReservationPatch:
+      type: object
+      required: [version]
+      properties:
+        version: {type: integer}
+        stay_id: {type: integer, format: int64}
+        status_code: {type: string}
+        state_code: {type: string}
+        room_id: {type: integer, format: int64}
+        arrival: {type: string, format: date}
+        departure: {type: string, format: date}
+        adults: {type: integer}
+        children: {type: integer}
+        remarks: {type: string}
+        guest_id: {type: integer, format: int64}
+        guest:
+          type: object
+          properties:
+            first_name: {type: string}
+            last_name: {type: string}
+    RackChart:
+      type: object
+      required: [lang, from, to, rooms]
+      properties:
+        lang:
+          type: string
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+          description: Exclusive end of the night window.
+        rooms:
+          type: array
+          items:
+            type: object
+            required: [id, code, status_code, type_name, blocks]
+            properties:
+              id:
+                type: integer
+                format: int64
+              code:
+                type: string
+              floor:
+                type: integer
+                nullable: true
+              status_code:
+                type: string
+              type_name:
+                type: string
+              building_name:
+                type: string
+                nullable: true
+              blocks:
+                type: array
+                items:
+                  type: object
+                  required: [stay_id, reservation_id, guest_name, state_code, reservation_status, arrival, departure]
+                  properties:
+                    stay_id:
+                      type: integer
+                      format: int64
+                    reservation_id:
+                      type: integer
+                      format: int64
+                    guest_name:
+                      type: string
+                    state_code:
+                      type: string
+                    reservation_status:
+                      type: string
+                    arrival:
+                      type: string
+                      format: date
+                    departure:
+                      type: string
+                      format: date
+                      description: Exclusive. The room is free on this date.
+    RoomList:
+      type: object
+      required: [lang, items]
+      properties:
+        lang:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required: [id, code, status_code, room_type]
+            properties:
+              id:
+                type: integer
+                format: int64
+              code:
+                type: string
+              floor:
+                type: integer
+                nullable: true
+              phone:
+                type: string
+                nullable: true
+              status_code:
+                type: string
+                description: Closed code. The client translates it.
+              room_type:
+                $ref: '#/components/schemas/NamedCode'
+              building:
+                nullable: true
+                allOf:
+                  - $ref: '#/components/schemas/NamedCode'
+    LogoutResult:
+      type: object
+      required: [revoked]
+      properties:
+        revoked:
+          type: boolean
+          enum: [true]
     Error:
       type: object
       required: [error]
@@ -270,6 +962,9 @@ components:
           enum:
             - invalid_request
             - unauthorized
+            - session_expired
+            - user_disabled
+            - commands_not_allowed
             - database_not_configured
             - driver_not_loaded
             - access_denied
@@ -278,6 +973,17 @@ components:
             - tls_error
             - database_unavailable
             - session_store_unavailable
+            - schema_outdated
+            - invalid_range
+            - range_too_long
+            - overlap
+            - invalid_transition
+            - version_conflict
+            - stay_in_house
+            - stay_locked
+            - room_not_found
+            - guest_not_found
+            - reservation_not_found
             - not_found
         message:
           type: string

@@ -30,8 +30,8 @@
 | Схема с нуля, все таблицы с префиксом `nx_`. DDL: [`next/dbdump/migrations/0002_nx_core.sql`](../dbdump/migrations/0002_nx_core.sql). Карта имён: [nx-schema.md](nx-schema.md). Старые таблицы — только образец поведения. Expand/contract из аудита §2.4, который оставлял `f_reservation` / `m_register` хранилищем для `next/`, на этот API не действует. | [nx-schema.md](nx-schema.md) |
 | `next/webport` начинается после того, как `next/desktopapp` реально работает. Каталога `webport/` в дереве нет. | ADR |
 | Конфиг сервера: `hotel-api.ini` рядом с exe, на Linux ещё `/etc/hotel-api/hotel-api.ini`, либо полный путь в `HOTEL_CONFIG`. Ключи базы: `mysql_host`, `mysql_port` (необязателен, по умолчанию 3306), `mysql_schema`, `mysql_user`, `mysql_password`. Пароль буквальный, без percent-encoding. База включена, когда заданы хост и схема; без пользователя старт с ошибкой. `HOTEL_LISTEN`, `HOTEL_WS_LISTEN` и `HOTEL_MYSQL_HOST` / `PORT` / `SCHEMA` / `USER` / `PASSWORD` перекрывают ключ ini только если после обрезки пробелов не пустые. Старый `dsn` / `HOTEL_DSN` принимается только если нет ни одного непустого `mysql_host`/`port`/`schema`/`user`/`password`, и в лог пишется deprecation; если заданы оба, побеждают `mysql_*`. `mysql_ssl`: `off` \| `preferred` (по умолчанию) \| `required` \| `verify`, переменная `HOTEL_MYSQL_SSL`. По умолчанию локальная MariaDB без TLS должна открываться. Native `2026` — код `tls_error`. | [server-config.md](server-config.md) |
-| Конфиг десктоп-клиента: личный INI, не рядом с exe и не в реестре (ни HKLM, ни HKCU). Windows: `%APPDATA%\Resort\hotel-desktop\hotel-desktop.ini`. Linux: `~/.config/Resort/hotel-desktop/hotel-desktop.ini` (или `$XDG_CONFIG_HOME/...`). Рядом с exe допустим только необязательный `hotel-desktop.ini` на чтение, и только пока личного файла нет. Ключи: `base_url`, `websocket_url`, `last_login`. DSN и пароль MariaDB клиенту не выдаются. Пароль и bearer в файл не писать. | `next/desktopapp/src/appconfig.cpp`, [next/desktopapp/README.md](../desktopapp/README.md) |
-| Язык UI — русский. Идентификаторы, ключи конфига и пути в коде — английские. | этот файл |
+| Конфиг десктоп-клиента: личный INI, не рядом с exe и не в реестре (ни HKLM, ни HKCU). Windows: `%APPDATA%\Resort\hotel-desktop\hotel-desktop.ini`. Linux: `~/.config/Resort/hotel-desktop/hotel-desktop.ini` (или `$XDG_CONFIG_HOME/...`). Рядом с exe допустим только необязательный `hotel-desktop.ini` на чтение, и только пока личного файла нет. Ключи: `base_url`, `websocket_url`, `last_login`, `language` (`hy` / `en` / `ru`; пусто — язык системы, если он из этих трёх, иначе `ru`). DSN и пароль MariaDB клиенту не выдаются. Пароль и bearer в файл не писать. Комментарий в этом ini — только `;`. | `next/desktopapp/src/appconfig.cpp`, [next/desktopapp/README.md](../desktopapp/README.md) |
+| Языки UI с первого дня: армянский (`hy`), английский (`en`), русский (`ru`). Это обязательно для всех клиентов: десктоп сейчас, `webport` позже. Исходные строки в коде английские. Сервер отдаёт языконезависимые коды ошибок (`database_not_configured` и другие); фразу показывает клиент. Имена справочников (типы номеров и т.п.) в одной колонке `name` для трёх языков не годятся — рекомендация, без смены DDL: [nx-schema.md](nx-schema.md). Идентификаторы, ключи конфига и пути — английские. | этот файл; [nx-schema.md](nx-schema.md) |
 
 Ограничение к выбору Qt-сервера: `next/server` не линкует Qt Widgets и не компилирует диалоги `Resort/`. Правило переписывается кодом сервиса, а не копируется из формы.
 
@@ -49,7 +49,7 @@
 
 ## 4. Что уже влито в `main`
 
-Версия контракта: `0.3.0` (`openapi.yaml`, `HOTEL_API_VERSION`). Корневой `README.md` — changelog старого клиента `1.8.19.787`, не инструкция.
+Версия контракта: `0.8.0` (`openapi.yaml`, `HOTEL_API_VERSION`). Корневой `README.md` — changelog старого клиента `1.8.19.787`, не инструкция. Цепочка ещё не в `main`: см. §9.
 
 | PR | Статус | Что сделано |
 |----|--------|-------------|
@@ -69,10 +69,14 @@
 - `GET /health` — без сессии. Нет `mysql_host` и `mysql_schema`: `200`, `db.state=skipped`. Ключи заданы: проба `QMYSQL` (таймаут 3 с), `200` `up` или `503` `down`. Тело без пароля. Лог старта называет хост, порт, базу и пользователя, пароль не пишет.
 - `GET /api/v1` — маркер `status=partial`.
 - `POST /api/v1/sessions` — читает `nx_user`, пишет `nx_session`. Пароль в MariaDB не уходит. `password_scheme` должен быть `md5`, хеш — 32 hex MD5 от UTF-8. Таблицу `users` запрос не трогает, хеш не обновляет. Токен в ответе — 64 hex, в базе SHA-256, срок 12 часов UTC. `commands_allowed` ложен, если у роли нет строки `nx_role_permission`; токен всё равно выдаётся. Маршрута команд нет.
-- Bearer на маршрутах **не проверяется**. Клиент умеет слать `Authorization: Bearer`, сервер заголовок не читает. Эндпоинта выхода нет: меню «Выход» только стирает токен из памяти. Строка `nx_session` живёт до срока (12 часов).
-- WebSocket `/api/v1/ws` поднимается только при непустом `ws_listen`. Кадр hello, событий PMS нет.
+- Bearer проверяется на каждом `/api/v1/*`, кроме `POST /api/v1/sessions`. `GET /health` открыт. Токен — 64 hex, в базе SHA-256 (`nx_session.token_hash`). Нет токена, битый, чужой или отозванный: `401` `unauthorized`. Срок вышел: `401` `session_expired`. `nx_user.state` не `active`: `401` `user_disabled`. Изменяющий маршрут при `commands_allowed=false` — `403` `commands_not_allowed` (самого такого маршрута, кроме выхода, ещё нет; выход флаг не требует). `DELETE /api/v1/sessions` ставит `revoked_at`. `GET /api/v1/sessions/current` отдаёт пользователя без токена.
+- Меню «Выход» вызывает `DELETE` и затем стирает токен из памяти. `401` на уже открытом сеансе возвращает на вход с переведённой фразой (`hy` / `en` / `ru`), не с текстом про неверный пароль.
+- Справочники только на чтение: `GET /api/v1/rooms`, `/room-types`, `/buildings`, `/room-statuses`. Имена типов и корпусов — таблица `nx_label` ([adr-0002-nx-label.md](adr-0002-nx-label.md), миграция `0003_nx_label.sql`, `0002` не менять). Коды статуса номера переводит клиент. Пример сида: `next/dbdump/seed/nx_demo_rooms.example.sql`.
+- Шахматка: `GET /api/v1/rack?from=&to=` (ночи `[from, to)`, не больше 120). Блок — проживание `[arrival, departure)`, отменённые не входят.
+- Брони: список и карточка, создание и правка (`POST`/`PATCH /api/v1/reservations`). Пересечение номера, переходы статуса и `version` проверяет сервер. Кто и когда — миграция `0004_nx_audit.sql` (`0002` и `0003` не менять). Запись требует `commands_allowed`. Фолио нет. Вкладки: шахматка, брони, номера. Клик по блоку шахматки открывает бронь.
+- WebSocket `/api/v1/ws` поднимается только при непустом `ws_listen`. Токен — `?token=` или первый кадр `{"type":"auth","token"}`. После этого `{"type":"hello"}`, а после commit брони — `reservation.created` / `updated` / `cancelled` и `room.status_changed`. Схема кадров: [ws-events.md](ws-events.md).
 - `nx_folio` и `nx_posting` есть в DDL. HTTP-маршрута фолио нет.
-- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с, hello по WebSocket). Рабочая область пустая (`MainWindow::setWorkspacePage`). UI: `hy` / `en` / `ru`, переключение без перезапуска. Токен только в памяти. Коды ошибок сервера клиент переводит сам.
+- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с). Сокет открывается только с токеном и шлёт `auth`; `hello` и события брони/статуса номера перечитывают шахматку и список. Обрыв — повтор с паузой 1…30 с. Рабочая область — вкладки шахматки, броней и списка номеров (`WorkspacePage` через `MainWindow::setWorkspacePage`). UI: `hy` / `en` / `ru`, переключение без перезапуска. Токен только в памяти. Коды ошибок сервера клиент переводит сам.
 - Конфиг клиента — пути из §2. Ключ `password` при сохранении удаляется. Образец `hotel-desktop.ini.example` программа не открывает; на `main` его комментарии всё ещё `#` (см. §5).
 - `hotel-desktop-stub` — консоль без окон: `GET /health`, опционально один логин. Ini клиента не читает. Это не UI ресепшена.
 - `0001_hotel_api_session.sql` не применять. Сервис таблицу `hotel_api_session` не читает.
@@ -101,7 +105,7 @@
 
 Длинный план — [docs/audit/05-dorozhnaya-karta.md](../../docs/audit/05-dorozhnaya-karta.md) (фазы 0–10). Быстрые победы без нового backend — [docs/audit/06-bystrye-pobedy.md](../../docs/audit/06-bystrye-pobedy.md). Сначала три пункта ниже, каждый своим PR. Они важнее остального списка.
 
-1. Middleware bearer и эндпоинт выхода. Токен из `POST /api/v1/sessions` проверять на маршрутах; `GET /health` остаётся открытым. Сессия с `commands_allowed=false` на командах отвергается. Выход отзывает строку `nx_session` (сейчас «Выход» в клиенте только забывает токен в памяти, строка живёт 12 часов). Клиент после этого вызывает выход, а не только чистит память.
+1. Middleware bearer и эндпоинт выхода. **Сделано в 0.4.0.** Токен из `POST /api/v1/sessions` проверяется на `/api/v1/*`; `GET /health` открыт. `commands_allowed=false` на изменяющих маршрутах даёт `403` `commands_not_allowed` (чтение и выход — нет). `DELETE /api/v1/sessions` пишет `revoked_at`. Клиент вызывает выход, а не только чистит память.
 2. Read-эндпоинты на таблицах `nx_`: шахматка и брони (фаза 3). Запись брони и фолио позже. Сверять с базой, не с кэшем станции.
 3. Первый экран десктопа в пустой области `MainWindow::setWorkspacePage` (шахматка или список броней), по флагу, флаг по умолчанию выключен. `Resort/` до флага пишет SQL как раньше. Экран не открывает MariaDB.
 
@@ -166,3 +170,35 @@ mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
 ```text
 Прочитай next/docs/HANDOFF.md в End1-1/resort.next и продолжай миграцию
 ```
+
+## 9. Статус цепочки 0.4.0–0.8.0
+
+Срез этого файла — ветка `cursor/ws-events-cd9c`, не `main`. PR стеком: база каждого следующего — ветка предыдущего. Вливать по порядку. `0002_nx_core.sql` уже на базе владельца: не править и не применять заново.
+
+| Порядок | PR | Ветка | Контракт | Тема |
+|---------|----|-------|----------|------|
+| 1 | [#18](https://github.com/End1-1/resort.next/pull/18) | `cursor/session-bearer-cd9c` | 0.4.0 | Bearer на `/api/v1/*`, `DELETE` и `GET /api/v1/sessions/current`, выход и `401` в клиенте. База: `main`. |
+| 2 | [#19](https://github.com/End1-1/resort.next/pull/19) | `cursor/nx-dictionaries-cd9c` | 0.5.0 | Справочники номеров. Миграция `0003_nx_label.sql`. ADR [adr-0002-nx-label.md](adr-0002-nx-label.md). Сид `next/dbdump/seed/nx_demo_rooms.example.sql`. |
+| 3 | [#20](https://github.com/End1-1/resort.next/pull/20) | `cursor/rack-chart-cd9c` | 0.6.0 | `GET /api/v1/rack` и виджет шахматки. |
+| 4 | [#21](https://github.com/End1-1/resort.next/pull/21) | `cursor/reservations-cd9c` | 0.7.0 | Список, карточка, создание и правка брони. Миграция `0004_nx_audit.sql`. Фолио нет. |
+| 5 | [#22](https://github.com/End1-1/resort.next/pull/22) | `cursor/ws-events-cd9c` | 0.8.0 | Аутентифицированный WebSocket и живое обновление шахматки и списка. Схема: [ws-events.md](ws-events.md). База PR: `cursor/reservations-cd9c`. |
+
+Миграции, которые владелец применяет сам (не на бой без явного «да»; каждый файл безопасен при повторном запуске):
+
+```bash
+mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
+  < next/dbdump/migrations/0003_nx_label.sql
+mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
+  < next/dbdump/migrations/0004_nx_audit.sql
+```
+
+Необязательный сид номеров (свойство `NXDEMO`, без гостей и без паролей):
+
+```bash
+mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
+  < next/dbdump/seed/nx_demo_rooms.example.sql
+```
+
+Пользователя по-прежнему вставляет только заполненная копия `nx_user.example.sql`. Её не коммитить.
+
+Проверено на Linux, Qt 6.4.2, g++. Qt 6.10.2 MSVC 2022 на Windows этим срезом не собирался. Ветка Qt 6.8 в `httpserver.cpp` на этой машине не компилировалась.
