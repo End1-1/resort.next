@@ -6,6 +6,7 @@ DDL for the `nx_` store used by `hotel-api`. The map from the old tables is `nex
 |------|--------|
 | `migrations/0002_nx_core.sql` | Yes. Creates the `nx_` tables and the voucher catalog. Do not edit a file that is already applied. |
 | `migrations/0003_nx_label.sql` | Yes, after `0002`. Translated names (`hy` / `en` / `ru`). Safe to run again. |
+| `migrations/0004_nx_audit.sql` | Yes, after `0003`. `created_by` / `updated_at` / `updated_by` on reservations and stays. Safe to run again. |
 | `migrations/0001_hotel_api_session.sql` | No. Superseded by `nx_session`. Skip it on a new database. |
 | `seed/nx_user.example.sql` | By hand, after you replace the placeholders. Not part of `migrations/*.sql`. |
 | `seed/nx_demo_rooms.example.sql` | Optional fictional rooms. After `0002` and `0003`. Not a guest dump. |

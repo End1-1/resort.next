@@ -1,8 +1,8 @@
 #include "appcontroller.h"
 
 #include "connectiondialog.h"
-#include "dictionariespage.h"
 #include "uilanguage.h"
+#include "workspacepage.h"
 
 #include <QCoreApplication>
 #include <QJsonObject>
@@ -24,11 +24,15 @@ AppController::AppController(QObject *parent)
     connect(&m_login, &LoginWindow::languageRequested, this, &AppController::onLanguage);
     connect(&m_main, &MainWindow::languageRequested, this, &AppController::onLanguage);
     connect(&m_monitor, &HealthMonitor::statusChanged, this, &AppController::refreshStatus);
+    connect(&m_monitor, &HealthMonitor::hotelEvent, this, [this](const QString &) {
+        if (m_workspace)
+            m_workspace->reload();
+    });
     connect(&m_api, &ApiClient::responseFinished, this, &AppController::onApiResponse);
     connect(&m_api, &ApiClient::sessionRejected, this, &AppController::onSessionRejected);
 
-    m_rooms = new DictionariesPage(&m_api, &m_main);
-    m_main.setWorkspacePage(m_rooms);
+    m_workspace = new WorkspacePage(&m_api, &m_main);
+    m_main.setWorkspacePage(m_workspace);
 }
 
 void AppController::start()
@@ -60,8 +64,9 @@ void AppController::onLogin(const UserSnapshot &user)
     m_main.raise();
     m_main.activateWindow();
     m_login.hide();
-    if (m_rooms)
-        m_rooms->reload();
+    if (m_workspace)
+        m_workspace->reload();
+    m_monitor.reconnectNow();
     m_api.request(HttpVerb::Get,
                   QStringLiteral("/api/v1/sessions/current"),
                   QUrlQuery(),
@@ -72,6 +77,7 @@ void AppController::onLogin(const UserSnapshot &user)
 void AppController::returnToLogin(const QString &sessionCode)
 {
     m_api.clearToken();
+    m_monitor.reconnectNow();
     m_logoutId = 0;
     m_leaving = false;
     m_login.prepareForShow();

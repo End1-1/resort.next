@@ -113,6 +113,7 @@ public:
     void setToken(const QString &token);
     void clearToken();
     bool hasToken() const;
+    QString token() const;
 
     void requestHealth(int timeoutMs = 5000);
     void requestLogin(const QString &login, const QString &password, int timeoutMs = 8000);

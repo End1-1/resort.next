@@ -49,7 +49,7 @@
 
 ## 4. Что уже влито в `main`
 
-Версия контракта: `0.5.0` (`openapi.yaml`, `HOTEL_API_VERSION`). Корневой `README.md` — changelog старого клиента `1.8.19.787`, не инструкция.
+Версия контракта: `0.8.0` (`openapi.yaml`, `HOTEL_API_VERSION`). Корневой `README.md` — changelog старого клиента `1.8.19.787`, не инструкция. Цепочка ещё не в `main`: см. §9.
 
 | PR | Статус | Что сделано |
 |----|--------|-------------|
@@ -71,10 +71,12 @@
 - `POST /api/v1/sessions` — читает `nx_user`, пишет `nx_session`. Пароль в MariaDB не уходит. `password_scheme` должен быть `md5`, хеш — 32 hex MD5 от UTF-8. Таблицу `users` запрос не трогает, хеш не обновляет. Токен в ответе — 64 hex, в базе SHA-256, срок 12 часов UTC. `commands_allowed` ложен, если у роли нет строки `nx_role_permission`; токен всё равно выдаётся. Маршрута команд нет.
 - Bearer проверяется на каждом `/api/v1/*`, кроме `POST /api/v1/sessions`. `GET /health` открыт. Токен — 64 hex, в базе SHA-256 (`nx_session.token_hash`). Нет токена, битый, чужой или отозванный: `401` `unauthorized`. Срок вышел: `401` `session_expired`. `nx_user.state` не `active`: `401` `user_disabled`. Изменяющий маршрут при `commands_allowed=false` — `403` `commands_not_allowed` (самого такого маршрута, кроме выхода, ещё нет; выход флаг не требует). `DELETE /api/v1/sessions` ставит `revoked_at`. `GET /api/v1/sessions/current` отдаёт пользователя без токена.
 - Меню «Выход» вызывает `DELETE` и затем стирает токен из памяти. `401` на уже открытом сеансе возвращает на вход с переведённой фразой (`hy` / `en` / `ru`), не с текстом про неверный пароль.
-- Справочники только на чтение: `GET /api/v1/rooms`, `/room-types`, `/buildings`, `/room-statuses`. Имена типов и корпусов — таблица `nx_label` ([adr-0002-nx-label.md](adr-0002-nx-label.md), миграция `0003_nx_label.sql`, `0002` не менять). Коды статуса номера переводит клиент. В главном окне список номеров. Пример сида: `next/dbdump/seed/nx_demo_rooms.example.sql`.
-- WebSocket `/api/v1/ws` поднимается только при непустом `ws_listen`. Кадр hello, событий PMS нет.
+- Справочники только на чтение: `GET /api/v1/rooms`, `/room-types`, `/buildings`, `/room-statuses`. Имена типов и корпусов — таблица `nx_label` ([adr-0002-nx-label.md](adr-0002-nx-label.md), миграция `0003_nx_label.sql`, `0002` не менять). Коды статуса номера переводит клиент. Пример сида: `next/dbdump/seed/nx_demo_rooms.example.sql`.
+- Шахматка: `GET /api/v1/rack?from=&to=` (ночи `[from, to)`, не больше 120). Блок — проживание `[arrival, departure)`, отменённые не входят.
+- Брони: список и карточка, создание и правка (`POST`/`PATCH /api/v1/reservations`). Пересечение номера, переходы статуса и `version` проверяет сервер. Кто и когда — миграция `0004_nx_audit.sql` (`0002` и `0003` не менять). Запись требует `commands_allowed`. Фолио нет. Вкладки: шахматка, брони, номера. Клик по блоку шахматки открывает бронь.
+- WebSocket `/api/v1/ws` поднимается только при непустом `ws_listen`. Токен — `?token=` или первый кадр `{"type":"auth","token"}`. После этого `{"type":"hello"}`, а после commit брони — `reservation.created` / `updated` / `cancelled` и `room.status_changed`. Схема кадров: [ws-events.md](ws-events.md).
 - `nx_folio` и `nx_posting` есть в DDL. HTTP-маршрута фолио нет.
-- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с, hello по WebSocket). Рабочая область — список номеров (`DictionariesPage` через `MainWindow::setWorkspacePage`). UI: `hy` / `en` / `ru`, переключение без перезапуска. Токен только в памяти. Коды ошибок сервера клиент переводит сам.
+- `hotel-desktop` — окна Qt Widgets, без Qt Sql и без MariaDB. «Настройки подключения» (адрес и необязательный WebSocket, «Проверить соединение» → `GET /health`), «Вход» (`POST /api/v1/sessions`), главное окно (пользователь, `role_id`, `commands_allowed`, адрес, опрос `/health` раз в 15 с). Сокет открывается только с токеном и шлёт `auth`; `hello` и события брони/статуса номера перечитывают шахматку и список. Обрыв — повтор с паузой 1…30 с. Рабочая область — вкладки шахматки, броней и списка номеров (`WorkspacePage` через `MainWindow::setWorkspacePage`). UI: `hy` / `en` / `ru`, переключение без перезапуска. Токен только в памяти. Коды ошибок сервера клиент переводит сам.
 - Конфиг клиента — пути из §2. Ключ `password` при сохранении удаляется. Образец `hotel-desktop.ini.example` программа не открывает; на `main` его комментарии всё ещё `#` (см. §5).
 - `hotel-desktop-stub` — консоль без окон: `GET /health`, опционально один логин. Ini клиента не читает. Это не UI ресепшена.
 - `0001_hotel_api_session.sql` не применять. Сервис таблицу `hotel_api_session` не читает.
@@ -168,3 +170,35 @@ mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
 ```text
 Прочитай next/docs/HANDOFF.md в End1-1/resort.next и продолжай миграцию
 ```
+
+## 9. Статус цепочки 0.4.0–0.8.0
+
+Срез этого файла — ветка `cursor/ws-events-cd9c`, не `main`. PR стеком: база каждого следующего — ветка предыдущего. Вливать по порядку. `0002_nx_core.sql` уже на базе владельца: не править и не применять заново.
+
+| Порядок | PR | Ветка | Контракт | Тема |
+|---------|----|-------|----------|------|
+| 1 | [#18](https://github.com/End1-1/resort.next/pull/18) | `cursor/session-bearer-cd9c` | 0.4.0 | Bearer на `/api/v1/*`, `DELETE` и `GET /api/v1/sessions/current`, выход и `401` в клиенте. База: `main`. |
+| 2 | [#19](https://github.com/End1-1/resort.next/pull/19) | `cursor/nx-dictionaries-cd9c` | 0.5.0 | Справочники номеров. Миграция `0003_nx_label.sql`. ADR [adr-0002-nx-label.md](adr-0002-nx-label.md). Сид `next/dbdump/seed/nx_demo_rooms.example.sql`. |
+| 3 | [#20](https://github.com/End1-1/resort.next/pull/20) | `cursor/rack-chart-cd9c` | 0.6.0 | `GET /api/v1/rack` и виджет шахматки. |
+| 4 | [#21](https://github.com/End1-1/resort.next/pull/21) | `cursor/reservations-cd9c` | 0.7.0 | Список, карточка, создание и правка брони. Миграция `0004_nx_audit.sql`. Фолио нет. |
+| 5 | [#22](https://github.com/End1-1/resort.next/pull/22) | `cursor/ws-events-cd9c` | 0.8.0 | Аутентифицированный WebSocket и живое обновление шахматки и списка. Схема: [ws-events.md](ws-events.md). База PR: `cursor/reservations-cd9c`. |
+
+Миграции, которые владелец применяет сам (не на бой без явного «да»; каждый файл безопасен при повторном запуске):
+
+```bash
+mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
+  < next/dbdump/migrations/0003_nx_label.sql
+mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
+  < next/dbdump/migrations/0004_nx_audit.sql
+```
+
+Необязательный сид номеров (свойство `NXDEMO`, без гостей и без паролей):
+
+```bash
+mariadb --default-character-set=utf8mb4 -h HOST -u USER -p DATABASE \
+  < next/dbdump/seed/nx_demo_rooms.example.sql
+```
+
+Пользователя по-прежнему вставляет только заполненная копия `nx_user.example.sql`. Её не коммитить.
+
+Проверено на Linux, Qt 6.4.2, g++. Qt 6.10.2 MSVC 2022 на Windows этим срезом не собирался. Ветка Qt 6.8 в `httpserver.cpp` на этой машине не компилировалась.
