@@ -115,11 +115,44 @@ bool mysqlValuesPresent(const DatabaseResolveInput &input)
         || !input.mysqlUser.isEmpty() || !input.mysqlPassword.isEmpty();
 }
 
+bool canonicalMysqlSsl(const QString &text, QString *mode, QString *error)
+{
+    const QString value = text.trimmed().toLower();
+    if (value.isEmpty() || value == QLatin1String("preferred")) {
+        *mode = QStringLiteral("preferred");
+        return true;
+    }
+    if (value == QLatin1String("off") || value == QLatin1String("required") || value == QLatin1String("verify")) {
+        *mode = value;
+        return true;
+    }
+    *error = QStringLiteral("mysql_ssl must be off, preferred, required, or verify");
+    return false;
+}
+
 } // namespace
 
 DatabaseResolveResult resolveDatabaseTarget(const DatabaseResolveInput &input)
 {
     DatabaseResolveResult result;
+    QString sslMode;
+    QString sslError;
+    if (!canonicalMysqlSsl(input.mysqlSsl, &sslMode, &sslError)) {
+        result.ok = false;
+        result.error = sslError;
+        return result;
+    }
+    if (input.mysqlSslCa.contains(QLatin1Char(';')) || input.mysqlSslCa.contains(QLatin1Char('\n'))
+        || input.mysqlSslCa.contains(QLatin1Char('\r'))) {
+        result.ok = false;
+        result.error = QStringLiteral("mysql_ssl_ca must not contain ';'");
+        return result;
+    }
+    const auto stampSsl = [&]() {
+        result.target.sslMode = sslMode;
+        result.target.sslCa = input.mysqlSslCa;
+    };
+
     const bool mysql = mysqlValuesPresent(input);
     const QString dsn = input.dsn.trimmed();
     const bool legacy = !dsn.isEmpty();
@@ -159,6 +192,7 @@ DatabaseResolveResult resolveDatabaseTarget(const DatabaseResolveInput &input)
         result.target.database = input.mysqlSchema;
         result.target.user = input.mysqlUser;
         result.target.password = input.mysqlPassword;
+        stampSsl();
         return result;
     }
 
@@ -168,10 +202,13 @@ DatabaseResolveResult resolveDatabaseTarget(const DatabaseResolveInput &input)
         if (!parseDsn(dsn, &result.target, &error)) {
             result.ok = false;
             result.error = error;
+            return result;
         }
+        stampSsl();
         return result;
     }
 
+    stampSsl();
     return result;
 }
 
@@ -224,6 +261,8 @@ struct IniFields {
     QString mysqlSchema;
     QString mysqlUser;
     QString mysqlPassword;
+    QString mysqlSsl;
+    QString mysqlSslCa;
     QString dsn;
 };
 
@@ -246,6 +285,10 @@ bool readIniFile(const QString &path, IniFields *fields, QString *error)
         fields->mysqlUser = values.mysqlUser;
     if (values.hasMysqlPassword)
         fields->mysqlPassword = values.mysqlPassword;
+    if (values.hasMysqlSsl)
+        fields->mysqlSsl = values.mysqlSsl;
+    if (values.hasMysqlSslCa)
+        fields->mysqlSslCa = values.mysqlSslCa;
     if (values.hasDsn)
         fields->dsn = values.dsn;
     return true;
@@ -305,6 +348,8 @@ ConfigLoadResult loadConfig()
     overlayEnv("HOTEL_MYSQL_SCHEMA", &fields.mysqlSchema);
     overlayEnv("HOTEL_MYSQL_USER", &fields.mysqlUser);
     overlayEnv("HOTEL_MYSQL_PASSWORD", &fields.mysqlPassword);
+    overlayEnv("HOTEL_MYSQL_SSL", &fields.mysqlSsl);
+    overlayEnv("HOTEL_MYSQL_SSL_CA", &fields.mysqlSslCa);
     overlayEnv("HOTEL_DSN", &fields.dsn);
 
     QString error;
@@ -319,6 +364,8 @@ ConfigLoadResult loadConfig()
     databaseInput.mysqlSchema = fields.mysqlSchema;
     databaseInput.mysqlUser = fields.mysqlUser;
     databaseInput.mysqlPassword = fields.mysqlPassword;
+    databaseInput.mysqlSsl = fields.mysqlSsl;
+    databaseInput.mysqlSslCa = fields.mysqlSslCa;
     databaseInput.dsn = fields.dsn;
     const DatabaseResolveResult database = resolveDatabaseTarget(databaseInput);
     result.databaseNotice = database.notice;

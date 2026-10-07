@@ -15,6 +15,9 @@ struct DatabaseTarget {
     QString database;
     QString user;
     QString password;
+    // off, preferred, required, or verify. Empty means preferred.
+    QString sslMode;
+    QString sslCa;
 };
 
 struct AppConfig {
@@ -48,6 +51,8 @@ struct DatabaseResolveInput {
     QString mysqlSchema;
     QString mysqlUser;
     QString mysqlPassword;
+    QString mysqlSsl;
+    QString mysqlSslCa;
     QString dsn;
 };
 
@@ -70,7 +75,8 @@ QString databaseConfigNoticeLine(DatabaseConfigNotice notice);
 //   1. hotel-api.ini next to the executable (application dir, not the working directory)
 //   2. /etc/hotel-api/hotel-api.ini on Linux
 // A non-empty HOTEL_CONFIG replaces that search.
-// HOTEL_LISTEN, HOTEL_WS_LISTEN, and HOTEL_MYSQL_HOST/PORT/SCHEMA/USER/PASSWORD
+// HOTEL_LISTEN, HOTEL_WS_LISTEN, and HOTEL_MYSQL_HOST/PORT/SCHEMA/USER/PASSWORD/SSL/SSL_CA
 // override ini keys only when non-empty. HOTEL_DSN is the legacy fallback and
-// is ignored when any mysql_* value is set.
+// is ignored when any mysql host/schema/user/password/port value is set.
+// mysql_ssl does not by itself turn the database on.
 ConfigLoadResult loadConfig();
