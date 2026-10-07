@@ -115,11 +115,15 @@ The first existing file wins. An unreadable file aborts startup instead of skipp
 | `mysql_schema` | `HOTEL_MYSQL_SCHEMA` | Database name. |
 | `mysql_user` | `HOTEL_MYSQL_USER` | Required once the host and schema are set. Missing user aborts startup. |
 | `mysql_password` | `HOTEL_MYSQL_PASSWORD` | Literal password. `@`, `:`, `%`, `#`, and `;` are not encoded. Never logged. |
+| `mysql_ssl` | `HOTEL_MYSQL_SSL` | `off`, `preferred` (default), `required`, or `verify`. |
+| `mysql_ssl_ca` | `HOTEL_MYSQL_SSL_CA` | CA file, passed to QMYSQL only for `required` and `verify`. |
 | `ws_listen` | `HOTEL_WS_LISTEN` | Same shape as `listen`. Absent or empty: WebSocket stays off. |
 
 An environment variable overrides the matching ini key only when it is set and not empty (after trimming). `HOTEL_MYSQL_PASSWORD=` does not clear a password written in the ini. That keeps a file-first setup working when a shell, Qt Creator kit, or `EnvironmentFile` exports the variable as empty. To leave the database off, leave `mysql_host` and `mysql_schema` empty or point `HOTEL_CONFIG` at a different file. A non-empty variable still wins, including `HOTEL_LISTEN=127.0.0.1:8080` in the env example.
 
 Spaces around `=` are allowed (`mysql_user = root`). A value may be wrapped in double quotes when it needs leading or trailing spaces. A missing `mysql_user` while the host and schema are set aborts startup with `mysql_user is required`. The error text does not include the password.
+
+`mysql_ssl` defaults to `preferred`: TLS when the server offers it, plain otherwise, without certificate verification. That is what a local MariaDB without TLS needs. MariaDB Connector/C 3.4 turns verification on by default and then fails with native `2026` (`SSL is required, but the server does not support it`). Qt 6.10.2's QMYSQL passes `MYSQL_OPT_SSL_MODE` only for a plugin built with libmysqlclient, and `MYSQL_OPT_SSL_VERIFY_SERVER_CERT` only for MariaDB Connector/C (MySQL 8 has no such option in the driver). hotel-api reads the loaded plugin: an import of `libmariadb`, or `mysql_get_client_info()` containing `MariaDB` or starting with `3.`, means Connector/C. For that plugin `preferred` sets only `MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0` and does not send `MYSQL_OPT_SSL_MODE` (Qt would otherwise log `Illegal connect option value` on every connect). For libmysqlclient, `preferred` sets `MYSQL_OPT_SSL_MODE=PREFERRED` and `MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0`. `required` is `REQUIRED` plus verify `1` on libmysqlclient, and verify `1` without `SSL_MODE` on Connector/C. `verify` is `VERIFY_CA` plus verify `1`, or verify `1` alone on Connector/C, plus `MYSQL_OPT_SSL_CA` when `mysql_ssl_ca` is set. `off` is `DISABLED` plus verify `0` on libmysqlclient, and verify `0` on Connector/C.
 
 A legacy `dsn` key, or `HOTEL_DSN`, is still accepted when no `mysql_*` value is set, and startup logs `dsn is deprecated`. If both are present, `mysql_*` wins and startup logs `mysql_* overrides dsn`. New files should not use `dsn`.
 
@@ -134,7 +138,7 @@ Compiled only into the Windows binary:
 - Started by the Service Control Manager: service name `HotelApi`, display name `Hotel API`.
 - `hotel-api --install` registers that service (elevated). `hotel-api --uninstall` removes it. Stop it before uninstall.
 - `hotel-api --console`, or any start that is not the SCM, runs the same listeners in the foreground.
-- The service looks for `hotel-api.ini` next to `hotel-api.exe`. It does not look in `System32`. A non-empty `HOTEL_CONFIG` replaces that path. A non-empty `HOTEL_LISTEN`, `HOTEL_WS_LISTEN`, or `HOTEL_MYSQL_HOST` / `HOTEL_MYSQL_PORT` / `HOTEL_MYSQL_SCHEMA` / `HOTEL_MYSQL_USER` / `HOTEL_MYSQL_PASSWORD` in the system environment overrides the matching ini key.
+- The service looks for `hotel-api.ini` next to `hotel-api.exe`. It does not look in `System32`. A non-empty `HOTEL_CONFIG` replaces that path. A non-empty `HOTEL_LISTEN`, `HOTEL_WS_LISTEN`, or `HOTEL_MYSQL_HOST` / `HOTEL_MYSQL_PORT` / `HOTEL_MYSQL_SCHEMA` / `HOTEL_MYSQL_USER` / `HOTEL_MYSQL_PASSWORD` / `HOTEL_MYSQL_SSL` / `HOTEL_MYSQL_SSL_CA` in the system environment overrides the matching ini key.
 
 ## Contract
 

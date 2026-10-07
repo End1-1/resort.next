@@ -465,6 +465,8 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     env.remove(QStringLiteral("HOTEL_MYSQL_SCHEMA"));
     env.remove(QStringLiteral("HOTEL_MYSQL_USER"));
     env.remove(QStringLiteral("HOTEL_MYSQL_PASSWORD"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_SSL"));
+    env.remove(QStringLiteral("HOTEL_MYSQL_SSL_CA"));
     env.remove(QStringLiteral("HOTEL_WS_LISTEN"));
     env.insert(QStringLiteral("HOTEL_CONFIG"), iniPath);
     env.insert(QStringLiteral("HOTEL_LISTEN"), QStringLiteral("127.0.0.1:18080"));
@@ -704,7 +706,9 @@ void LoginSmoke::mapsDatabaseConnectCodes()
     QVERIFY(offline.contains(QStringLiteral("не подключился")));
 
     QVERIFY(loginErrorMessage(503, QStringLiteral("database_unavailable")).contains(QStringLiteral("недоступна")));
-    QVERIFY(loginErrorMessage(503, QStringLiteral("connection_failed")).contains(QStringLiteral("connection_failed")));
+    const QString tls = loginErrorMessage(503, QStringLiteral("tls_error"));
+    QVERIFY(tls.contains(QStringLiteral("tls_error")));
+    QVERIFY(tls.contains(QStringLiteral("TLS")));
 
     HealthStatus health;
     health.reachable = true;

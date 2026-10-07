@@ -1,4 +1,5 @@
 #include "config.h"
+#include "dberror.h"
 #include "iniparse.h"
 
 #include <QDir>
@@ -21,6 +22,8 @@ public:
                                "HOTEL_MYSQL_SCHEMA",
                                "HOTEL_MYSQL_USER",
                                "HOTEL_MYSQL_PASSWORD",
+                               "HOTEL_MYSQL_SSL",
+                               "HOTEL_MYSQL_SSL_CA",
                                nullptr};
         for (int i = 0; names[i] != nullptr; ++i) {
             keys.append(QByteArray(names[i]));
@@ -71,6 +74,11 @@ private slots:
     void emptyEnvDoesNotClearIni();
     void envDsnFallback();
     void envDsnLosesToMysqlKeys();
+    void sslDefaultsToPreferred();
+    void sslEnvOverridesIni();
+    void sslRejectsUnknownMode();
+    void sslCaRejectsSemicolon();
+    void legacyDsnKeepsSslMode();
 };
 
 void TestDatabaseConfig::literalPasswordIsNotDecoded()
@@ -308,6 +316,91 @@ void TestDatabaseConfig::envDsnLosesToMysqlKeys()
     QCOMPARE(databaseConfigNoticeLine(loaded.databaseNotice),
              QStringLiteral("hotel-api database: mysql_* overrides dsn"));
     QVERIFY(!databaseStartupDetail(loaded.config.database).contains(QStringLiteral("legacypass")));
+}
+
+void TestDatabaseConfig::sslDefaultsToPreferred()
+{
+    DatabaseResolveInput input;
+    input.mysqlHost = QStringLiteral("127.0.0.1");
+    input.mysqlSchema = QStringLiteral("hotelnext");
+    input.mysqlUser = QStringLiteral("root");
+    const DatabaseResolveResult resolved = resolveDatabaseTarget(input);
+    QVERIFY(resolved.ok);
+    QCOMPARE(resolved.target.sslMode, QStringLiteral("preferred"));
+    QCOMPARE(mysqlConnectOptions(3, resolved.target.sslMode, resolved.target.sslCa),
+             QStringLiteral(
+                 "MYSQL_OPT_CONNECT_TIMEOUT=3;MYSQL_OPT_READ_TIMEOUT=3;MYSQL_OPT_WRITE_TIMEOUT=3;"
+                 "MYSQL_OPT_SSL_MODE=PREFERRED;MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0"));
+}
+
+void TestDatabaseConfig::sslEnvOverridesIni()
+{
+    EnvRestore env;
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(QStringLiteral("hotel-api.ini"));
+    QVERIFY(writeIni(path,
+                     "mysql_host=127.0.0.1\n"
+                     "mysql_schema=hotelnext\n"
+                     "mysql_user = root\n"
+                     "mysql_ssl = preferred\n"
+                     "mysql_ssl_ca=\"C:/certs/ca.pem\"\n"));
+    qputenv("HOTEL_CONFIG", path.toUtf8());
+    qputenv("HOTEL_MYSQL_SSL", "verify");
+    qputenv("HOTEL_MYSQL_SSL_CA", "/etc/hotel-api/ca.pem");
+
+    const ConfigLoadResult loaded = loadConfig();
+    QVERIFY2(loaded.ok, qPrintable(loaded.error));
+    QCOMPARE(loaded.config.database.sslMode, QStringLiteral("verify"));
+    QCOMPARE(loaded.config.database.sslCa, QStringLiteral("/etc/hotel-api/ca.pem"));
+    QVERIFY(mysqlConnectOptions(3, loaded.config.database.sslMode, loaded.config.database.sslCa)
+                .contains(QStringLiteral("MYSQL_OPT_SSL_MODE=VERIFY_CA")));
+    QVERIFY(mysqlConnectOptions(3, loaded.config.database.sslMode, loaded.config.database.sslCa)
+                .contains(QStringLiteral("MYSQL_OPT_SSL_VERIFY_SERVER_CERT=1")));
+    QVERIFY(mysqlConnectOptions(3, loaded.config.database.sslMode, loaded.config.database.sslCa)
+                .endsWith(QStringLiteral("MYSQL_OPT_SSL_CA=/etc/hotel-api/ca.pem")));
+}
+
+void TestDatabaseConfig::sslRejectsUnknownMode()
+{
+    DatabaseResolveInput input;
+    input.mysqlHost = QStringLiteral("127.0.0.1");
+    input.mysqlSchema = QStringLiteral("hotelnext");
+    input.mysqlUser = QStringLiteral("root");
+    input.mysqlSsl = QStringLiteral("maybe");
+    const DatabaseResolveResult resolved = resolveDatabaseTarget(input);
+    QVERIFY(!resolved.ok);
+    QCOMPARE(resolved.error, QStringLiteral("mysql_ssl must be off, preferred, required, or verify"));
+    QVERIFY(!resolved.target.configured);
+}
+
+void TestDatabaseConfig::sslCaRejectsSemicolon()
+{
+    DatabaseResolveInput input;
+    input.mysqlHost = QStringLiteral("127.0.0.1");
+    input.mysqlSchema = QStringLiteral("hotelnext");
+    input.mysqlUser = QStringLiteral("root");
+    input.mysqlSsl = QStringLiteral("verify");
+    input.mysqlSslCa = QStringLiteral("C:/a;b.pem");
+    const DatabaseResolveResult resolved = resolveDatabaseTarget(input);
+    QVERIFY(!resolved.ok);
+    QCOMPARE(resolved.error, QStringLiteral("mysql_ssl_ca must not contain ';'"));
+}
+
+void TestDatabaseConfig::legacyDsnKeepsSslMode()
+{
+    DatabaseResolveInput input;
+    input.dsn = QStringLiteral("mysql://hotel_api:p%40ss%3Aword@127.0.0.1:3306/resort");
+    input.mysqlSsl = QStringLiteral("off");
+    const DatabaseResolveResult resolved = resolveDatabaseTarget(input);
+    QVERIFY(resolved.ok);
+    QCOMPARE(resolved.notice, DatabaseConfigNotice::DeprecatedDsn);
+    QCOMPARE(resolved.target.user, QStringLiteral("hotel_api"));
+    QCOMPARE(resolved.target.sslMode, QStringLiteral("off"));
+    QVERIFY(mysqlConnectOptions(3, resolved.target.sslMode, resolved.target.sslCa)
+                .contains(QStringLiteral("MYSQL_OPT_SSL_MODE=DISABLED")));
+    QVERIFY(mysqlConnectOptions(3, resolved.target.sslMode, resolved.target.sslCa)
+                .contains(QStringLiteral("MYSQL_OPT_SSL_VERIFY_SERVER_CERT=0")));
 }
 
 int runDatabaseConfigTests(int argc, char **argv)
