@@ -2,6 +2,7 @@
 
 #include "apiclient.h"
 
+#include <QDate>
 #include <QDialog>
 
 class QComboBox;
@@ -17,6 +18,7 @@ class ReservationDialog : public QDialog {
 public:
     explicit ReservationDialog(ApiClient *api, QWidget *parent = nullptr);
     void load(qint64 reservationId);
+    void loadNew(qint64 roomId, const QDate &arrival, const QDate &departure);
 
 private:
     ApiResponse waitFor(quint64 requestId);
@@ -33,6 +35,10 @@ private:
     int m_version = 0;
     qint64 m_stayId = 0;
     QString m_stayState;
+    bool m_hasPreset = false;
+    qint64 m_presetRoomId = 0;
+    QDate m_presetArrival;
+    QDate m_presetDeparture;
 
     QLabel *m_error = nullptr;
     QLineEdit *m_lastName = nullptr;

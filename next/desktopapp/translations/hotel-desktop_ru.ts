@@ -778,8 +778,8 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/uilanguage.cpp" line="128"/>
         <location filename="../src/mainwindow.cpp" line="172"/>
+        <location filename="../src/uilanguage.cpp" line="128"/>
         <source>Hotel</source>
         <translation>Отель</translation>
     </message>
@@ -940,94 +940,242 @@
 <context>
     <name>RackPage</name>
     <message>
-        <location filename="../src/rackpage.cpp" line="64"/>
+        <location filename="../src/rackchart.cpp" line="680"/>
+        <source>%1
+%2 – %3
+%4
+%5</source>
+        <translation>%1
+%2 – %3
+%4
+%5</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="689"/>
+        <source>%1
+%2</source>
+        <translation>%1
+%2</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="695"/>
         <source>Reserved</source>
         <translation>Забронирован</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="66"/>
+        <location filename="../src/rackchart.cpp" line="697"/>
         <source>In house</source>
         <translation>Проживает</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="68"/>
+        <location filename="../src/rackchart.cpp" line="699"/>
         <source>Checked out</source>
         <translation>Выехал</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="70"/>
+        <location filename="../src/rackchart.cpp" line="701"/>
+        <location filename="../src/rackchart.cpp" line="731"/>
         <source>Out of order</source>
         <translation>На ремонте</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="72"/>
+        <location filename="../src/rackchart.cpp" line="703"/>
+        <location filename="../src/rackchart.cpp" line="737"/>
         <source>Out of inventory</source>
         <translation>Выведен из фонда</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="145"/>
-        <location filename="../src/rackpage.cpp" line="160"/>
-        <source>No guest</source>
-        <translation>Без гостя</translation>
+        <location filename="../src/rackchart.cpp" line="710"/>
+        <source>Tentative</source>
+        <translation>Предварительная</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="161"/>
-        <source>%1
-%2 – %3
-%4</source>
-        <translation>%1
-%2 – %3
-%4</translation>
+        <location filename="../src/rackchart.cpp" line="712"/>
+        <source>Confirmed</source>
+        <translation>Подтверждена</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="256"/>
-        <source>The departure date must be after the arrival date.</source>
-        <translation>Дата выезда должна быть позже даты заезда.</translation>
+        <location filename="../src/rackchart.cpp" line="714"/>
+        <source>Guaranteed</source>
+        <translation>Гарантирована</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="260"/>
-        <source>The rack window is at most 120 nights.</source>
-        <translation>Окно шахматки — не больше 120 ночей.</translation>
+        <location filename="../src/rackchart.cpp" line="716"/>
+        <source>Blocked</source>
+        <translation>Блок</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="264"/>
+        <location filename="../src/rackchart.cpp" line="718"/>
+        <source>Canceled</source>
+        <translation>Отменена</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="725"/>
+        <source>Ready</source>
+        <translation>Готов</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="727"/>
+        <source>Occupied</source>
+        <translation>Занят</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="729"/>
+        <source>Dirty</source>
+        <translation>Грязный</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="733"/>
+        <source>House use</source>
+        <translation>Служебный</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="735"/>
+        <source>Complimentary</source>
+        <translation>Комплиментарный</translation>
+    </message>
+</context>
+<context>
+    <name>RackPage</name>
+    <message>
+        <location filename="../src/rackpage.cpp" line="169"/>
+        <source>Date</source>
+        <translation>Дата</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="170"/>
+        <source>Today</source>
+        <translation>Сегодня</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="171"/>
+        <source>Previous day</source>
+        <translation>Предыдущий день</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="172"/>
+        <source>Next day</source>
+        <translation>Следующий день</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="173"/>
+        <source>Previous rooms</source>
+        <translation>Номера выше</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="174"/>
+        <source>Next rooms</source>
+        <translation>Номера ниже</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="175"/>
+        <source>Room</source>
+        <translation>Номер</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="179"/>
+        <source>Any status</source>
+        <translation>Любой статус</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="302"/>
+        <source>No building</source>
+        <translation>Без корпуса</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="309"/>
+        <source>Floor %1</source>
+        <translation>Этаж %1</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="309"/>
+        <source>No floor</source>
+        <translation>Без этажа</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="358"/>
+        <source>All</source>
+        <translation>Все</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="394"/>
+        <source>Type</source>
+        <translation>Тип</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="395"/>
+        <source>Building</source>
+        <translation>Корпус</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="396"/>
+        <source>Floor</source>
+        <translation>Этаж</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="441"/>
+        <source>No rooms match the filter.</source>
+        <translation>Нет номеров по этому фильтру.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="443"/>
+        <source>%1 rooms, %2 days</source>
+        <translation>Номеров: %1, дней: %2</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="449"/>
+        <source>Ready</source>
+        <translation>Готов</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="451"/>
+        <source>Occupied</source>
+        <translation>Занят</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="453"/>
+        <source>Dirty</source>
+        <translation>Грязный</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="455"/>
+        <source>Out of order</source>
+        <translation>На ремонте</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="457"/>
+        <source>House use</source>
+        <translation>Служебный</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="459"/>
+        <source>Complimentary</source>
+        <translation>Комплиментарный</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="461"/>
+        <source>Out of inventory</source>
+        <translation>Выведен из фонда</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="222"/>
         <source>Loading the rack…</source>
         <translation>Загрузка шахматки…</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="284"/>
+        <location filename="../src/rackpage.cpp" line="168"/>
         <source>Rack</source>
         <translation>Шахматка</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="285"/>
-        <source>From</source>
-        <translation>С</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="286"/>
-        <source>To</source>
-        <translation>По</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="287"/>
-        <source>Show</source>
-        <translation>Показать</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="289"/>
+        <location filename="../src/rackpage.cpp" line="196"/>
         <source>The rack loads after sign-in.</source>
         <translation>Шахматка загружается после входа.</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="331"/>
+        <location filename="../src/rackpage.cpp" line="439"/>
         <source>No rooms.</source>
         <translation>Номеров нет.</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="333"/>
-        <source>%1 rooms, %2 nights</source>
-        <translation>Номеров: %1, ночей: %2</translation>
     </message>
 </context>
 <context>
@@ -1134,27 +1282,27 @@
         <translation>Блок</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <location filename="../src/reservationdialog.cpp" line="173"/>
         <source>New reservation</source>
         <translation>Новая бронь</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <location filename="../src/reservationdialog.cpp" line="173"/>
         <source>Reservation %1</source>
         <translation>Бронь %1</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="240"/>
+        <location filename="../src/reservationdialog.cpp" line="261"/>
         <source>Last name is required.</source>
         <translation>Укажите фамилию.</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="244"/>
+        <location filename="../src/reservationdialog.cpp" line="265"/>
         <source>Choose a room.</source>
         <translation>Выберите номер.</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="248"/>
+        <location filename="../src/reservationdialog.cpp" line="269"/>
         <source>The departure date must be after the arrival date.</source>
         <translation>Дата выезда должна быть позже даты заезда.</translation>
     </message>
@@ -1172,115 +1320,115 @@
         <translation>Загрузка броней…</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="138"/>
+        <location filename="../src/reservationspage.cpp" line="150"/>
         <source>Reservations</source>
         <translation>Брони</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="139"/>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="151"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Guest</source>
         <translation>Гость</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="140"/>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="152"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Room</source>
         <translation>Номер</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="141"/>
+        <location filename="../src/reservationspage.cpp" line="153"/>
         <source>Show</source>
         <translation>Показать</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="142"/>
+        <location filename="../src/reservationspage.cpp" line="154"/>
         <source>New reservation</source>
         <translation>Новая бронь</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Arrival</source>
         <translation>Заезд</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Departure</source>
         <translation>Выезд</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Status</source>
         <translation>Статус</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Stay</source>
         <translation>Проживание</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="146"/>
+        <location filename="../src/reservationspage.cpp" line="158"/>
         <source>Any status</source>
         <translation>Любой статус</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="148"/>
-        <location filename="../src/reservationspage.cpp" line="171"/>
+        <location filename="../src/reservationspage.cpp" line="160"/>
+        <location filename="../src/reservationspage.cpp" line="183"/>
         <source>Tentative</source>
         <translation>Предварительная</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="149"/>
-        <location filename="../src/reservationspage.cpp" line="173"/>
+        <location filename="../src/reservationspage.cpp" line="161"/>
+        <location filename="../src/reservationspage.cpp" line="185"/>
         <source>Confirmed</source>
         <translation>Подтверждена</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="150"/>
-        <location filename="../src/reservationspage.cpp" line="175"/>
+        <location filename="../src/reservationspage.cpp" line="162"/>
+        <location filename="../src/reservationspage.cpp" line="187"/>
         <source>Guaranteed</source>
         <translation>Гарантирована</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="151"/>
-        <location filename="../src/reservationspage.cpp" line="177"/>
+        <location filename="../src/reservationspage.cpp" line="163"/>
+        <location filename="../src/reservationspage.cpp" line="189"/>
         <source>Blocked</source>
         <translation>Блок</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="152"/>
-        <location filename="../src/reservationspage.cpp" line="179"/>
-        <location filename="../src/reservationspage.cpp" line="192"/>
+        <location filename="../src/reservationspage.cpp" line="164"/>
+        <location filename="../src/reservationspage.cpp" line="191"/>
+        <location filename="../src/reservationspage.cpp" line="204"/>
         <source>Canceled</source>
         <translation>Отменён</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="159"/>
+        <location filename="../src/reservationspage.cpp" line="171"/>
         <source>Reservations load after sign-in.</source>
         <translation>Брони загружаются после входа.</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="186"/>
+        <location filename="../src/reservationspage.cpp" line="198"/>
         <source>Reserved</source>
         <translation>Забронирован</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="188"/>
+        <location filename="../src/reservationspage.cpp" line="200"/>
         <source>In house</source>
         <translation>Проживает</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="190"/>
+        <location filename="../src/reservationspage.cpp" line="202"/>
         <source>Checked out</source>
         <translation>Выехал</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="229"/>
+        <location filename="../src/reservationspage.cpp" line="241"/>
         <source>No reservations.</source>
         <translation>Броней нет.</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="231"/>
+        <location filename="../src/reservationspage.cpp" line="243"/>
         <source>%1 reservations</source>
         <translation>Броней: %1</translation>
     </message>

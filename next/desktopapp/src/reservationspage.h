@@ -2,6 +2,7 @@
 
 #include "apiclient.h"
 
+#include <QDate>
 #include <QWidget>
 
 class QComboBox;
@@ -21,6 +22,7 @@ public:
 
 public slots:
     void openReservation(qint64 reservationId);
+    void beginReservation(qint64 roomId, const QDate &arrival, const QDate &departure);
 
 signals:
     void reservationsChanged();

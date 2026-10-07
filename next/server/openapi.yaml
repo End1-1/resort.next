@@ -42,8 +42,10 @@ info:
     server. After a successful write the WebSocket frame is dictionary.changed.
 
     GET /api/v1/rack returns rooms and stay blocks for a night window
-    [from, to). to is exclusive. A stay occupies [arrival, departure).
-    Canceled stays and canceled reservations are omitted.
+    [from, to). to is exclusive. Rooms are ordered by building code, then
+    room code, then id. A stay occupies [arrival, departure). Canceled stays
+    and canceled reservations are omitted. Every room of the property is
+    returned even when it has no stay in the window.
 
     Reservations: GET /api/v1/reservations searches by dates, guest, status,
     and room. GET /api/v1/reservations/{id} is the detail. POST creates one
@@ -423,11 +425,15 @@ paths:
         Bearer required. Query `from` and `to` are YYYY-MM-DD. The window is
         half-open: nights from `from` inclusive until `to` exclusive, at most
         120 nights. Each room of the signed-in property is returned. A block
-        is a stay whose [arrival, departure) overlaps that window. Canceled
-        stays and stays on a canceled reservation are omitted, as are stays
-        with no room. guest_name is the primary stay guest, otherwise the
-        first guest (last name, then first name). type_name follows nx_label
-        the same way as GET /api/v1/rooms. state_code is not translated.
+        is a stay whose [arrival, departure) overlaps that window. Every room
+        of the property is included, with an empty blocks array when nothing
+        overlaps. Rooms are ordered by building code (nulls first), then room
+        code, then id. Canceled stays and stays on a canceled reservation are
+        omitted, as are stays with no room. guest_name is the primary stay
+        guest, otherwise the first guest (last name, then first name).
+        type_name and building_name follow nx_label the same way as
+        GET /api/v1/rooms. state_code is not translated. The client filters
+        and scrolls this payload; the query itself is not a filter.
       security:
         - bearerAuth: []
       parameters:
@@ -1267,7 +1273,7 @@ components:
           type: array
           items:
             type: object
-            required: [id, code, status_code, type_name, blocks]
+            required: [id, code, status_code, type_id, type_code, type_name, blocks]
             properties:
               id:
                 type: integer
@@ -1279,8 +1285,20 @@ components:
                 nullable: true
               status_code:
                 type: string
+              type_id:
+                type: integer
+                format: int64
+              type_code:
+                type: string
               type_name:
                 type: string
+              building_id:
+                type: integer
+                format: int64
+                nullable: true
+              building_code:
+                type: string
+                nullable: true
               building_name:
                 type: string
                 nullable: true

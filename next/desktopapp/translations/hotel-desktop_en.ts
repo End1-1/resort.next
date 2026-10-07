@@ -778,8 +778,8 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/uilanguage.cpp" line="128"/>
         <location filename="../src/mainwindow.cpp" line="172"/>
+        <location filename="../src/uilanguage.cpp" line="128"/>
         <source>Hotel</source>
         <translation>Hotel</translation>
     </message>
@@ -940,94 +940,242 @@
 <context>
     <name>RackPage</name>
     <message>
-        <location filename="../src/rackpage.cpp" line="64"/>
+        <location filename="../src/rackchart.cpp" line="680"/>
+        <source>%1
+%2 – %3
+%4
+%5</source>
+        <translation>%1
+%2 – %3
+%4
+%5</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="689"/>
+        <source>%1
+%2</source>
+        <translation>%1
+%2</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="695"/>
         <source>Reserved</source>
         <translation>Reserved</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="66"/>
+        <location filename="../src/rackchart.cpp" line="697"/>
         <source>In house</source>
         <translation>In house</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="68"/>
+        <location filename="../src/rackchart.cpp" line="699"/>
         <source>Checked out</source>
         <translation>Checked out</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="70"/>
+        <location filename="../src/rackchart.cpp" line="701"/>
+        <location filename="../src/rackchart.cpp" line="731"/>
         <source>Out of order</source>
         <translation>Out of order</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="72"/>
+        <location filename="../src/rackchart.cpp" line="703"/>
+        <location filename="../src/rackchart.cpp" line="737"/>
         <source>Out of inventory</source>
         <translation>Out of inventory</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="145"/>
-        <location filename="../src/rackpage.cpp" line="160"/>
-        <source>No guest</source>
-        <translation>No guest</translation>
+        <location filename="../src/rackchart.cpp" line="710"/>
+        <source>Tentative</source>
+        <translation>Tentative</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="161"/>
-        <source>%1
-%2 – %3
-%4</source>
-        <translation>%1
-%2 – %3
-%4</translation>
+        <location filename="../src/rackchart.cpp" line="712"/>
+        <source>Confirmed</source>
+        <translation>Confirmed</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="256"/>
-        <source>The departure date must be after the arrival date.</source>
-        <translation>The departure date must be after the arrival date.</translation>
+        <location filename="../src/rackchart.cpp" line="714"/>
+        <source>Guaranteed</source>
+        <translation>Guaranteed</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="260"/>
-        <source>The rack window is at most 120 nights.</source>
-        <translation>The rack window is at most 120 nights.</translation>
+        <location filename="../src/rackchart.cpp" line="716"/>
+        <source>Blocked</source>
+        <translation>Blocked</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="264"/>
+        <location filename="../src/rackchart.cpp" line="718"/>
+        <source>Canceled</source>
+        <translation>Canceled</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="725"/>
+        <source>Ready</source>
+        <translation>Ready</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="727"/>
+        <source>Occupied</source>
+        <translation>Occupied</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="729"/>
+        <source>Dirty</source>
+        <translation>Dirty</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="733"/>
+        <source>House use</source>
+        <translation>House use</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="735"/>
+        <source>Complimentary</source>
+        <translation>Complimentary</translation>
+    </message>
+</context>
+<context>
+    <name>RackPage</name>
+    <message>
+        <location filename="../src/rackpage.cpp" line="169"/>
+        <source>Date</source>
+        <translation>Date</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="170"/>
+        <source>Today</source>
+        <translation>Today</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="171"/>
+        <source>Previous day</source>
+        <translation>Previous day</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="172"/>
+        <source>Next day</source>
+        <translation>Next day</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="173"/>
+        <source>Previous rooms</source>
+        <translation>Previous rooms</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="174"/>
+        <source>Next rooms</source>
+        <translation>Next rooms</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="175"/>
+        <source>Room</source>
+        <translation>Room</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="179"/>
+        <source>Any status</source>
+        <translation>Any status</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="302"/>
+        <source>No building</source>
+        <translation>No building</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="309"/>
+        <source>Floor %1</source>
+        <translation>Floor %1</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="309"/>
+        <source>No floor</source>
+        <translation>No floor</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="358"/>
+        <source>All</source>
+        <translation>All</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="394"/>
+        <source>Type</source>
+        <translation>Type</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="395"/>
+        <source>Building</source>
+        <translation>Building</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="396"/>
+        <source>Floor</source>
+        <translation>Floor</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="441"/>
+        <source>No rooms match the filter.</source>
+        <translation>No rooms match the filter.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="443"/>
+        <source>%1 rooms, %2 days</source>
+        <translation>%1 rooms, %2 days</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="449"/>
+        <source>Ready</source>
+        <translation>Ready</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="451"/>
+        <source>Occupied</source>
+        <translation>Occupied</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="453"/>
+        <source>Dirty</source>
+        <translation>Dirty</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="455"/>
+        <source>Out of order</source>
+        <translation>Out of order</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="457"/>
+        <source>House use</source>
+        <translation>House use</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="459"/>
+        <source>Complimentary</source>
+        <translation>Complimentary</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="461"/>
+        <source>Out of inventory</source>
+        <translation>Out of inventory</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="222"/>
         <source>Loading the rack…</source>
         <translation>Loading the rack…</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="284"/>
+        <location filename="../src/rackpage.cpp" line="168"/>
         <source>Rack</source>
         <translation>Rack</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="285"/>
-        <source>From</source>
-        <translation>From</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="286"/>
-        <source>To</source>
-        <translation>To</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="287"/>
-        <source>Show</source>
-        <translation>Show</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="289"/>
+        <location filename="../src/rackpage.cpp" line="196"/>
         <source>The rack loads after sign-in.</source>
         <translation>The rack loads after sign-in.</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="331"/>
+        <location filename="../src/rackpage.cpp" line="439"/>
         <source>No rooms.</source>
         <translation>No rooms.</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="333"/>
-        <source>%1 rooms, %2 nights</source>
-        <translation>%1 rooms, %2 nights</translation>
     </message>
 </context>
 <context>
@@ -1134,27 +1282,27 @@
         <translation>Blocked</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <location filename="../src/reservationdialog.cpp" line="173"/>
         <source>New reservation</source>
         <translation>New reservation</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <location filename="../src/reservationdialog.cpp" line="173"/>
         <source>Reservation %1</source>
         <translation>Reservation %1</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="240"/>
+        <location filename="../src/reservationdialog.cpp" line="261"/>
         <source>Last name is required.</source>
         <translation>Last name is required.</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="244"/>
+        <location filename="../src/reservationdialog.cpp" line="265"/>
         <source>Choose a room.</source>
         <translation>Choose a room.</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="248"/>
+        <location filename="../src/reservationdialog.cpp" line="269"/>
         <source>The departure date must be after the arrival date.</source>
         <translation>The departure date must be after the arrival date.</translation>
     </message>
@@ -1172,115 +1320,115 @@
         <translation>Loading reservations…</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="138"/>
+        <location filename="../src/reservationspage.cpp" line="150"/>
         <source>Reservations</source>
         <translation>Reservations</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="139"/>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="151"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Guest</source>
         <translation>Guest</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="140"/>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="152"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Room</source>
         <translation>Room</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="141"/>
+        <location filename="../src/reservationspage.cpp" line="153"/>
         <source>Show</source>
         <translation>Show</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="142"/>
+        <location filename="../src/reservationspage.cpp" line="154"/>
         <source>New reservation</source>
         <translation>New reservation</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Arrival</source>
         <translation>Arrival</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Departure</source>
         <translation>Departure</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Stay</source>
         <translation>Stay</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="146"/>
+        <location filename="../src/reservationspage.cpp" line="158"/>
         <source>Any status</source>
         <translation>Any status</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="148"/>
-        <location filename="../src/reservationspage.cpp" line="171"/>
+        <location filename="../src/reservationspage.cpp" line="160"/>
+        <location filename="../src/reservationspage.cpp" line="183"/>
         <source>Tentative</source>
         <translation>Tentative</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="149"/>
-        <location filename="../src/reservationspage.cpp" line="173"/>
+        <location filename="../src/reservationspage.cpp" line="161"/>
+        <location filename="../src/reservationspage.cpp" line="185"/>
         <source>Confirmed</source>
         <translation>Confirmed</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="150"/>
-        <location filename="../src/reservationspage.cpp" line="175"/>
+        <location filename="../src/reservationspage.cpp" line="162"/>
+        <location filename="../src/reservationspage.cpp" line="187"/>
         <source>Guaranteed</source>
         <translation>Guaranteed</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="151"/>
-        <location filename="../src/reservationspage.cpp" line="177"/>
+        <location filename="../src/reservationspage.cpp" line="163"/>
+        <location filename="../src/reservationspage.cpp" line="189"/>
         <source>Blocked</source>
         <translation>Blocked</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="152"/>
-        <location filename="../src/reservationspage.cpp" line="179"/>
-        <location filename="../src/reservationspage.cpp" line="192"/>
+        <location filename="../src/reservationspage.cpp" line="164"/>
+        <location filename="../src/reservationspage.cpp" line="191"/>
+        <location filename="../src/reservationspage.cpp" line="204"/>
         <source>Canceled</source>
         <translation>Canceled</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="159"/>
+        <location filename="../src/reservationspage.cpp" line="171"/>
         <source>Reservations load after sign-in.</source>
         <translation>Reservations load after sign-in.</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="186"/>
+        <location filename="../src/reservationspage.cpp" line="198"/>
         <source>Reserved</source>
         <translation>Reserved</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="188"/>
+        <location filename="../src/reservationspage.cpp" line="200"/>
         <source>In house</source>
         <translation>In house</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="190"/>
+        <location filename="../src/reservationspage.cpp" line="202"/>
         <source>Checked out</source>
         <translation>Checked out</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="229"/>
+        <location filename="../src/reservationspage.cpp" line="241"/>
         <source>No reservations.</source>
         <translation>No reservations.</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="231"/>
+        <location filename="../src/reservationspage.cpp" line="243"/>
         <source>%1 reservations</source>
         <translation>%1 reservations</translation>
     </message>

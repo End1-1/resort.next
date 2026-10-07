@@ -142,4 +142,14 @@ if(BUILD_TESTING)
     )
     add_dependencies(hotel-desktop-login-smoke hotel-desktop_lrelease)
     add_test(NAME hotel-desktop-login-smoke COMMAND hotel-desktop-login-smoke)
+
+    add_executable(hotel-desktop-rack-chart
+        tests/rack_chart_test.cpp
+    )
+    target_link_libraries(hotel-desktop-rack-chart PRIVATE hotel-desktop-ui Qt6::Test)
+    target_compile_definitions(hotel-desktop-rack-chart PRIVATE
+        HOTEL_DESKTOP_RU_QM="${CMAKE_CURRENT_BINARY_DIR}/hotel-desktop_ru.qm")
+    add_dependencies(hotel-desktop-rack-chart hotel-desktop_lrelease)
+    hotel_desktop_warnings(hotel-desktop-rack-chart)
+    add_test(NAME hotel-desktop-rack-chart COMMAND hotel-desktop-rack-chart)
 endif()

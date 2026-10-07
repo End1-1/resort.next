@@ -805,7 +805,8 @@ void LoginSmoke::logoutSendsBearerAndReturnsToLogin()
     QCOMPARE(rooms->item(0, 4)->text(), QStringLiteral("Ready"));
     auto *rackStatus = visibleMain()->findChild<QLabel *>(QStringLiteral("rackStatus"));
     QVERIFY(rackStatus);
-    QTRY_VERIFY_WITH_TIMEOUT(rackStatus->text().contains(QStringLiteral("1 rooms, 14 nights")), 8000);
+    QTRY_VERIFY_WITH_TIMEOUT(rackStatus->text().contains(QStringLiteral("1 rooms")), 8000);
+    QVERIFY(rackStatus->text().contains(QStringLiteral("days")));
     auto *reservations = visibleMain()->findChild<QLabel *>(QStringLiteral("reservationsStatus"));
     QVERIFY(reservations);
     QTRY_VERIFY_WITH_TIMEOUT(reservations->text().contains(QStringLiteral("No reservations")), 8000);
