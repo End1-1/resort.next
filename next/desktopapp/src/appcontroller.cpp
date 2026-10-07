@@ -59,6 +59,8 @@ void AppController::onLogin(const UserSnapshot &user)
     m_leaving = false;
     m_logoutId = 0;
     m_main.showSession(user, m_api.baseUrl());
+    if (m_workspace)
+        m_workspace->setCommandsAllowed(user.commandsAllowed);
     refreshStatus();
     m_main.show();
     m_main.raise();
@@ -123,8 +125,11 @@ void AppController::onApiResponse(const ApiResponse &response)
             snap.roleId = role.toInteger();
         snap.commandsAllowed = object.value(QStringLiteral("commands_allowed")).toBool();
         snap.expiresAt = object.value(QStringLiteral("expires_at")).toString();
-        if (!m_leaving && m_main.isVisible())
+        if (!m_leaving && m_main.isVisible()) {
             m_main.showSession(snap, m_api.baseUrl());
+            if (m_workspace)
+                m_workspace->setCommandsAllowed(snap.commandsAllowed);
+        }
         return;
     }
     if (m_logoutId == 0 || response.id != m_logoutId)

@@ -1,6 +1,6 @@
 # next/server
 
-`hotel-api` is the Qt/C++ HTTP service that owns hotel rules and is the only writer to MariaDB. This directory binds a port, serves `/health`, sessions, read-only room dictionaries, the rack chart, and reservation create/update. Folio routes are not registered. After a reservation commit it can publish WebSocket hints on `/api/v1/ws` when `HOTEL_WS_LISTEN` is set. Core tables are `next/dbdump/migrations/0002_nx_core.sql`; labels are `0003_nx_label.sql`; audit columns are `0004_nx_audit.sql`.
+`hotel-api` is the Qt/C++ HTTP service that owns hotel rules and is the only writer to MariaDB. This directory binds a port, serves `/health`, sessions, room dictionaries (read and write), the rack chart, and reservation create/update. Folio routes are not registered. After a reservation or dictionary commit it can publish WebSocket hints on `/api/v1/ws` when `HOTEL_WS_LISTEN` is set. Core tables are `next/dbdump/migrations/0002_nx_core.sql`; labels are `0003_nx_label.sql`; audit columns are `0004_nx_audit.sql`; dictionary `version` columns are `0005_nx_dictionary_version.sql`.
 
 It is not the old `Server/` tray program (UDP `"who"`). It does not link Qt Widgets and it does not compile `Resort/` sources.
 
@@ -52,15 +52,16 @@ curl -sS http://127.0.0.1:8080/health
 | `POST /api/v1/sessions` | Login. JSON `login` + `password`. No bearer. No DSN is 503 `database_not_configured`. Wrong password is 401. |
 | `GET /api/v1/sessions/current` | Current user, `commands_allowed`, `expires_at`. No token in the body. |
 | `DELETE /api/v1/sessions` | Logout. Sets `nx_session.revoked_at`. Does not require `commands_allowed`. |
-| `GET /api/v1/rooms`, `/room-types`, `/buildings` | Bearer. Names from `nx_label` (`?lang=` or `Accept-Language`). |
-| `GET /api/v1/room-statuses` | Bearer. Codes only; the client translates them. |
+| `GET /api/v1/rooms`, `/room-types`, `/buildings` | Bearer. Names from `nx_label` (`?lang=` or `Accept-Language`), plus `names` and `version`. |
+| `POST` / `PATCH` / `DELETE` those three | Bearer and `commands_allowed`. Same property only. `PATCH` sends `version`. Delete of a row that is still referenced is `409` `in_use`. |
+| `GET /api/v1/room-statuses` | Bearer. Codes only; the client translates them. Not a writable dictionary. |
 | `GET /api/v1/rack` | Bearer. `from` and `to` (YYYY-MM-DD, `to` exclusive, max 120 nights). Rooms and overlapping stays. |
 | `GET /api/v1/reservations` | Bearer. Optional `from`+`to`, `guest`, `status`, `room`, `room_id`. |
 | `GET /api/v1/reservations/{id}` | Bearer. One reservation and its stays. |
 | `POST /api/v1/reservations` | Bearer and `commands_allowed`. One stay. `409` `overlap` if the room is taken. |
 | `PATCH /api/v1/reservations/{id}` | Bearer and `commands_allowed`. Dates, room, guest, status. Sends `version`. |
 | anything else under `/api/v1` | `401` without a bearer, otherwise `404` JSON |
-| WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Token in `?token=` or the first text frame `{"type":"auth","token"}`. Then `hello`, and after commit `reservation.created` / `updated` / `cancelled` and `room.status_changed`. See `next/docs/ws-events.md`. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
+| WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Token in `?token=` or the first text frame `{"type":"auth","token"}`. Then `hello`, and after commit `reservation.created` / `updated` / `cancelled`, `room.status_changed`, and `dictionary.changed`. See `next/docs/ws-events.md`. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
 
 ## Sessions
 

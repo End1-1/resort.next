@@ -19,6 +19,7 @@ public:
 
 private:
     void publishReservation(const char *type, const ApiResult &result);
+    void publishDictionary(const char *dictionary, const char *action, qint64 id);
 
     AppConfig m_config;
     QHttpServer m_server;

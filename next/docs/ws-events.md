@@ -29,5 +29,6 @@
 | `reservation.updated` | `PATCH` вернул 200 и бронь не `canceled` | те же |
 | `reservation.cancelled` | `PATCH` вернул 200 и `status_code` стал `canceled` | те же |
 | `room.status_changed` | тот же `PATCH` вернул 200 и `state_code` проживания `in_house` или `checked_out` | `room_id`, `status_code` (`occupied` при `in_house`, `vacant_dirty` при `checked_out`) |
+| `dictionary.changed` | успешные `POST` / `PATCH` / `DELETE` типа номера, корпуса или номера | `dictionary` (`room_types`, `buildings` или `rooms`), `action` (`created`, `updated` или `deleted`), `id` |
 
-`hotel-desktop` после hello держит сокет. Обрыв — повтор через 1 с, затем 2, 4, 8, … не чаще чем раз в 30 с. После hello пауза снова 1 с. Кадры `reservation.*` и `room.status_changed` заново запрашивают шахматку и список броней. Без токена в памяти клиент сокет не открывает.
+`hotel-desktop` после hello держит сокет. Обрыв — повтор через 1 с, затем 2, 4, 8, … не чаще чем раз в 30 с. После hello пауза снова 1 с. Кадры `reservation.*`, `room.status_changed` и `dictionary.changed` заново запрашивают шахматку, список броней и справочники. Без токена в памяти клиент сокет не открывает.

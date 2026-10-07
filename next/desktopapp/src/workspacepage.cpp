@@ -32,6 +32,12 @@ void WorkspacePage::reload()
         m_rooms->reload();
 }
 
+void WorkspacePage::setCommandsAllowed(bool allowed)
+{
+    if (m_rooms)
+        m_rooms->setCommandsAllowed(allowed);
+}
+
 void WorkspacePage::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::LanguageChange)
@@ -43,5 +49,5 @@ void WorkspacePage::retranslateUi()
 {
     setTabText(indexOf(m_rack), tr("Rack"));
     setTabText(indexOf(m_reservations), tr("Reservations"));
-    setTabText(indexOf(m_rooms), tr("Rooms"));
+    setTabText(indexOf(m_rooms), tr("Dictionaries"));
 }

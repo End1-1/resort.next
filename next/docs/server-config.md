@@ -258,7 +258,7 @@ line 5: unknown key "listn": C:\hotel-api\hotel-api.ini
 `/health` отвечает `503`. Тело:
 
 ```json
-{"status":"degraded","service":"hotel-api","version":"0.8.0","db":{"configured":true,"state":"down","error":"driver_not_loaded"}}
+{"status":"degraded","service":"hotel-api","version":"0.9.0","db":{"configured":true,"state":"down","error":"driver_not_loaded"}}
 ```
 
 В логе: `database probe failed: driver_not_loaded`. Плагин Qt `QMYSQL` не загрузился. Так бывает, когда нет `qsqlmysql.dll` / `qsqlmysqld.dll` или Windows не смог подгрузить его зависимость `libmariadb.dll`.
@@ -293,7 +293,7 @@ database probe failed: access_denied
 `/health` в том же случае:
 
 ```json
-{"status":"degraded","service":"hotel-api","version":"0.8.0","db":{"configured":true,"state":"down","error":"access_denied"}}
+{"status":"degraded","service":"hotel-api","version":"0.9.0","db":{"configured":true,"state":"down","error":"access_denied"}}
 ```
 
 `POST /api/v1/sessions` отвечает `503` с тем же машинным кодом в поле `error` (`access_denied`, `unknown_database` или `cannot_connect`). Текст `message` общий, без хоста и без пароля. Номер, которому нет отдельного кода, по-прежнему даёт в `/health` `connection_failed`, а на входе `database_unavailable`.

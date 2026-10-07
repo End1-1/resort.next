@@ -269,6 +269,74 @@ HttpApi::HttpApi(AppConfig config)
     m_server.route(QStringLiteral("/api/v1/rooms"), QHttpServerRequest::Method::Get, dictionaryRoute(listRooms));
     m_server.route(QStringLiteral("/api/v1/room-types"), QHttpServerRequest::Method::Get, dictionaryRoute(listRoomTypes));
     m_server.route(QStringLiteral("/api/v1/buildings"), QHttpServerRequest::Method::Get, dictionaryRoute(listBuildings));
+
+    using CreateFn = ApiResult (*)(const DatabaseTarget &, int, qint64, const QByteArray &);
+    using UpdateFn = ApiResult (*)(const DatabaseTarget &, int, qint64, qint64, const QByteArray &);
+    using DeleteFn = ApiResult (*)(const DatabaseTarget &, int, qint64, qint64);
+    const auto postDictionary = [this](const QString &path, CreateFn handler, const char *dictionary) {
+        m_server.route(path, QHttpServerRequest::Method::Post, [this, handler, dictionary](const QHttpServerRequest &request) {
+            const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Command);
+            if (!auth.allowed)
+                return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+            const ApiResult result = handler(m_config.database, m_config.dbConnectTimeoutSec, auth.principal.propertyId, request.body());
+            if (result.httpStatus == 201)
+                publishDictionary(dictionary, "created", result.body.value(QStringLiteral("id")).toInteger());
+            return jsonResponse(result.body, toStatus(result.httpStatus));
+        });
+    };
+    const auto patchDictionary = [this](const QString &path, UpdateFn handler, const char *dictionary, const char *missingCode) {
+        m_server.route(path,
+                       QHttpServerRequest::Method::Patch,
+                       [this, handler, dictionary, missingCode](const QString &idText, const QHttpServerRequest &request) {
+                           const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Command);
+                           if (!auth.allowed)
+                               return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                           bool ok = false;
+                           const qint64 id = idText.toLongLong(&ok);
+                           if (!ok || id <= 0) {
+                               const ApiResult missing = apiError(404, missingCode, "not found");
+                               return jsonResponse(missing.body, toStatus(missing.httpStatus));
+                           }
+                           const ApiResult result = handler(m_config.database,
+                                                            m_config.dbConnectTimeoutSec,
+                                                            auth.principal.propertyId,
+                                                            id,
+                                                            request.body());
+                           if (result.httpStatus == 200)
+                               publishDictionary(dictionary, "updated", id);
+                           return jsonResponse(result.body, toStatus(result.httpStatus));
+                       });
+    };
+    const auto deleteDictionary = [this](const QString &path, DeleteFn handler, const char *dictionary, const char *missingCode) {
+        m_server.route(path,
+                       QHttpServerRequest::Method::Delete,
+                       [this, handler, dictionary, missingCode](const QString &idText, const QHttpServerRequest &request) {
+                           const AuthOutcome auth = requireUser(m_config, request, RouteAccess::Command);
+                           if (!auth.allowed)
+                               return jsonResponse(auth.result.body, toStatus(auth.result.httpStatus));
+                           bool ok = false;
+                           const qint64 id = idText.toLongLong(&ok);
+                           if (!ok || id <= 0) {
+                               const ApiResult missing = apiError(404, missingCode, "not found");
+                               return jsonResponse(missing.body, toStatus(missing.httpStatus));
+                           }
+                           const ApiResult result =
+                               handler(m_config.database, m_config.dbConnectTimeoutSec, auth.principal.propertyId, id);
+                           if (result.httpStatus == 200)
+                               publishDictionary(dictionary, "deleted", id);
+                           return jsonResponse(result.body, toStatus(result.httpStatus));
+                       });
+    };
+    postDictionary(QStringLiteral("/api/v1/room-types"), createRoomType, "room_types");
+    patchDictionary(QStringLiteral("/api/v1/room-types/<arg>"), updateRoomType, "room_types", "room_type_not_found");
+    deleteDictionary(QStringLiteral("/api/v1/room-types/<arg>"), deleteRoomType, "room_types", "room_type_not_found");
+    postDictionary(QStringLiteral("/api/v1/buildings"), createBuilding, "buildings");
+    patchDictionary(QStringLiteral("/api/v1/buildings/<arg>"), updateBuilding, "buildings", "building_not_found");
+    deleteDictionary(QStringLiteral("/api/v1/buildings/<arg>"), deleteBuilding, "buildings", "building_not_found");
+    postDictionary(QStringLiteral("/api/v1/rooms"), createRoom, "rooms");
+    patchDictionary(QStringLiteral("/api/v1/rooms/<arg>"), updateRoom, "rooms", "room_not_found");
+    deleteDictionary(QStringLiteral("/api/v1/rooms/<arg>"), deleteRoom, "rooms", "room_not_found");
+
     m_server.route(QStringLiteral("/api/v1/room-statuses"),
                    QHttpServerRequest::Method::Get,
                    [this](const QHttpServerRequest &request) {
@@ -310,6 +378,21 @@ HttpApi::HttpApi(AppConfig config)
 void HttpApi::setRealtime(RealtimeHub *hub)
 {
     m_hub = hub;
+}
+
+void HttpApi::publishDictionary(const char *dictionary, const char *action, qint64 id)
+{
+    if (!m_hub || id <= 0)
+        return;
+    QJsonObject event;
+    event.insert(QStringLiteral("type"), QStringLiteral("dictionary.changed"));
+    event.insert(QStringLiteral("dictionary"), QLatin1String(dictionary));
+    event.insert(QStringLiteral("action"), QLatin1String(action));
+    event.insert(QStringLiteral("id"), QJsonValue(id));
+    QMetaObject::invokeMethod(m_hub,
+                              "publish",
+                              Qt::QueuedConnection,
+                              Q_ARG(QByteArray, QJsonDocument(event).toJson(QJsonDocument::Compact)));
 }
 
 void HttpApi::publishReservation(const char *type, const ApiResult &result)

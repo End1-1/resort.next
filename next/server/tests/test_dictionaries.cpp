@@ -96,6 +96,8 @@ class DictionaryTest : public QObject {
 private slots:
     void localeFallsBackToRussian();
     void roomStatusesAreCodes();
+    void namedWriteValidation();
+    void roomWriteValidation();
     void roomsRequireBearerWhenDatabaseIsOff();
     void databaseNamesFollowLocale();
 };
@@ -126,6 +128,104 @@ void DictionaryTest::roomStatusesAreCodes()
             ready = true;
     }
     QVERIFY(ready);
+}
+
+void DictionaryTest::namedWriteValidation()
+{
+    NamedWrite row;
+    ApiResult error;
+    QVERIFY(!parseNamedWrite(QJsonObject(), true, &row, &error));
+    QCOMPARE(error.httpStatus, 400);
+    QCOMPARE(QString::fromLatin1(error.body.value(QStringLiteral("error")).toString().toLatin1()), QStringLiteral("invalid_request"));
+
+    QJsonObject names;
+    names.insert(QStringLiteral("hy"), QStringLiteral("Հայ"));
+    names.insert(QStringLiteral("en"), QStringLiteral("En"));
+    names.insert(QStringLiteral("ru"), QStringLiteral("Ру"));
+    QJsonObject body;
+    body.insert(QStringLiteral("code"), QStringLiteral("  "));
+    body.insert(QStringLiteral("names"), names);
+    body.insert(QStringLiteral("version"), 0);
+    QVERIFY(!parseNamedWrite(body, true, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("code_required"));
+
+    body.insert(QStringLiteral("code"), QString(33, QLatin1Char('A')));
+    QVERIFY(!parseNamedWrite(body, true, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("code_too_long"));
+
+    body.insert(QStringLiteral("code"), QStringLiteral("std"));
+    body.remove(QStringLiteral("names"));
+    QVERIFY(!parseNamedWrite(body, false, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("name_required"));
+
+    names.insert(QStringLiteral("en"), QStringLiteral(" "));
+    body.insert(QStringLiteral("names"), names);
+    QVERIFY(!parseNamedWrite(body, false, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("name_required"));
+
+    names.insert(QStringLiteral("en"), QString(129, QLatin1Char('n')));
+    body.insert(QStringLiteral("names"), names);
+    QVERIFY(!parseNamedWrite(body, false, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("name_too_long"));
+
+    names.insert(QStringLiteral("en"), QStringLiteral("English"));
+    body.insert(QStringLiteral("names"), names);
+    QVERIFY(parseNamedWrite(body, false, &row, &error));
+    QCOMPARE(row.code, QStringLiteral("std"));
+    QCOMPARE(row.hy, QStringLiteral("Հայ"));
+    QCOMPARE(row.ru, QString::fromUtf8("Ру"));
+    body.insert(QStringLiteral("version"), -1);
+    QVERIFY(!parseNamedWrite(body, true, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("invalid_request"));
+    body.insert(QStringLiteral("version"), 2);
+    QVERIFY(parseNamedWrite(body, true, &row, &error));
+    QCOMPARE(row.version, 2);
+}
+
+void DictionaryTest::roomWriteValidation()
+{
+    RoomWrite row;
+    ApiResult error;
+    QJsonObject body;
+    body.insert(QStringLiteral("code"), QStringLiteral("101"));
+    body.insert(QStringLiteral("room_type_id"), 4);
+    body.insert(QStringLiteral("status_code"), QStringLiteral("dirty"));
+    QVERIFY(!parseRoomWrite(body, false, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("invalid_status"));
+
+    body.insert(QStringLiteral("status_code"), QStringLiteral("vacant_ready"));
+    body.insert(QStringLiteral("room_type_id"), 0);
+    QVERIFY(!parseRoomWrite(body, false, &row, &error));
+    QCOMPARE(error.body.value(QStringLiteral("error")).toString(), QStringLiteral("invalid_request"));
+
+    body.insert(QStringLiteral("room_type_id"), 4);
+    body.insert(QStringLiteral("building_id"), QJsonValue::Null);
+    body.insert(QStringLiteral("floor"), QJsonValue::Null);
+    body.insert(QStringLiteral("phone"), QStringLiteral("  "));
+    body.insert(QStringLiteral("do_not_disturb"), true);
+    QVERIFY(parseRoomWrite(body, false, &row, &error));
+    QCOMPARE(row.roomTypeId, 4);
+    QVERIFY(!row.hasBuilding);
+    QVERIFY(!row.hasFloor);
+    QVERIFY(!row.hasPhone);
+    QVERIFY(row.doNotDisturb);
+    QCOMPARE(row.statusCode, QStringLiteral("vacant_ready"));
+
+    body.insert(QStringLiteral("floor"), 1.5);
+    QVERIFY(!parseRoomWrite(body, false, &row, &error));
+    body.insert(QStringLiteral("floor"), 2);
+    body.insert(QStringLiteral("building_id"), 9);
+    body.insert(QStringLiteral("phone"), QStringLiteral("101"));
+    body.insert(QStringLiteral("version"), 3);
+    QVERIFY(parseRoomWrite(body, true, &row, &error));
+    QVERIFY(row.hasBuilding);
+    QCOMPARE(row.buildingId, 9);
+    QVERIFY(row.hasFloor);
+    QCOMPARE(row.floor, 2);
+    QCOMPARE(row.phone, QStringLiteral("101"));
+    QCOMPARE(row.version, 3);
+    QVERIFY(knownRoomStatus(QStringLiteral("out_of_inventory")));
+    QVERIFY(!knownRoomStatus(QStringLiteral("dirty")));
 }
 
 void DictionaryTest::roomsRequireBearerWhenDatabaseIsOff()
@@ -168,6 +268,8 @@ void DictionaryTest::roomsRequireBearerWhenDatabaseIsOff()
     const HttpReply rooms = httpCall(18084, "GET", "/api/v1/rooms", {});
     const HttpReply typed = httpCall(18084, "GET", "/api/v1/room-types?lang=hy", {});
     const HttpReply statuses = httpCall(18084, "GET", "/api/v1/room-statuses", {});
+    const HttpReply posted = httpCall(18084, "POST", "/api/v1/room-types", {}, "{\"code\":\"STD\"}");
+    const HttpReply removed = httpCall(18084, "DELETE", "/api/v1/rooms/1", {});
     server.terminate();
     if (!server.waitForFinished(3000)) {
         server.kill();
@@ -177,6 +279,8 @@ void DictionaryTest::roomsRequireBearerWhenDatabaseIsOff()
     QCOMPARE(rooms.status, 401);
     QCOMPARE(typed.status, 401);
     QCOMPARE(statuses.status, 401);
+    QCOMPARE(posted.status, 401);
+    QCOMPARE(removed.status, 401);
     QVERIFY(rooms.body.contains("unauthorized"));
 }
 
@@ -222,7 +326,10 @@ void DictionaryTest::databaseNamesFollowLocale()
     QVERIFY2(mysql(QStringLiteral("source ") + QStringLiteral(HOTEL_MIGRATION_0002)).isEmpty(), "0002");
     QVERIFY2(mysql(QStringLiteral("source ") + QStringLiteral(HOTEL_MIGRATION_0003)).isEmpty(), "0003");
     QVERIFY2(mysql(QStringLiteral("source ") + QStringLiteral(HOTEL_MIGRATION_0003)).isEmpty(), "0003 again");
+    QVERIFY2(mysql(QStringLiteral("source ") + QStringLiteral(HOTEL_MIGRATION_0005)).isEmpty(), "0005");
+    QVERIFY2(mysql(QStringLiteral("source ") + QStringLiteral(HOTEL_MIGRATION_0005)).isEmpty(), "0005 again");
 
+    qint64 otherTypeId = 0;
     const QString connectionName = QStringLiteral("dict-test");
     {
         QSqlDatabase db = QSqlDatabase::addDatabase(QStringLiteral("QMYSQL"), connectionName);
@@ -291,6 +398,20 @@ void DictionaryTest::databaseNamesFollowLocale()
             "FROM nx_property p JOIN nx_role r ON r.property_id=p.id AND r.code='desk' WHERE p.code='DICT'")));
         userInsert.bindValue(QStringLiteral(":hash"), QString::fromLatin1(hash));
         QVERIFY(userInsert.exec());
+        QSqlQuery reader(db);
+        QVERIFY(reader.prepare(QStringLiteral(
+            "INSERT INTO nx_user (property_id, role_id, login, first_name, last_name, password_hash, "
+            "password_scheme, state, created_at) "
+            "SELECT id, NULL, 'dict-read', 'Read', 'Only', :hash, 'md5', 'active', UTC_TIMESTAMP() "
+            "FROM nx_property WHERE code='DICT'")));
+        reader.bindValue(QStringLiteral(":hash"), QString::fromLatin1(hash));
+        QVERIFY(reader.exec());
+        QSqlQuery otherType(db);
+        QVERIFY(otherType.exec(QStringLiteral(
+            "SELECT t.id FROM nx_room_type t JOIN nx_property p ON p.id = t.property_id "
+            "WHERE p.code = 'OTHER' AND t.code = 'STD'")));
+        QVERIFY(otherType.next());
+        otherTypeId = otherType.value(0).toLongLong();
         db.close();
     }
     QSqlDatabase::removeDatabase(connectionName);
@@ -383,6 +504,94 @@ void DictionaryTest::databaseNamesFollowLocale()
     QCOMPARE(statuses.status, 200);
     QVERIFY(statuses.body.contains("vacant_ready"));
     QVERIFY(!statuses.body.contains("\"name\""));
+
+    QVERIFY(types.at(0).toObject().contains(QStringLiteral("version")));
+    QVERIFY(types.at(0).toObject().contains(QStringLiteral("names")));
+    QJsonObject stdType;
+    for (const QJsonValue &type : types) {
+        if (type.toObject().value(QStringLiteral("code")).toString() == QLatin1String("STD"))
+            stdType = type.toObject();
+    }
+    QCOMPARE(stdType.value(QStringLiteral("names")).toObject().value(QStringLiteral("ru")).toString(),
+             QString::fromUtf8("Стандарт"));
+    QCOMPARE(stdType.value(QStringLiteral("names")).toObject().value(QStringLiteral("hy")).toString(),
+             QString::fromUtf8("Ստանդարտ"));
+    QVERIFY(stdType.value(QStringLiteral("names")).toObject().value(QStringLiteral("en")).isNull());
+    QCOMPARE(hyItems.at(0).toObject().value(QStringLiteral("version")).toInt(), 0);
+    QCOMPARE(hyItems.at(0).toObject().value(QStringLiteral("do_not_disturb")).toBool(), false);
+
+    const auto postJson = [&](const QByteArray &path, const QByteArray &json, const QByteArray &auth) {
+        return httpCall(18085, "POST", path, auth, json);
+    };
+    const QByteArray missingNames = "{\"code\":\"SUITE\"}";
+    const HttpReply missing = postJson("/api/v1/room-types", missingNames, bearer);
+    QCOMPARE(missing.status, 400);
+    QVERIFY(missing.body.contains("name_required"));
+
+    const QByteArray suite =
+        "{\"code\":\"SUITE\",\"names\":{\"hy\":\"Սյուիտ\",\"en\":\"Suite\",\"ru\":\"Сюит\"}}";
+    const HttpReply created = postJson("/api/v1/room-types", suite, bearer);
+    QCOMPARE(created.status, 201);
+    const QJsonObject createdBody = QJsonDocument::fromJson(created.body).object();
+    const qint64 suiteId = createdBody.value(QStringLiteral("id")).toInteger();
+    QVERIFY(suiteId > 0);
+    QCOMPARE(createdBody.value(QStringLiteral("version")).toInt(), 0);
+    QCOMPARE(createdBody.value(QStringLiteral("name")).toString(), QString::fromUtf8("Сюит"));
+
+    const HttpReply duplicate = postJson("/api/v1/room-types", suite, bearer);
+    QCOMPARE(duplicate.status, 409);
+    QVERIFY(duplicate.body.contains("duplicate_code"));
+
+    const QByteArray stale =
+        QByteArray("{\"version\":1,\"code\":\"SUITE\",\"names\":{\"hy\":\"Սյուիտ\",\"en\":\"Suite\",\"ru\":\"Сюит\"}}");
+    const HttpReply conflict = httpCall(18085, "PATCH", "/api/v1/room-types/" + QByteArray::number(suiteId), bearer, stale);
+    QCOMPARE(conflict.status, 409);
+    QVERIFY(conflict.body.contains("version_conflict"));
+
+    const QByteArray renamed =
+        QByteArray("{\"version\":0,\"code\":\"SU\",\"names\":{\"hy\":\"Սյուիտ\",\"en\":\"Suite\",\"ru\":\"Люкс\"}}");
+    const HttpReply patched = httpCall(18085, "PATCH", "/api/v1/room-types/" + QByteArray::number(suiteId), bearer, renamed);
+    QCOMPARE(patched.status, 200);
+    QCOMPARE(QJsonDocument::fromJson(patched.body).object().value(QStringLiteral("version")).toInt(), 1);
+    QCOMPARE(QJsonDocument::fromJson(patched.body).object().value(QStringLiteral("code")).toString(), QStringLiteral("SU"));
+
+    const QByteArray foreignType = QByteArray("{\"version\":0,\"code\":\"H\",\"names\":{\"hy\":\"Հ\",\"en\":\"H\",\"ru\":\"Ч\"}}");
+    const HttpReply hidden = httpCall(18085, "PATCH", "/api/v1/room-types/" + QByteArray::number(otherTypeId), bearer, foreignType);
+    QCOMPARE(hidden.status, 404);
+    QVERIFY(hidden.body.contains("room_type_not_found"));
+
+    const QByteArray badRoom =
+        QByteArray("{\"code\":\"301\",\"room_type_id\":999999,\"status_code\":\"vacant_ready\"}");
+    const HttpReply badRoomReply = postJson("/api/v1/rooms", badRoom, bearer);
+    QCOMPARE(badRoomReply.status, 404);
+    QVERIFY(badRoomReply.body.contains("room_type_not_found"));
+
+    const QByteArray roomJson = QByteArray("{\"code\":\"301\",\"room_type_id\":") + QByteArray::number(suiteId)
+        + ",\"floor\":3,\"phone\":\"301\",\"status_code\":\"vacant_ready\",\"do_not_disturb\":false}";
+    const HttpReply roomCreated = postJson("/api/v1/rooms", roomJson, bearer);
+    QCOMPARE(roomCreated.status, 201);
+    const qint64 roomId = QJsonDocument::fromJson(roomCreated.body).object().value(QStringLiteral("id")).toInteger();
+    QVERIFY(roomId > 0);
+    QCOMPARE(QJsonDocument::fromJson(roomCreated.body).object().value(QStringLiteral("version")).toInt(), 0);
+
+    const HttpReply typeInUse = httpCall(18085, "DELETE", "/api/v1/room-types/" + QByteArray::number(suiteId), bearer);
+    QCOMPARE(typeInUse.status, 409);
+    QVERIFY(typeInUse.body.contains("in_use"));
+
+    const HttpReply roomGone = httpCall(18085, "DELETE", "/api/v1/rooms/" + QByteArray::number(roomId), bearer);
+    QCOMPARE(roomGone.status, 200);
+    QVERIFY(roomGone.body.contains("deleted"));
+    const HttpReply typeGone = httpCall(18085, "DELETE", "/api/v1/room-types/" + QByteArray::number(suiteId), bearer);
+    QCOMPARE(typeGone.status, 200);
+
+    const HttpReply readerLogin = httpCall(18085, "POST", "/api/v1/sessions", {}, "{\"login\":\"dict-read\",\"password\":\"test-pass\"}");
+    QCOMPARE(readerLogin.status, 200);
+    const QByteArray readerToken = QJsonDocument::fromJson(readerLogin.body).object().value(QStringLiteral("token")).toString().toLatin1();
+    const QByteArray readerBearer = "Bearer " + readerToken;
+    QVERIFY(!QJsonDocument::fromJson(readerLogin.body).object().value(QStringLiteral("commands_allowed")).toBool());
+    const HttpReply forbidden = postJson("/api/v1/buildings", suite, readerBearer);
+    QCOMPARE(forbidden.status, 403);
+    QVERIFY(forbidden.body.contains("commands_not_allowed"));
 
     server.terminate();
     server.waitForFinished(3000);
