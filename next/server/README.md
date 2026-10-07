@@ -55,7 +55,7 @@ curl -sS http://127.0.0.1:8080/health
 | `GET /api/v1/rooms`, `/room-types`, `/buildings` | Bearer. Names from `nx_label` (`?lang=` or `Accept-Language`), plus `names` and `version`. |
 | `POST` / `PATCH` / `DELETE` those three | Bearer and `commands_allowed`. Same property only. `PATCH` sends `version`. Delete of a row that is still referenced is `409` `in_use`. |
 | `GET /api/v1/room-statuses` | Bearer. Codes only; the client translates them. Not a writable dictionary. |
-| `GET /api/v1/rack` | Bearer. `from` and `to` (YYYY-MM-DD, `to` exclusive, max 120 nights). Rooms and overlapping stays. |
+| `GET /api/v1/rack` | Bearer. `from` and `to` (YYYY-MM-DD, `to` exclusive, max 120 nights). Every room of the property, ordered by building then room code, plus overlapping stays. |
 | `GET /api/v1/reservations` | Bearer. Optional `from`+`to`, `guest`, `status`, `room`, `room_id`. |
 | `GET /api/v1/reservations/{id}` | Bearer. One reservation and its stays. |
 | `POST /api/v1/reservations` | Bearer and `commands_allowed`. One stay. `409` `overlap` if the room is taken. |

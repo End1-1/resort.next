@@ -16,7 +16,7 @@ Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake
 | `src/connectiondialog.*` | Address, WebSocket, «Проверить соединение». |
 | `src/loginwindow.*` | Login form. |
 | `src/dictionariespage.*`, `src/dictionarydialogs.*` | Dictionaries tab: room types, buildings, rooms. Add, edit, and delete when `commands_allowed` is true. Names are Armenian, English, and Russian. |
-| `src/rackpage.*` | Rack chart tab. Rooms as rows, nights as columns. `GET /api/v1/rack`. A block opens the reservation. |
+| `src/rackchart.*`, `src/rackpage.*` | Rack chart tab. The grid fills the window (as many days and room rows as fit). `GET /api/v1/rack`. Drag-select opens a new reservation; a block opens the existing one. |
 | `src/reservationspage.*` | Reservation search. `GET /api/v1/reservations`. |
 | `src/reservationdialog.*` | Create and edit. The server validates. |
 | `src/workspacepage.*` | Tabs passed to `MainWindow::setWorkspacePage`. |
