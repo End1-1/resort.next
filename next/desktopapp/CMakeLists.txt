@@ -39,6 +39,8 @@ add_library(hotel-desktop-ui STATIC
     src/connectiondialog.h
     src/dictionariespage.cpp
     src/dictionariespage.h
+    src/rackchart.cpp
+    src/rackchart.h
     src/rackpage.cpp
     src/rackpage.h
     src/reservationdialog.cpp
@@ -85,6 +87,7 @@ set(HOTEL_DESKTOP_I18N_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/appcontroller.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connectiondialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dictionariespage.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/rackchart.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rackpage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reservationdialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reservationspage.cpp
@@ -139,4 +142,14 @@ if(BUILD_TESTING)
     )
     add_dependencies(hotel-desktop-login-smoke hotel-desktop_lrelease)
     add_test(NAME hotel-desktop-login-smoke COMMAND hotel-desktop-login-smoke)
+
+    add_executable(hotel-desktop-rack-chart
+        tests/rack_chart_test.cpp
+    )
+    target_link_libraries(hotel-desktop-rack-chart PRIVATE hotel-desktop-ui Qt6::Test)
+    target_compile_definitions(hotel-desktop-rack-chart PRIVATE
+        HOTEL_DESKTOP_RU_QM="${CMAKE_CURRENT_BINARY_DIR}/hotel-desktop_ru.qm")
+    add_dependencies(hotel-desktop-rack-chart hotel-desktop_lrelease)
+    hotel_desktop_warnings(hotel-desktop-rack-chart)
+    add_test(NAME hotel-desktop-rack-chart COMMAND hotel-desktop-rack-chart)
 endif()

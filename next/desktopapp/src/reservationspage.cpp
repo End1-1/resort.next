@@ -123,6 +123,18 @@ void ReservationsPage::openReservation(qint64 reservationId)
     }
 }
 
+void ReservationsPage::beginReservation(qint64 roomId, const QDate &arrival, const QDate &departure)
+{
+    if (!m_api->hasToken())
+        return;
+    ReservationDialog dialog(m_api, this);
+    dialog.loadNew(roomId, arrival, departure);
+    if (dialog.exec() == QDialog::Accepted) {
+        reload();
+        emit reservationsChanged();
+    }
+}
+
 void ReservationsPage::changeEvent(QEvent *event)
 {
     if (event->type() == QEvent::LanguageChange) {

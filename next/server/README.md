@@ -54,7 +54,7 @@ curl -sS http://127.0.0.1:8080/health
 | `DELETE /api/v1/sessions` | Logout. Sets `nx_session.revoked_at`. Does not require `commands_allowed`. |
 | `GET /api/v1/rooms`, `/room-types`, `/buildings` | Bearer. Names from `nx_label` (`?lang=` or `Accept-Language`). |
 | `GET /api/v1/room-statuses` | Bearer. Codes only; the client translates them. |
-| `GET /api/v1/rack` | Bearer. `from` and `to` (YYYY-MM-DD, `to` exclusive, max 120 nights). Rooms and overlapping stays. |
+| `GET /api/v1/rack` | Bearer. `from` and `to` (YYYY-MM-DD, `to` exclusive, max 120 nights). Every room of the property, ordered by building then room code, plus overlapping stays. |
 | `GET /api/v1/reservations` | Bearer. Optional `from`+`to`, `guest`, `status`, `room`, `room_id`. |
 | `GET /api/v1/reservations/{id}` | Bearer. One reservation and its stays. |
 | `POST /api/v1/reservations` | Bearer and `commands_allowed`. One stay. `409` `overlap` if the room is taken. |

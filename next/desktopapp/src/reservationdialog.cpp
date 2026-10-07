@@ -152,12 +152,23 @@ ApiResponse ReservationDialog::waitFor(quint64 requestId)
     return found;
 }
 
+void ReservationDialog::loadNew(qint64 roomId, const QDate &arrival, const QDate &departure)
+{
+    m_hasPreset = true;
+    m_presetRoomId = roomId;
+    m_presetArrival = arrival;
+    m_presetDeparture = departure;
+    load(0);
+}
+
 void ReservationDialog::load(qint64 reservationId)
 {
     m_id = reservationId;
     m_version = 0;
     m_stayId = 0;
     m_stayState.clear();
+    if (reservationId > 0)
+        m_hasPreset = false;
     retranslateUi();
     setWindowTitle(reservationId == 0 ? tr("New reservation") : tr("Reservation %1").arg(reservationId));
     const bool editing = reservationId > 0;
@@ -174,8 +185,18 @@ void ReservationDialog::load(qint64 reservationId)
     else
         showFailure(rooms);
 
-    if (reservationId <= 0)
+    if (reservationId <= 0) {
+        if (m_hasPreset) {
+            if (m_presetArrival.isValid())
+                m_arrival->setDate(m_presetArrival);
+            if (m_presetDeparture.isValid())
+                m_departure->setDate(m_presetDeparture);
+            const int presetIndex = m_room->findData(m_presetRoomId);
+            if (presetIndex >= 0)
+                m_room->setCurrentIndex(presetIndex);
+        }
         return;
+    }
     const ApiResponse detail = waitFor(m_api->request(HttpVerb::Get,
                                                       QStringLiteral("/api/v1/reservations/%1").arg(reservationId),
                                                       QUrlQuery(),
