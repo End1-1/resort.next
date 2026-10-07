@@ -124,6 +124,8 @@ add_executable(hotel-api-auth-test
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_auth.cpp
 )
 target_include_directories(hotel-api-auth-test PRIVATE src)
