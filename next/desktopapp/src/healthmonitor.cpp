@@ -235,7 +235,8 @@ void HealthMonitor::ensureSocket()
             emit statusChanged();
             return;
         }
-        if (type.startsWith(QLatin1String("reservation.")) || type == QLatin1String("room.status_changed"))
+        if (type.startsWith(QLatin1String("reservation.")) || type == QLatin1String("room.status_changed")
+            || type == QLatin1String("dictionary.changed"))
             emit hotelEvent(type);
     });
     connect(m_socket, &QWebSocket::disconnected, this, &HealthMonitor::markSocketDown);

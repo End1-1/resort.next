@@ -37,8 +37,8 @@
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
         <location filename="../src/apiclient.cpp" line="252"/>
-        <location filename="../src/apiclient.cpp" line="311"/>
-        <location filename="../src/apiclient.cpp" line="332"/>
+        <location filename="../src/apiclient.cpp" line="329"/>
+        <location filename="../src/apiclient.cpp" line="350"/>
         <source>Server unavailable.</source>
         <translation>Server unavailable.</translation>
     </message>
@@ -159,38 +159,91 @@
     </message>
     <message>
         <location filename="../src/apiclient.cpp" line="283"/>
-        <source>The reservation was changed. Reload it and try again.</source>
-        <translation>The reservation was changed. Reload it and try again.</translation>
+        <source>This record was changed. Reload it and try again.</source>
+        <translation>This record was changed. Reload it and try again.</translation>
     </message>
     <message>
         <location filename="../src/apiclient.cpp" line="285"/>
+        <source>That code is already used for this hotel.</source>
+        <translation>That code is already used for this hotel.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="287"/>
+        <source>This record is in use and cannot be deleted.</source>
+        <translation>This record is in use and cannot be deleted.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="289"/>
+        <source>Armenian, English, and Russian names are required.</source>
+        <translation>Armenian, English, and Russian names are required.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="291"/>
+        <source>Code is required.</source>
+        <translation>Code is required.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="293"/>
+        <source>The code is too long (32 characters at most).</source>
+        <translation>The code is too long (32 characters at most).</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="295"/>
+        <source>A name is too long (128 characters at most).</source>
+        <translation>A name is too long (128 characters at most).</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="297"/>
+        <source>That room status is not allowed.</source>
+        <translation>That room status is not allowed.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="299"/>
+        <source>The room type was not found.</source>
+        <translation>The room type was not found.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="301"/>
+        <source>The building was not found.</source>
+        <translation>The building was not found.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="313"/>
+        <source>The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0005_nx_dictionary_version.sql.</source>
+        <translation>The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0005_nx_dictionary_version.sql.</translation>
+    </message>
+    <message>
+        <source>The reservation was changed. Reload it and try again.</source>
+        <translation type="vanished">The reservation was changed. Reload it and try again.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="303"/>
         <source>Check the guest out before canceling the reservation.</source>
         <translation>Check the guest out before canceling the reservation.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="287"/>
+        <location filename="../src/apiclient.cpp" line="305"/>
         <source>Dates and room cannot change while the guest is in house or checked out.</source>
         <translation>Dates and room cannot change while the guest is in house or checked out.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="289"/>
+        <location filename="../src/apiclient.cpp" line="307"/>
         <source>The room was not found.</source>
         <translation>The room was not found.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="291"/>
+        <location filename="../src/apiclient.cpp" line="309"/>
         <source>The guest was not found.</source>
         <translation>The guest was not found.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="293"/>
+        <location filename="../src/apiclient.cpp" line="311"/>
         <source>The reservation was not found.</source>
         <translation>The reservation was not found.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="295"/>
         <source>The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.</source>
-        <translation>The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.</translation>
+        <translation type="vanished">The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.</translation>
     </message>
     <message>
         <location filename="../src/apiclient.cpp" line="135"/>
@@ -243,42 +296,46 @@
         <translation>Sign in again. The session is no longer valid.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="309"/>
+        <source>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</source>
+        <translation type="vanished">The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="327"/>
         <source>Request failed, HTTP %1 (%2).</source>
         <translation>Request failed, HTTP %1 (%2).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="338"/>
+        <location filename="../src/apiclient.cpp" line="356"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Server replied HTTP %1; the database state is unknown.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="341"/>
+        <location filename="../src/apiclient.cpp" line="359"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Server replied with an unexpected body.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="344"/>
+        <location filename="../src/apiclient.cpp" line="362"/>
         <source>Server</source>
         <translation>Server</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="348"/>
+        <location filename="../src/apiclient.cpp" line="366"/>
         <source>responded</source>
         <translation>responded</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="350"/>
+        <location filename="../src/apiclient.cpp" line="368"/>
         <source>unknown</source>
         <translation>unknown</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="351"/>
+        <location filename="../src/apiclient.cpp" line="369"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1: running (%2). Database: %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="353"/>
+        <location filename="../src/apiclient.cpp" line="371"/>
         <source>. Version %1</source>
         <translation>. Version %1</translation>
     </message>
@@ -304,17 +361,17 @@
 <context>
     <name>AppController</name>
     <message>
-        <location filename="../src/appcontroller.cpp" line="151"/>
+        <location filename="../src/appcontroller.cpp" line="156"/>
         <source>Could not remember the login. %1</source>
         <translation>Could not remember the login. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="163"/>
+        <location filename="../src/appcontroller.cpp" line="168"/>
         <source>Could not save the language. %1</source>
         <translation>Could not save the language. %1</translation>
     </message>
     <message>
-        <location filename="../src/appcontroller.cpp" line="196"/>
+        <location filename="../src/appcontroller.cpp" line="201"/>
         <source>The server address changed. Sign in again.</source>
         <translation>The server address changed. Sign in again.</translation>
     </message>
@@ -405,89 +462,203 @@
 <context>
     <name>DictionariesPage</name>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="69"/>
+        <location filename="../src/dictionariespage.cpp" line="146"/>
+        <source>Loading room types…</source>
+        <translation>Loading room types…</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="148"/>
+        <source>Loading buildings…</source>
+        <translation>Loading buildings…</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="150"/>
         <source>Loading rooms…</source>
         <translation>Loading rooms…</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="87"/>
+        <location filename="../src/dictionariespage.cpp" line="168"/>
+        <source>Room types</source>
+        <translation>Room types</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="169"/>
+        <source>Buildings</source>
+        <translation>Buildings</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="170"/>
         <source>Rooms</source>
         <translation>Rooms</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <location filename="../src/dictionariespage.cpp" line="176"/>
+        <location filename="../src/dictionariespage.cpp" line="220"/>
+        <source>You do not have permission to change dictionaries.</source>
+        <translation>You do not have permission to change dictionaries.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="180"/>
+        <location filename="../src/dictionariespage.cpp" line="185"/>
+        <location filename="../src/dictionariespage.cpp" line="190"/>
+        <source>Add</source>
+        <translation>Add</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="181"/>
+        <location filename="../src/dictionariespage.cpp" line="186"/>
+        <location filename="../src/dictionariespage.cpp" line="191"/>
+        <source>Edit</source>
+        <translation>Edit</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="182"/>
+        <location filename="../src/dictionariespage.cpp" line="187"/>
+        <location filename="../src/dictionariespage.cpp" line="192"/>
+        <location filename="../src/dictionariespage.cpp" line="384"/>
+        <source>Delete</source>
+        <translation>Delete</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="183"/>
+        <location filename="../src/dictionariespage.cpp" line="188"/>
+        <source>Code</source>
+        <translation>Code</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="183"/>
+        <location filename="../src/dictionariespage.cpp" line="188"/>
+        <source>Armenian</source>
+        <translation>Armenian</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="183"/>
+        <location filename="../src/dictionariespage.cpp" line="188"/>
+        <source>English</source>
+        <translation>English</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="183"/>
+        <location filename="../src/dictionariespage.cpp" line="188"/>
+        <source>Russian</source>
+        <translation>Russian</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="193"/>
         <source>Room</source>
         <translation>Room</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <location filename="../src/dictionariespage.cpp" line="193"/>
         <source>Floor</source>
         <translation>Floor</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <location filename="../src/dictionariespage.cpp" line="193"/>
         <source>Type</source>
         <translation>Type</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <location filename="../src/dictionariespage.cpp" line="193"/>
         <source>Building</source>
         <translation>Building</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="88"/>
+        <location filename="../src/dictionariespage.cpp" line="193"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="90"/>
+        <location filename="../src/dictionariespage.cpp" line="198"/>
+        <location filename="../src/dictionariespage.cpp" line="200"/>
+        <source>The list loads after sign-in.</source>
+        <translation>The list loads after sign-in.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="202"/>
         <source>The room list loads after sign-in.</source>
         <translation>The room list loads after sign-in.</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="104"/>
+        <location filename="../src/dictionariespage.cpp" line="233"/>
         <source>Ready</source>
         <translation>Ready</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="106"/>
+        <location filename="../src/dictionariespage.cpp" line="235"/>
         <source>Occupied</source>
         <translation>Occupied</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="108"/>
+        <location filename="../src/dictionariespage.cpp" line="237"/>
         <source>Dirty</source>
         <translation>Dirty</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="110"/>
+        <location filename="../src/dictionariespage.cpp" line="239"/>
         <source>Out of order</source>
         <translation>Out of order</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="112"/>
+        <location filename="../src/dictionariespage.cpp" line="241"/>
         <source>House use</source>
         <translation>House use</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="114"/>
+        <location filename="../src/dictionariespage.cpp" line="243"/>
         <source>Complimentary</source>
         <translation>Complimentary</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="116"/>
+        <location filename="../src/dictionariespage.cpp" line="245"/>
         <source>Out of inventory</source>
         <translation>Out of inventory</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="151"/>
+        <location filename="../src/dictionariespage.cpp" line="313"/>
+        <source>No room types.</source>
+        <translation>No room types.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="315"/>
+        <source>No buildings.</source>
+        <translation>No buildings.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="317"/>
         <source>No rooms.</source>
         <translation>No rooms.</translation>
     </message>
     <message>
-        <location filename="../src/dictionariespage.cpp" line="153"/>
+        <location filename="../src/dictionariespage.cpp" line="319"/>
+        <source>%1 room types</source>
+        <translation>%1 room types</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="321"/>
+        <source>%1 buildings</source>
+        <translation>%1 buildings</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="323"/>
         <source>%1 rooms</source>
         <translation>%1 rooms</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="354"/>
+        <location filename="../src/dictionariespage.cpp" line="379"/>
+        <source>Select a row.</source>
+        <translation>Select a row.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="383"/>
+        <source>Delete this record?</source>
+        <translation>Delete this record?</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionariespage.cpp" line="383"/>
+        <source>Delete %1?</source>
+        <translation>Delete %1?</translation>
     </message>
 </context>
 <context>
@@ -704,61 +875,70 @@
     </message>
 </context>
 <context>
-    <name>RackChart</name>
+    <name>NamedDictionaryDialog</name>
     <message>
-        <location filename="../src/rackchart.cpp" line="307"/>
-        <location filename="../src/rackchart.cpp" line="679"/>
-        <source>No guest</source>
-        <translation>No guest</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="145"/>
+        <source>New room type</source>
+        <translation>New room type</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="392"/>
-        <source>Room</source>
-        <translation>Room</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="145"/>
+        <source>Edit room type</source>
+        <translation>Edit room type</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="396"/>
-        <source>No rooms.</source>
-        <translation>No rooms.</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="147"/>
+        <source>New building</source>
+        <translation>New building</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="396"/>
-        <source>No rooms match the filter.</source>
-        <translation>No rooms match the filter.</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="147"/>
+        <source>Edit building</source>
+        <translation>Edit building</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="641"/>
-        <source>Open reservation</source>
-        <translation>Open reservation</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="148"/>
+        <source>Code</source>
+        <translation>Code</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="645"/>
-        <source>New reservation</source>
-        <translation>New reservation</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="149"/>
+        <source>Armenian</source>
+        <translation>Armenian</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="666"/>
-        <source>No building</source>
-        <translation>No building</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="150"/>
+        <source>English</source>
+        <translation>English</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="667"/>
-        <source>No floor</source>
-        <translation>No floor</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="151"/>
+        <source>Russian</source>
+        <translation>Russian</translation>
     </message>
     <message>
-        <location filename="../src/rackchart.cpp" line="668"/>
-        <source>%1
-%2
-%3
-%4
-%5</source>
-        <translation>%1
-%2
-%3
-%4
-%5</translation>
+        <location filename="../src/dictionarydialogs.cpp" line="152"/>
+        <source>Save</source>
+        <translation>Save</translation>
     </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="153"/>
+        <source>Cancel</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="180"/>
+        <source>Code is required.</source>
+        <translation>Code is required.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="184"/>
+        <source>Armenian, English, and Russian names are required.</source>
+        <translation>Armenian, English, and Russian names are required.</translation>
+    </message>
+</context>
+<context>
+    <name>RackPage</name>
     <message>
         <location filename="../src/rackchart.cpp" line="680"/>
         <source>%1
@@ -1254,6 +1434,125 @@
     </message>
 </context>
 <context>
+    <name>RoomEditorDialog</name>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="34"/>
+        <source>Ready</source>
+        <translation>Ready</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="36"/>
+        <source>Occupied</source>
+        <translation>Occupied</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="38"/>
+        <source>Dirty</source>
+        <translation>Dirty</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="40"/>
+        <source>Out of order</source>
+        <translation>Out of order</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="42"/>
+        <source>House use</source>
+        <translation>House use</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="44"/>
+        <source>Complimentary</source>
+        <translation>Complimentary</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="46"/>
+        <source>Out of inventory</source>
+        <translation>Out of inventory</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="321"/>
+        <source>New room</source>
+        <translation>New room</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="321"/>
+        <source>Edit room</source>
+        <translation>Edit room</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="322"/>
+        <source>Room</source>
+        <translation>Room</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="323"/>
+        <source>Type</source>
+        <translation>Type</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="324"/>
+        <source>Building</source>
+        <translation>Building</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="325"/>
+        <source>Floor</source>
+        <translation>Floor</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="326"/>
+        <source>Phone</source>
+        <translation>Phone</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="327"/>
+        <source>Status</source>
+        <translation>Status</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="328"/>
+        <location filename="../src/dictionarydialogs.cpp" line="329"/>
+        <source>Do not disturb</source>
+        <translation>Do not disturb</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="330"/>
+        <source>Save</source>
+        <translation>Save</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="331"/>
+        <source>Cancel</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="370"/>
+        <source>None</source>
+        <translation>None</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="425"/>
+        <source>Code is required.</source>
+        <translation>Code is required.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="429"/>
+        <source>Choose a room type.</source>
+        <translation>Choose a room type.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="438"/>
+        <source>Floor must be a whole number.</source>
+        <translation>Floor must be a whole number.</translation>
+    </message>
+    <message>
+        <location filename="../src/dictionarydialogs.cpp" line="444"/>
+        <source>Phone is too long.</source>
+        <translation>Phone is too long.</translation>
+    </message>
+</context>
+<context>
     <name>UrlUtil</name>
     <message>
         <location filename="../src/urlutil.cpp" line="20"/>
@@ -1319,19 +1618,23 @@
 <context>
     <name>WorkspacePage</name>
     <message>
-        <location filename="../src/workspacepage.cpp" line="45"/>
+        <location filename="../src/workspacepage.cpp" line="50"/>
         <source>Rack</source>
         <translation>Rack</translation>
     </message>
     <message>
-        <location filename="../src/workspacepage.cpp" line="46"/>
+        <location filename="../src/workspacepage.cpp" line="51"/>
         <source>Reservations</source>
         <translation>Reservations</translation>
     </message>
     <message>
-        <location filename="../src/workspacepage.cpp" line="47"/>
+        <location filename="../src/workspacepage.cpp" line="52"/>
+        <source>Dictionaries</source>
+        <translation>Dictionaries</translation>
+    </message>
+    <message>
         <source>Rooms</source>
-        <translation>Rooms</translation>
+        <translation type="vanished">Rooms</translation>
     </message>
 </context>
 </TS>

@@ -32,10 +32,14 @@ info:
     commands_allowed. GET /api/v1/sessions/current returns the same user object
     without the token.
 
-    Read-only dictionaries: GET /api/v1/rooms, /room-types, /buildings, and
-    /room-statuses. Names are one string resolved from nx_label (see
-    next/docs/adr-0002-nx-label.md and migration 0003_nx_label.sql). Room
-    status codes are not translated by the server.
+    Room dictionaries: GET /api/v1/rooms, /room-types, /buildings, and
+    /room-statuses. POST, PATCH, and DELETE on rooms, room types, and buildings
+    require commands_allowed and are limited to the session property. Names are
+    nx_label rows for hy, en, and ru (see next/docs/adr-0002-nx-label.md,
+    migrations 0003_nx_label.sql and 0005_nx_dictionary_version.sql). PATCH
+    sends version. A referenced row is not deleted (409 in_use). Room status
+    codes are a closed set, not a dictionary, and are not translated by the
+    server. After a successful write the WebSocket frame is dictionary.changed.
 
     GET /api/v1/rack returns rooms and stay blocks for a night window
     [from, to). to is exclusive. Rooms are ordered by building code, then
@@ -499,7 +503,140 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
         '503':
-          description: Database unavailable or nx_label / nx_room missing (schema_outdated).
+          description: Database unavailable or nx_label / nx_room / version column missing (schema_outdated).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags: [dictionaries]
+      operationId: createRoom
+      summary: Create a room in the signed-in property
+      description: |
+        Requires commands_allowed. property_id in the body is ignored.
+        room_type_id and building_id must belong to the same property.
+        status_code is one of the closed room statuses. code is unique per property.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomWrite'
+      responses:
+        '201':
+          description: Created room.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: invalid_request, code_required, code_too_long, or invalid_status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: room_type_not_found or building_not_found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: duplicate_code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/rooms/{id}:
+    patch:
+      tags: [dictionaries]
+      operationId: updateRoom
+      summary: Replace editable fields of one room
+      description: |
+        Requires commands_allowed and the version from GET. A stale version is
+        409 version_conflict. Another property's id is 404 room_not_found.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/dictionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomPatch'
+      responses:
+        '200':
+          description: Updated room.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: invalid_request, code_required, code_too_long, or invalid_status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: room_not_found, room_type_not_found, or building_not_found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: duplicate_code or version_conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [dictionaries]
+      operationId: deleteRoom
+      summary: Delete a room that no stay references
+      description: |
+        Requires commands_allowed. A room with any nx_stay is 409 in_use.
+        There is no deactivate flag; take a room out of sale with status_code
+        out_of_inventory instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/dictionaryId'
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedRow'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: room_not_found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: in_use.
           content:
             application/json:
               schema:
@@ -526,6 +663,126 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    post:
+      tags: [dictionaries]
+      operationId: createRoomType
+      summary: Create a room type
+      description: |
+        Requires commands_allowed. code is unique in the property. names.hy,
+        names.en, and names.ru are required (at most 128 characters). The
+        name column stores the Russian name. Labels go to nx_label.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamedWrite'
+      responses:
+        '201':
+          description: Created room type. name is the Russian label.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedCode'
+        '400':
+          description: code_required, code_too_long, name_required, name_too_long, or invalid_request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: duplicate_code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/room-types/{id}:
+    patch:
+      tags: [dictionaries]
+      operationId: updateRoomType
+      summary: Replace code and the three names
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/dictionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamedPatch'
+      responses:
+        '200':
+          description: Updated room type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedCode'
+        '400':
+          description: code_required, code_too_long, name_required, name_too_long, or invalid_request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: room_type_not_found, including a row from another property.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: duplicate_code or version_conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [dictionaries]
+      operationId: deleteRoomType
+      summary: Delete a room type that no room uses
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/dictionaryId'
+      responses:
+        '200':
+          description: Deleted, including its nx_label rows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedRow'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: room_type_not_found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: in_use when any room still has this type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/buildings:
     get:
       tags: [dictionaries]
@@ -544,6 +801,117 @@ paths:
                 $ref: '#/components/schemas/NamedCodeList'
         '401':
           description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags: [dictionaries]
+      operationId: createBuilding
+      summary: Create a building
+      description: Same rules as createRoomType. owner_table is nx_building.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamedWrite'
+      responses:
+        '201':
+          description: Created building.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedCode'
+        '400':
+          description: code_required, code_too_long, name_required, name_too_long, or invalid_request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: duplicate_code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/buildings/{id}:
+    patch:
+      tags: [dictionaries]
+      operationId: updateBuilding
+      summary: Replace code and the three names
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/dictionaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamedPatch'
+      responses:
+        '200':
+          description: Updated building.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedCode'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: building_not_found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: duplicate_code or version_conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags: [dictionaries]
+      operationId: deleteBuilding
+      summary: Delete a building that no room uses
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/dictionaryId'
+      responses:
+        '200':
+          description: Deleted, including its nx_label rows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedRow'
+        '403':
+          description: commands_not_allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: building_not_found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: in_use when any room still points at this building.
           content:
             application/json:
               schema:
@@ -585,8 +953,9 @@ paths:
         not auth closes the socket with 1008 and reason unauthorized. A silent
         socket is not subscribed and receives no hello. After auth the server
         sends {"type":"hello"}, then reservation.created, reservation.updated,
-        reservation.cancelled, and room.status_changed. Payload fields are in
-        next/docs/ws-events.md. Any other path on that listener is closed.
+        reservation.cancelled, room.status_changed, and dictionary.changed.
+        Payload fields are in next/docs/ws-events.md. Any other path on that
+        listener is closed.
         A browser Origin other than loopback is rejected.
       x-websocket: true
       responses:
@@ -594,6 +963,14 @@ paths:
           description: Switching Protocols when the WebSocket listener is enabled.
 components:
   parameters:
+    dictionaryId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
     lang:
       name: lang
       in: query
@@ -745,7 +1122,25 @@ components:
           type: string
         name:
           type: string
-          description: Resolved for lang. Not three columns.
+          description: |
+            On GET, resolved for lang (nx_label, then ru, then the name column, then code).
+            On a write response, the Russian name stored in the name column.
+        version:
+          type: integer
+          description: Optimistic concurrency. Requires migration 0005. Starts at 0.
+        names:
+          type: object
+          description: The three nx_label rows. A missing locale is null.
+          properties:
+            hy:
+              type: string
+              nullable: true
+            en:
+              type: string
+              nullable: true
+            ru:
+              type: string
+              nullable: true
     NamedCodeList:
       type: object
       required: [lang, items]
@@ -958,12 +1353,80 @@ components:
               status_code:
                 type: string
                 description: Closed code. The client translates it.
+              version:
+                type: integer
+              do_not_disturb:
+                type: boolean
               room_type:
                 $ref: '#/components/schemas/NamedCode'
               building:
                 nullable: true
                 allOf:
                   - $ref: '#/components/schemas/NamedCode'
+    NamedWrite:
+      type: object
+      required: [code, names]
+      properties:
+        code:
+          type: string
+          maxLength: 32
+        names:
+          type: object
+          required: [hy, en, ru]
+          properties:
+            hy: {type: string, maxLength: 128}
+            en: {type: string, maxLength: 128}
+            ru: {type: string, maxLength: 128}
+    NamedPatch:
+      allOf:
+        - $ref: '#/components/schemas/NamedWrite'
+        - type: object
+          required: [version]
+          properties:
+            version: {type: integer, minimum: 0}
+    RoomWrite:
+      type: object
+      required: [code, room_type_id, status_code]
+      properties:
+        code: {type: string, maxLength: 32}
+        room_type_id: {type: integer, format: int64}
+        building_id: {type: integer, format: int64, nullable: true}
+        floor: {type: integer, nullable: true, minimum: -32768, maximum: 32767}
+        phone: {type: string, nullable: true, maxLength: 32}
+        status_code:
+          type: string
+          enum: [vacant_ready, occupied, vacant_dirty, out_of_order, house_use, complimentary, out_of_inventory]
+        do_not_disturb: {type: boolean, default: false}
+    RoomPatch:
+      allOf:
+        - $ref: '#/components/schemas/RoomWrite'
+        - type: object
+          required: [version]
+          properties:
+            version: {type: integer, minimum: 0}
+    Room:
+      type: object
+      required: [id, code, status_code, room_type, version, do_not_disturb]
+      properties:
+        id: {type: integer, format: int64}
+        code: {type: string}
+        floor: {type: integer, nullable: true}
+        phone: {type: string, nullable: true}
+        status_code: {type: string}
+        version: {type: integer}
+        do_not_disturb: {type: boolean}
+        room_type:
+          $ref: '#/components/schemas/NamedCode'
+        building:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/NamedCode'
+    DeletedRow:
+      type: object
+      required: [id, deleted]
+      properties:
+        id: {type: integer, format: int64}
+        deleted: {type: boolean, enum: [true]}
     LogoutResult:
       type: object
       required: [revoked]
@@ -1003,6 +1466,15 @@ components:
             - guest_not_found
             - reservation_not_found
             - not_found
+            - code_required
+            - code_too_long
+            - name_required
+            - name_too_long
+            - duplicate_code
+            - in_use
+            - invalid_status
+            - room_type_not_found
+            - building_not_found
         message:
           type: string
           description: Present for some errors. Never a password, hash, or DSN.

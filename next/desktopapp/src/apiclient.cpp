@@ -280,7 +280,25 @@ QString apiErrorMessage(int httpStatus, const QString &code)
     if (code == QLatin1String("invalid_transition"))
         return QCoreApplication::translate("ApiClient", "That status change is not allowed.");
     if (code == QLatin1String("version_conflict"))
-        return QCoreApplication::translate("ApiClient", "The reservation was changed. Reload it and try again.");
+        return QCoreApplication::translate("ApiClient", "This record was changed. Reload it and try again.");
+    if (code == QLatin1String("duplicate_code"))
+        return QCoreApplication::translate("ApiClient", "That code is already used for this hotel.");
+    if (code == QLatin1String("in_use"))
+        return QCoreApplication::translate("ApiClient", "This record is in use and cannot be deleted.");
+    if (code == QLatin1String("name_required"))
+        return QCoreApplication::translate("ApiClient", "Armenian, English, and Russian names are required.");
+    if (code == QLatin1String("code_required"))
+        return QCoreApplication::translate("ApiClient", "Code is required.");
+    if (code == QLatin1String("code_too_long"))
+        return QCoreApplication::translate("ApiClient", "The code is too long (32 characters at most).");
+    if (code == QLatin1String("name_too_long"))
+        return QCoreApplication::translate("ApiClient", "A name is too long (128 characters at most).");
+    if (code == QLatin1String("invalid_status"))
+        return QCoreApplication::translate("ApiClient", "That room status is not allowed.");
+    if (code == QLatin1String("room_type_not_found"))
+        return QCoreApplication::translate("ApiClient", "The room type was not found.");
+    if (code == QLatin1String("building_not_found"))
+        return QCoreApplication::translate("ApiClient", "The building was not found.");
     if (code == QLatin1String("stay_in_house"))
         return QCoreApplication::translate("ApiClient", "Check the guest out before canceling the reservation.");
     if (code == QLatin1String("stay_locked"))
@@ -294,7 +312,7 @@ QString apiErrorMessage(int httpStatus, const QString &code)
     if (code == QLatin1String("schema_outdated")) {
         return QCoreApplication::translate(
             "ApiClient",
-            "The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.");
+            "The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0005_nx_dictionary_version.sql.");
     }
     if (code == QLatin1String("database_not_configured") || code == QLatin1String("session_store_unavailable")
         || code == QLatin1String("driver_not_loaded") || code == QLatin1String("access_denied")

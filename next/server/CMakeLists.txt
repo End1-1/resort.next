@@ -166,6 +166,7 @@ target_link_libraries(hotel-api-dictionary-test PRIVATE Qt6::Core Qt6::Network Q
 target_compile_definitions(hotel-api-dictionary-test PRIVATE
     "HOTEL_MIGRATION_0002=\"${CMAKE_CURRENT_SOURCE_DIR}/../dbdump/migrations/0002_nx_core.sql\""
     "HOTEL_MIGRATION_0003=\"${CMAKE_CURRENT_SOURCE_DIR}/../dbdump/migrations/0003_nx_label.sql\""
+    "HOTEL_MIGRATION_0005=\"${CMAKE_CURRENT_SOURCE_DIR}/../dbdump/migrations/0005_nx_dictionary_version.sql\""
 )
 if(MSVC)
     target_compile_options(hotel-api-dictionary-test PRIVATE /W4 /utf-8)

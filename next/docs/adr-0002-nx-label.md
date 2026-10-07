@@ -50,3 +50,13 @@ Guest `first_name` / `last_name`, free `remarks`, and status codes are not label
 - A room type with no `nx_label` rows still has a name: the old `name` column, or the code if that column is empty.
 - The desktop room list shows the name the server already chose. It does not pick among three columns.
 - Roles, permissions, and vouchers can use the same table later without another shape. This ADR does not add HTTP for them.
+
+## Update (2026-10-07): writes
+
+Room types and buildings are no longer read-only. `POST` and `PATCH` require `names.hy`, `names.en`, and `names.ru` (each 1–128 characters, so the string also fits the `0002` `name` column). The service writes three `nx_label` rows and sets the `name` column to the Russian text. `GET` still returns one resolved `name` for the requested locale, and also `names` for the editor.
+
+`version` on `nx_room_type`, `nx_building`, and `nx_room` comes from `0005_nx_dictionary_version.sql`. `PATCH` must send it. `0002`, `0003`, and `0004` stay untouched.
+
+Room status is still not a dictionary. There is no write route for `/api/v1/room-statuses`. A room's `status_code` is one of the closed codes.
+
+Delete removes the row and its `nx_label` rows. If a room still points at a type or a building, or a stay still points at a room, the response is `409` `in_use`. There is no active/inactive column. A room that should leave the sale inventory is `out_of_inventory`, not a soft delete.

@@ -2,7 +2,7 @@
 
 Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake only. The client speaks HTTP JSON and, after sign-in, an authenticated WebSocket for live refresh. It does not link Qt Sql and it does not open MariaDB. Business rules stay in `next/server`.
 
-`hotel-desktop` is the windowed program: connection settings, login, a rack chart, and a room list. `hotel-desktop-stub` remains a console check of `GET /health` and, optionally, one login call. `Resort/` is unchanged and still writes SQL.
+`hotel-desktop` is the windowed program: connection settings, login, a rack chart, reservations, and a dictionaries editor (room types, buildings, rooms). `hotel-desktop-stub` remains a console check of `GET /health` and, optionally, one login call. `Resort/` is unchanged and still writes SQL.
 
 `next/webport` is still not in this tree. The window shell is usable; the reception screens are not.
 
@@ -15,8 +15,8 @@ Qt Widgets client for `hotel-api`, plus the headless `hotel-desktop-stub`. CMake
 | `src/appconfig.*` | Per-user INI. Never stores a password or a token. |
 | `src/connectiondialog.*` | Address, WebSocket, «Проверить соединение». |
 | `src/loginwindow.*` | Login form. |
-| `src/dictionariespage.*` | Room list tab. `GET /api/v1/rooms?lang=`. |
-| `src/rackchart.*`, `src/rackpage.*` | Rack chart tab. The grid fills the window (as many days and room rows as fit). `GET /api/v1/rack`. Drag-select opens a new reservation; a block opens the existing one. |
+| `src/dictionariespage.*`, `src/dictionarydialogs.*` | Dictionaries tab: room types, buildings, rooms. Add, edit, and delete when `commands_allowed` is true. Names are Armenian, English, and Russian. |
+| `src/rackpage.*` | Rack chart tab. Rooms as rows, nights as columns. `GET /api/v1/rack`. A block opens the reservation. |
 | `src/reservationspage.*` | Reservation search. `GET /api/v1/reservations`. |
 | `src/reservationdialog.*` | Create and edit. The server validates. |
 | `src/workspacepage.*` | Tabs passed to `MainWindow::setWorkspacePage`. |

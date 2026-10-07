@@ -39,8 +39,8 @@ add_library(hotel-desktop-ui STATIC
     src/connectiondialog.h
     src/dictionariespage.cpp
     src/dictionariespage.h
-    src/rackchart.cpp
-    src/rackchart.h
+    src/dictionarydialogs.cpp
+    src/dictionarydialogs.h
     src/rackpage.cpp
     src/rackpage.h
     src/reservationdialog.cpp
@@ -87,7 +87,7 @@ set(HOTEL_DESKTOP_I18N_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/appcontroller.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connectiondialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/dictionariespage.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/rackchart.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/dictionarydialogs.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rackpage.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reservationdialog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/reservationspage.cpp

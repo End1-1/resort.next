@@ -15,6 +15,7 @@ class WorkspacePage : public QTabWidget {
 public:
     explicit WorkspacePage(ApiClient *api, QWidget *parent = nullptr);
     void reload();
+    void setCommandsAllowed(bool allowed);
 
 signals:
     void reservationActivated(qint64 reservationId);
