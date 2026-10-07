@@ -181,6 +181,8 @@ add_executable(hotel-api-rack-test
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_rack.cpp
 )
 target_include_directories(hotel-api-rack-test PRIVATE src)
