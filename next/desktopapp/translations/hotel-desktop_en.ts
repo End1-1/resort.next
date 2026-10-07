@@ -938,7 +938,61 @@
     </message>
 </context>
 <context>
-    <name>RackPage</name>
+    <name>RackChart</name>
+    <message>
+        <location filename="../src/rackchart.cpp" line="307"/>
+        <location filename="../src/rackchart.cpp" line="679"/>
+        <source>No guest</source>
+        <translation>No guest</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="392"/>
+        <source>Room</source>
+        <translation>Room</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="396"/>
+        <source>No rooms.</source>
+        <translation>No rooms.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="396"/>
+        <source>No rooms match the filter.</source>
+        <translation>No rooms match the filter.</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="641"/>
+        <source>Open reservation</source>
+        <translation>Open reservation</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="645"/>
+        <source>New reservation</source>
+        <translation>New reservation</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="666"/>
+        <source>No building</source>
+        <translation>No building</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="667"/>
+        <source>No floor</source>
+        <translation>No floor</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="668"/>
+        <source>%1
+%2
+%3
+%4
+%5</source>
+        <translation>%1
+%2
+%3
+%4
+%5</translation>
+    </message>
     <message>
         <location filename="../src/rackchart.cpp" line="680"/>
         <source>%1

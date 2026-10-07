@@ -938,7 +938,61 @@
     </message>
 </context>
 <context>
-    <name>RackPage</name>
+    <name>RackChart</name>
+    <message>
+        <location filename="../src/rackchart.cpp" line="307"/>
+        <location filename="../src/rackchart.cpp" line="679"/>
+        <source>No guest</source>
+        <translation>Առանց հյուրի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="392"/>
+        <source>Room</source>
+        <translation>Սենյակ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="396"/>
+        <source>No rooms.</source>
+        <translation>Սենյակներ չկան։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="396"/>
+        <source>No rooms match the filter.</source>
+        <translation>Զտիչին համապատասխան սենյակներ չկան։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="641"/>
+        <source>Open reservation</source>
+        <translation>Բացել ամրագրումը</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="645"/>
+        <source>New reservation</source>
+        <translation>Նոր ամրագրում</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="666"/>
+        <source>No building</source>
+        <translation>Առանց շենքի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="667"/>
+        <source>No floor</source>
+        <translation>Առանց հարկի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="668"/>
+        <source>%1
+%2
+%3
+%4
+%5</source>
+        <translation>%1
+%2
+%3
+%4
+%5</translation>
+    </message>
     <message>
         <location filename="../src/rackchart.cpp" line="680"/>
         <source>%1
