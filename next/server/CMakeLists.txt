@@ -22,6 +22,8 @@ set(HOTEL_API_SOURCES
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     src/healthcheck.cpp
     src/healthcheck.h
     src/httpserver.cpp
@@ -87,6 +89,8 @@ add_executable(hotel-api-config-test
     src/iniparse.h
     src/config.cpp
     src/config.h
+    src/dberror.cpp
+    src/dberror.h
     tests/test_iniparse.cpp
     tests/test_config.cpp
 )
@@ -104,10 +108,12 @@ endif()
 add_executable(hotel-api-dberror-test
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_dberror.cpp
 )
 target_include_directories(hotel-api-dberror-test PRIVATE src)
-target_link_libraries(hotel-api-dberror-test PRIVATE Qt6::Core Qt6::Test)
+target_link_libraries(hotel-api-dberror-test PRIVATE Qt6::Core Qt6::Sql Qt6::Test)
 if(MSVC)
     target_compile_options(hotel-api-dberror-test PRIVATE /W4 /utf-8)
 else()
@@ -124,6 +130,8 @@ add_executable(hotel-api-auth-test
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_auth.cpp
 )
 target_include_directories(hotel-api-auth-test PRIVATE src)
@@ -149,6 +157,8 @@ add_executable(hotel-api-dictionary-test
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_dictionaries.cpp
 )
 target_include_directories(hotel-api-dictionary-test PRIVATE src)
@@ -173,6 +183,8 @@ add_executable(hotel-api-rack-test
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_rack.cpp
 )
 target_include_directories(hotel-api-rack-test PRIVATE src)
@@ -197,6 +209,8 @@ add_executable(hotel-api-reservation-test
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_reservations.cpp
 )
 target_include_directories(hotel-api-reservation-test PRIVATE src)

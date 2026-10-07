@@ -117,7 +117,8 @@ int installService()
                "System32, so the ini is read from the executable directory, not the current directory.\n"
                "A non-empty HOTEL_CONFIG replaces that path. A non-empty HOTEL_LISTEN,\n"
                "HOTEL_WS_LISTEN, or HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT, HOTEL_MYSQL_SCHEMA,\n"
-               "HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD overrides the matching ini key.\n",
+               "HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD, HOTEL_MYSQL_SSL, HOTEL_MYSQL_SSL_CA\n"
+               "overrides the matching ini key.\n",
                stdout);
     return 0;
 }
@@ -171,8 +172,8 @@ void printHelp()
         "  Config file: hotel-api.ini next to the executable (not the working directory).\n"
         "  HOTEL_CONFIG replaces that path when set and non-empty.\n"
         "  HOTEL_LISTEN, HOTEL_WS_LISTEN, and HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT,\n"
-        "  HOTEL_MYSQL_SCHEMA, HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD override ini\n"
-        "  keys when non-empty.\n"
+        "  HOTEL_MYSQL_SCHEMA, HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD,\n"
+        "  HOTEL_MYSQL_SSL, HOTEL_MYSQL_SSL_CA override ini keys when non-empty.\n"
         "  The service process sees the system environment, not a user shell profile.\n",
         stdout);
 }

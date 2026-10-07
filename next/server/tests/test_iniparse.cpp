@@ -43,6 +43,10 @@ void TestIniParse::shippedExample()
     QCOMPARE(values.mysqlUser, QString());
     QVERIFY(values.hasMysqlPassword);
     QCOMPARE(values.mysqlPassword, QString());
+    QVERIFY(values.hasMysqlSsl);
+    QCOMPARE(values.mysqlSsl, QString());
+    QVERIFY(values.hasMysqlSslCa);
+    QCOMPARE(values.mysqlSslCa, QString());
     QVERIFY(values.hasWsListen);
     QCOMPARE(values.wsListen, QString());
 }
@@ -176,6 +180,11 @@ void TestIniParse::mysqlKeysKeepLiteralPassword()
     QCOMPARE(values.mysqlUser, QStringLiteral("root"));
     QCOMPARE(values.mysqlPassword, QStringLiteral("p@ss:w%rd#;x"));
     QVERIFY(!values.mysqlPassword.contains(QStringLiteral("%40")));
+
+    QVERIFY2(parseHotelIni("mysql_ssl = Preferred\nmysql_ssl_ca=\"C:/certs/ca.pem\"\n", &values, &error),
+             qPrintable(error));
+    QCOMPARE(values.mysqlSsl, QStringLiteral("Preferred"));
+    QCOMPARE(values.mysqlSslCa, QStringLiteral("C:/certs/ca.pem"));
 
     QVERIFY2(parseHotelIni("mysql_password=\" spaced \"\n", &values, &error), qPrintable(error));
     QCOMPARE(values.mysqlPassword, QStringLiteral(" spaced "));

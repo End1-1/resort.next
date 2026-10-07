@@ -160,6 +160,7 @@ Flag icons are original drawings in `resources/flags/` (SVG plus the PNG embedde
 | 503 | `access_denied` | учётная запись MariaDB не принята для этого хоста |
 | 503 | `unknown_database` | база на сервере не найдена |
 | 503 | `cannot_connect` | сервер не дождался MariaDB на порту |
+| 503 | `tls_error` | TLS не согласован; для локальной базы без TLS — `mysql_ssl=preferred` или `off` |
 | 503 | `connection_failed` | соединение с базой не установлено |
 | 503 | `database_unavailable` | база недоступна |
 
