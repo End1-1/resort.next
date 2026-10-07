@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Hotel API
-  version: 0.7.0
+  version: 0.8.0
   description: |
     Qt/C++ service in next/server (Qt 6.10 target; the same sources also build
     on Qt 6.4). The engine choice overrides docs/audit/03 §3.2 (that note suggested Go).
@@ -54,7 +54,11 @@ info:
 
     Realtime is a WebSocket hint, then an HTTP re-read. It does not replace
     this REST contract. The socket is served only when HOTEL_WS_LISTEN is set,
-    on that address, path /api/v1/ws.
+    on that address, path /api/v1/ws. The client authenticates with the same
+    session token (query token, or a first text frame {"type":"auth","token"}).
+    After that the server sends {"type":"hello"} and, after a successful
+    reservation commit, reservation.created, reservation.updated,
+    reservation.cancelled, and room.status_changed. See next/docs/ws-events.md.
 servers:
   - url: http://127.0.0.1:8080
     description: Default loopback bind (HOTEL_LISTEN).
@@ -570,8 +574,14 @@ paths:
       summary: WebSocket hint channel (not HTTP)
       description: |
         Not an HTTP GET. Clients open a WebSocket to ws://<HOTEL_WS_LISTEN>/api/v1/ws.
-        The first text frame is a hello object with events=not_implemented.
-        PMS events are not published yet. Any other path on that listener is closed.
+        Authenticate with ?token=<64 hex> or a first text frame
+        {"type":"auth","token":"<64 hex>"}. A bad token or a first frame that is
+        not auth closes the socket with 1008 and reason unauthorized. A silent
+        socket is not subscribed and receives no hello. After auth the server
+        sends {"type":"hello"}, then reservation.created, reservation.updated,
+        reservation.cancelled, and room.status_changed. Payload fields are in
+        next/docs/ws-events.md. Any other path on that listener is closed.
+        A browser Origin other than loopback is rejected.
       x-websocket: true
       responses:
         '101':
@@ -608,7 +618,7 @@ components:
           example: hotel-api
         version:
           type: string
-          example: 0.7.0
+          example: 0.8.0
         db:
           $ref: '#/components/schemas/DatabaseProbe'
     DatabaseProbe:
@@ -646,7 +656,7 @@ components:
           example: partial
         version:
           type: string
-          example: 0.7.0
+          example: 0.8.0
     LoginRequest:
       type: object
       required: [login, password]
