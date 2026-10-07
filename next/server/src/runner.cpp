@@ -85,15 +85,16 @@ int runApplication(int argc, char **argv, const std::function<void()> &onReady)
     }
 
     HttpApi api(loaded.config);
+    RealtimeHub hub;
+    api.setRealtime(&hub);
     QString error;
     if (!api.listen(&error)) {
         qCritical().noquote() << error;
         return 1;
     }
 
-    RealtimeHub hub;
     if (loaded.config.websocketEnabled) {
-        if (!hub.listen(loaded.config.websocket, &error)) {
+        if (!hub.listen(loaded.config.websocket, loaded.config.database, loaded.config.dbConnectTimeoutSec, &error)) {
             qCritical().noquote() << error;
             return 1;
         }

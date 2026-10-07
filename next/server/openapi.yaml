@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Hotel API
-  version: 0.6.0
+  version: 0.8.0
   description: |
     Qt/C++ service in next/server (Qt 6.10 target; the same sources also build
     on Qt 6.4). The engine choice overrides docs/audit/03 §3.2 (that note suggested Go).
@@ -39,8 +39,14 @@ info:
 
     GET /api/v1/rack returns rooms and stay blocks for a night window
     [from, to). to is exclusive. A stay occupies [arrival, departure).
-    Canceled stays and canceled reservations are omitted. Creating and
-    changing reservations is not implemented. Folio routes are not
+    Canceled stays and canceled reservations are omitted.
+
+    Reservations: GET /api/v1/reservations searches by dates, guest, status,
+    and room. GET /api/v1/reservations/{id} is the detail. POST creates one
+    stay. PATCH changes dates, room, guest, reservation status, or stay
+    state. The server rejects overlapping stays (row lock on nx_room), illegal
+    status changes, and a stale stay version. Writes require commands_allowed.
+    Audit columns are migration 0004_nx_audit.sql. Folio routes are not
     implemented. nx_folio and nx_posting are schema only.
 
     Planned resources (rack, reservations, stays, folios, end of day, reports)
@@ -48,7 +54,11 @@ info:
 
     Realtime is a WebSocket hint, then an HTTP re-read. It does not replace
     this REST contract. The socket is served only when HOTEL_WS_LISTEN is set,
-    on that address, path /api/v1/ws.
+    on that address, path /api/v1/ws. The client authenticates with the same
+    session token (query token, or a first text frame {"type":"auth","token"}).
+    After that the server sends {"type":"hello"} and, after a successful
+    reservation commit, reservation.created, reservation.updated,
+    reservation.cancelled, and room.status_changed. See next/docs/ws-events.md.
 servers:
   - url: http://127.0.0.1:8080
     description: Default loopback bind (HOTEL_LISTEN).
@@ -57,6 +67,7 @@ tags:
   - name: auth
   - name: dictionaries
   - name: rack
+  - name: reservations
 paths:
   /health:
     get:
@@ -226,6 +237,179 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/reservations:
+    get:
+      tags: [reservations]
+      operationId: listReservations
+      summary: Search reservations for the signed-in property
+      description: |
+        Bearer required. `from` and `to` are optional and must be sent together
+        (YYYY-MM-DD, `to` exclusive). A reservation matches when one of its stays
+        overlaps that window. `guest` matches first or last name. `status` is
+        the reservation status. `room` is the room code. `room_id` is numeric.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: from
+          in: query
+          schema: {type: string, format: date}
+        - name: to
+          in: query
+          schema: {type: string, format: date}
+        - name: guest
+          in: query
+          schema: {type: string}
+        - name: status
+          in: query
+          schema: {type: string}
+        - name: room
+          in: query
+          schema: {type: string}
+        - name: room_id
+          in: query
+          schema: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Matching reservations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationList'
+        '400':
+          description: invalid_request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Bearer missing or not accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags: [reservations]
+      operationId: createReservation
+      summary: Create one reservation and one stay
+      description: |
+        Requires commands_allowed. status_code is tentative, confirmed,
+        guaranteed, or blocked (default confirmed). departure must be after
+        arrival. The stay starts as reserved. Overlap with reserved, in_house,
+        out_of_order, or out_of_inventory on the same room is 409 overlap.
+        The room row is locked for the transaction.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationWrite'
+      responses:
+        '201':
+          description: Created reservation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDetail'
+        '400':
+          description: invalid_request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: commands_not_allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: room_not_found or guest_not_found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: overlap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/reservations/{id}:
+    get:
+      tags: [reservations]
+      operationId: getReservation
+      summary: Reservation detail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      responses:
+        '200':
+          description: Reservation and stays.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDetail'
+        '404':
+          description: reservation_not_found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags: [reservations]
+      operationId: updateReservation
+      summary: Change dates, room, guest, or status
+      description: |
+        Requires commands_allowed and the stay version. Reservation statuses
+        are tentative, confirmed, guaranteed, blocked, and canceled. Stay
+        states move reserved to in_house or canceled, in_house to checked_out,
+        and canceled back to reserved when the reservation is reinstated.
+        Check-in sets the room to occupied. Check-out sets it to vacant_dirty.
+        Dates and room cannot change while the stay is in_house or checked_out.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer, format: int64}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationPatch'
+      responses:
+        '200':
+          description: Updated reservation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationDetail'
+        '403':
+          description: commands_not_allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: reservation_not_found, room_not_found, or guest_not_found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: overlap, invalid_transition, version_conflict, stay_in_house, or stay_locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/rack:
     get:
       tags: [rack]
@@ -390,8 +574,14 @@ paths:
       summary: WebSocket hint channel (not HTTP)
       description: |
         Not an HTTP GET. Clients open a WebSocket to ws://<HOTEL_WS_LISTEN>/api/v1/ws.
-        The first text frame is a hello object with events=not_implemented.
-        PMS events are not published yet. Any other path on that listener is closed.
+        Authenticate with ?token=<64 hex> or a first text frame
+        {"type":"auth","token":"<64 hex>"}. A bad token or a first frame that is
+        not auth closes the socket with 1008 and reason unauthorized. A silent
+        socket is not subscribed and receives no hello. After auth the server
+        sends {"type":"hello"}, then reservation.created, reservation.updated,
+        reservation.cancelled, and room.status_changed. Payload fields are in
+        next/docs/ws-events.md. Any other path on that listener is closed.
+        A browser Origin other than loopback is rejected.
       x-websocket: true
       responses:
         '101':
@@ -428,7 +618,7 @@ components:
           example: hotel-api
         version:
           type: string
-          example: 0.6.0
+          example: 0.8.0
         db:
           $ref: '#/components/schemas/DatabaseProbe'
     DatabaseProbe:
@@ -466,7 +656,7 @@ components:
           example: partial
         version:
           type: string
-          example: 0.6.0
+          example: 0.8.0
     LoginRequest:
       type: object
       required: [login, password]
@@ -575,6 +765,96 @@ components:
             properties:
               code:
                 type: string
+    ReservationList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [id, status_code]
+            properties:
+              id: {type: integer, format: int64}
+              status_code: {type: string}
+              arrival: {type: string, format: date, nullable: true}
+              departure: {type: string, format: date, nullable: true}
+              guest_name: {type: string}
+              room_code: {type: string, nullable: true}
+              stay_state: {type: string, nullable: true}
+              created_at: {type: string}
+              updated_at: {type: string, nullable: true}
+    ReservationDetail:
+      type: object
+      required: [id, status_code, stays]
+      properties:
+        id: {type: integer, format: int64}
+        status_code: {type: string}
+        remarks: {type: string, nullable: true}
+        created_at: {type: string}
+        created_by: {type: integer, format: int64, nullable: true}
+        updated_at: {type: string, nullable: true}
+        updated_by: {type: integer, format: int64, nullable: true}
+        stays:
+          type: array
+          items:
+            type: object
+            required: [id, arrival, departure, state_code, version]
+            properties:
+              id: {type: integer, format: int64}
+              room_id: {type: integer, format: int64, nullable: true}
+              room_code: {type: string, nullable: true}
+              arrival: {type: string, format: date}
+              departure: {type: string, format: date}
+              state_code: {type: string}
+              adults: {type: integer}
+              children: {type: integer}
+              version: {type: integer}
+              guest:
+                nullable: true
+                type: object
+                properties:
+                  id: {type: integer, format: int64}
+                  first_name: {type: string}
+                  last_name: {type: string}
+    ReservationWrite:
+      type: object
+      required: [room_id, arrival, departure]
+      properties:
+        status_code: {type: string}
+        room_id: {type: integer, format: int64}
+        arrival: {type: string, format: date}
+        departure: {type: string, format: date}
+        adults: {type: integer}
+        children: {type: integer}
+        remarks: {type: string}
+        guest_id: {type: integer, format: int64}
+        guest:
+          type: object
+          required: [last_name]
+          properties:
+            first_name: {type: string}
+            last_name: {type: string}
+    ReservationPatch:
+      type: object
+      required: [version]
+      properties:
+        version: {type: integer}
+        stay_id: {type: integer, format: int64}
+        status_code: {type: string}
+        state_code: {type: string}
+        room_id: {type: integer, format: int64}
+        arrival: {type: string, format: date}
+        departure: {type: string, format: date}
+        adults: {type: integer}
+        children: {type: integer}
+        remarks: {type: string}
+        guest_id: {type: integer, format: int64}
+        guest:
+          type: object
+          properties:
+            first_name: {type: string}
+            last_name: {type: string}
     RackChart:
       type: object
       required: [lang, from, to, rooms]
@@ -696,6 +976,14 @@ components:
             - schema_outdated
             - invalid_range
             - range_too_long
+            - overlap
+            - invalid_transition
+            - version_conflict
+            - stay_in_house
+            - stay_locked
+            - room_not_found
+            - guest_not_found
+            - reservation_not_found
             - not_found
         message:
           type: string
