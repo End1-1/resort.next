@@ -36,9 +36,9 @@
     <message>
         <location filename="../src/apiclient.cpp" line="38"/>
         <location filename="../src/apiclient.cpp" line="42"/>
-        <location filename="../src/apiclient.cpp" line="245"/>
-        <location filename="../src/apiclient.cpp" line="287"/>
-        <location filename="../src/apiclient.cpp" line="308"/>
+        <location filename="../src/apiclient.cpp" line="252"/>
+        <location filename="../src/apiclient.cpp" line="295"/>
+        <location filename="../src/apiclient.cpp" line="316"/>
         <source>Server unavailable.</source>
         <translation>Server unavailable.</translation>
     </message>
@@ -59,176 +59,186 @@
     </message>
     <message>
         <location filename="../src/apiclient.cpp" line="54"/>
+        <source>TLS error (down, tls_error)</source>
+        <translation>TLS error (down, tls_error)</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="56"/>
         <source>driver not loaded (down, driver_not_loaded)</source>
         <translation>driver not loaded (down, driver_not_loaded)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="56"/>
+        <location filename="../src/apiclient.cpp" line="58"/>
         <source>unavailable (down, connection_failed)</source>
         <translation>unavailable (down, connection_failed)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="201"/>
+        <location filename="../src/apiclient.cpp" line="203"/>
         <source>Incorrect login or password.</source>
         <translation>Incorrect login or password.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="203"/>
+        <location filename="../src/apiclient.cpp" line="205"/>
         <source>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</source>
         <translation>The database is not configured (database_not_configured). Sign-in is impossible until the server has a MariaDB connection.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="208"/>
+        <location filename="../src/apiclient.cpp" line="210"/>
         <source>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</source>
         <translation>The session store is unavailable (session_store_unavailable). The server has no nx_user and nx_session tables, or the session was not written.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="213"/>
+        <location filename="../src/apiclient.cpp" line="215"/>
         <source>The database driver is not loaded on the server (driver_not_loaded).</source>
         <translation>The database driver is not loaded on the server (driver_not_loaded).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="217"/>
+        <location filename="../src/apiclient.cpp" line="219"/>
         <source>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</source>
         <translation>The server refused the database login (access_denied). The MariaDB account was not accepted for this host.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="222"/>
+        <location filename="../src/apiclient.cpp" line="224"/>
         <source>The database was not found on the server (unknown_database).</source>
         <translation>The database was not found on the server (unknown_database).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="225"/>
+        <location filename="../src/apiclient.cpp" line="227"/>
         <source>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</source>
         <translation>The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="230"/>
+        <location filename="../src/apiclient.cpp" line="232"/>
+        <source>The server could not negotiate TLS with MariaDB (tls_error). For a local database without TLS set mysql_ssl=preferred or off.</source>
+        <translation>The server could not negotiate TLS with MariaDB (tls_error). For a local database without TLS set mysql_ssl=preferred or off.</translation>
+    </message>
+    <message>
+        <location filename="../src/apiclient.cpp" line="237"/>
         <source>The database connection failed (connection_failed).</source>
         <translation>The database connection failed (connection_failed).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="233"/>
+        <location filename="../src/apiclient.cpp" line="240"/>
         <source>The database is unavailable (database_unavailable).</source>
         <translation>The database is unavailable (database_unavailable).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="235"/>
+        <location filename="../src/apiclient.cpp" line="242"/>
         <source>Invalid request to the server.</source>
         <translation>Invalid request to the server.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="237"/>
+        <location filename="../src/apiclient.cpp" line="244"/>
         <source>The server did not find the sign-in address.</source>
         <translation>The server did not find the sign-in address.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="239"/>
+        <location filename="../src/apiclient.cpp" line="246"/>
         <source>The server is temporarily unavailable (503).</source>
         <translation>The server is temporarily unavailable (503).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="242"/>
+        <location filename="../src/apiclient.cpp" line="249"/>
         <source>Sign-in failed, HTTP %1.</source>
         <translation>Sign-in failed, HTTP %1.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="243"/>
+        <location filename="../src/apiclient.cpp" line="250"/>
         <source>Sign-in failed, HTTP %1 (%2).</source>
         <translation>Sign-in failed, HTTP %1 (%2).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="133"/>
+        <location filename="../src/apiclient.cpp" line="135"/>
         <source>The server returned an unexpected response.</source>
         <translation>The server returned an unexpected response.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="160"/>
+        <location filename="../src/apiclient.cpp" line="162"/>
         <source>available (up)</source>
         <translation>available (up)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="162"/>
+        <location filename="../src/apiclient.cpp" line="164"/>
         <source>not configured (skipped)</source>
         <translation>not configured (skipped)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="58"/>
+        <location filename="../src/apiclient.cpp" line="60"/>
         <source>unavailable (down)</source>
         <translation>unavailable (down)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="59"/>
+        <location filename="../src/apiclient.cpp" line="61"/>
         <source>unavailable (down, %1)</source>
         <translation>unavailable (down, %1)</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="251"/>
+        <location filename="../src/apiclient.cpp" line="258"/>
         <source>Your session has expired. Sign in again.</source>
         <translation>Your session has expired. Sign in again.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="253"/>
+        <location filename="../src/apiclient.cpp" line="260"/>
         <source>This account is disabled. Sign in again.</source>
         <translation>This account is disabled. Sign in again.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="255"/>
+        <location filename="../src/apiclient.cpp" line="262"/>
         <source>Signed out on this computer. The server did not confirm logout.</source>
         <translation>Signed out on this computer. The server did not confirm logout.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="259"/>
+        <location filename="../src/apiclient.cpp" line="266"/>
         <source>You do not have permission to change data.</source>
         <translation>You do not have permission to change data.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="260"/>
+        <location filename="../src/apiclient.cpp" line="267"/>
         <source>Sign in again. The session is no longer valid.</source>
         <translation>Sign in again. The session is no longer valid.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="272"/>
+        <location filename="../src/apiclient.cpp" line="279"/>
         <source>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</source>
         <translation>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="285"/>
+        <location filename="../src/apiclient.cpp" line="293"/>
         <source>Request failed, HTTP %1 (%2).</source>
         <translation>Request failed, HTTP %1 (%2).</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="314"/>
+        <location filename="../src/apiclient.cpp" line="322"/>
         <source>Server replied HTTP %1; the database state is unknown.</source>
         <translation>Server replied HTTP %1; the database state is unknown.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="317"/>
+        <location filename="../src/apiclient.cpp" line="325"/>
         <source>Server replied with an unexpected body.</source>
         <translation>Server replied with an unexpected body.</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="320"/>
+        <location filename="../src/apiclient.cpp" line="328"/>
         <source>Server</source>
         <translation>Server</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="324"/>
+        <location filename="../src/apiclient.cpp" line="332"/>
         <source>responded</source>
         <translation>responded</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="326"/>
+        <location filename="../src/apiclient.cpp" line="334"/>
         <source>unknown</source>
         <translation>unknown</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="327"/>
+        <location filename="../src/apiclient.cpp" line="335"/>
         <source>%1: running (%2). Database: %3</source>
         <translation>%1: running (%2). Database: %3</translation>
     </message>
     <message>
-        <location filename="../src/apiclient.cpp" line="329"/>
+        <location filename="../src/apiclient.cpp" line="337"/>
         <source>. Version %1</source>
         <translation>. Version %1</translation>
     </message>

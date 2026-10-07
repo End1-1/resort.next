@@ -64,12 +64,12 @@ paths:
         executable, or from /etc/hotel-api/hotel-api.ini on Linux. A
         non-empty HOTEL_CONFIG selects a different file. Non-empty
         HOTEL_MYSQL_HOST, HOTEL_MYSQL_PORT, HOTEL_MYSQL_SCHEMA,
-        HOTEL_MYSQL_USER, and HOTEL_MYSQL_PASSWORD override the matching
-        ini keys. The body does not contain the password, the host, the
+        HOTEL_MYSQL_USER, HOTEL_MYSQL_PASSWORD, HOTEL_MYSQL_SSL, and
+        HOTEL_MYSQL_SSL_CA override the matching ini keys. The body does not contain the password, the host, the
         user, or the driver text. When the probe fails, db.error is a
         short code: driver_not_loaded, access_denied (MySQL 1045),
-        unknown_database (1049), cannot_connect (2002 or 2003), or
-        connection_failed. The server log has the native code and the
+        unknown_database (1049), cannot_connect (2002 or 2003),
+        tls_error (2026), or connection_failed. The server log has the native code and the
         scrubbed driver text. No database configured does not fail
         /health; POST /api/v1/sessions returns 503 database_not_configured
         in that case.
@@ -119,7 +119,8 @@ paths:
         written to the log or the response. No configured database is 503
         database_not_configured. A refused MariaDB account is 503
         access_denied, a missing database is 503 unknown_database, and a
-        failure to reach the port is 503 cannot_connect. Other connect
+            failure to reach the port is 503 cannot_connect. A TLS failure
+            is 503 tls_error. Other connect
         failures stay 503 database_unavailable. The body does not include
         the driver text, host, user, or password. Missing nx_user or
         nx_session is 503 session_store_unavailable.
@@ -388,6 +389,7 @@ components:
             - access_denied
             - unknown_database
             - cannot_connect
+            - tls_error
             - connection_failed
     ApiRoot:
       type: object
@@ -568,6 +570,7 @@ components:
             - access_denied
             - unknown_database
             - cannot_connect
+            - tls_error
             - database_unavailable
             - session_store_unavailable
             - schema_outdated

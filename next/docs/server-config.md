@@ -115,8 +115,23 @@ ws_listen=
 | `mysql_schema` | `HOTEL_MYSQL_SCHEMA` | Имя базы, например `hotelnext`. |
 | `mysql_user` | `HOTEL_MYSQL_USER` | Пользователь MariaDB. |
 | `mysql_password` | `HOTEL_MYSQL_PASSWORD` | Пароль буквально. В лог не пишется. |
+| `mysql_ssl` | `HOTEL_MYSQL_SSL` | `off`, `preferred`, `required` или `verify`. Нет ключа — `preferred`. |
+| `mysql_ssl_ca` | `HOTEL_MYSQL_SSL_CA` | Файл CA. Передаётся драйверу только при `required` и `verify`. В значении нельзя `;`. |
 
 Значение не проходит через URL. Пароль `p@ss:w%rd#;x` в файле выглядит так же. `#` и `;` внутри значения не начинают комментарий: комментарий — только целая строка. Пробелы по краям пароля сохраняются, если значение в кавычках: `mysql_password=" p@ss "`.
+
+`mysql_ssl` без ключа или пустой — это `preferred`. Так локальная MariaDB без TLS открывается сама: клиент берёт шифрование, если сервер его предлагает, и обычное соединение, если нет. Сертификат при этом не проверяется. `off` — не требовать TLS. `required` — TLS обязателен. `verify` — TLS обязателен и сертификат сервера сверяется с `mysql_ssl_ca` (если файл не задан — с системным хранилищем). Чужое слово в `mysql_ssl` обрывает старт: `mysql_ssl must be off, preferred, required, or verify`.
+
+Какие опции Qt 6.10.2 реально передаёт в `mysql_options`, зависит от того, с какой клиентской библиотекой собран плагин `QMYSQL` (`src/plugins/sqldrivers/mysql/qsql_mysql.cpp`):
+
+| Режим | `MYSQL_OPT_SSL_MODE` (только libmysqlclient 5.7.11+ / 8.x) | `MYSQL_OPT_SSL_VERIFY_SERVER_CERT` (MariaDB Connector/C; у MySQL 8 этого пункта в драйвере нет) |
+|-------|--------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `off` | `DISABLED` | `0` |
+| `preferred` | `PREFERRED` | `0` |
+| `required` | `REQUIRED` | `1`, и `MYSQL_OPT_SSL_CA`, если задан файл |
+| `verify` | `VERIFY_CA` | `1`, и `MYSQL_OPT_SSL_CA`, если задан файл |
+
+Плагин, собранный с MariaDB Connector/C, строку `MYSQL_OPT_SSL_MODE` не принимает: в исходнике Qt она закрыта условием `!defined(MARIADB_VERSION_ID)`. Если её всё же передать, Qt пишет на каждое соединение `Illegal connect option value 'MYSQL_OPT_SSL_MODE=PREFERRED'`. hotel-api эту строку не передаёт, когда загруженный `qsqlmysql` связан с MariaDB: в таблице импорта есть `libmariadb`, либо `mysql_get_client_info()` содержит `MariaDB` или начинается с `3.` (Connector/C 3.x; у libmysqlclient это `8.0.x` или `5.7.x`). Для libmysqlclient `MYSQL_OPT_SSL_MODE` по-прежнему передаётся. Рабочий переключатель на Connector/C — `MYSQL_OPT_SSL_VERIFY_SERVER_CERT`. У Connector/C 3.4 он по умолчанию включён, и тогда сервер без TLS даёт native `2026`. Значение `0` это снимает. У Connector/C 3.3 флаг и так выключен. `off` и `preferred` на такой сборке поэтому одинаковы: TLS не обязателен, а если сервер его предлагает, клиент может его включить. Полностью запретить TLS (`DISABLED`) умеет только libmysqlclient.
 
 Пустые `mysql_host` и `mysql_schema` (или ключей нет) — база не настроена. `GET /health` даёт `200`, `db.state=skipped`. `POST /api/v1/sessions` даёт `503` и `error` `database_not_configured`. В логе: `hotel-api database not configured`.
 
@@ -159,6 +174,8 @@ hotel-api websocket 127.0.0.1 8081 path /api/v1/ws
 | `HOTEL_MYSQL_SCHEMA` | `mysql_schema` | не стирает имя базы из ini |
 | `HOTEL_MYSQL_USER` | `mysql_user` | не стирает пользователя из ini |
 | `HOTEL_MYSQL_PASSWORD` | `mysql_password` | не стирает пароль из ini |
+| `HOTEL_MYSQL_SSL` | `mysql_ssl` | не стирает режим из ini |
+| `HOTEL_MYSQL_SSL_CA` | `mysql_ssl_ca` | не стирает путь CA из ini |
 | `HOTEL_WS_LISTEN` | `ws_listen` | не включает и не выключает сокет поверх ini |
 
 `HOTEL_MYSQL_PASSWORD=` в окружении Qt Creator или в systemd `EnvironmentFile` не обнуляет пароль, записанный в ini. Чтобы не ходить в базу, очистите `mysql_host` и `mysql_schema` или укажите другой файл в `HOTEL_CONFIG`.
@@ -286,6 +303,7 @@ database probe failed: access_denied
 | 1045 | `access_denied` | Учётка и хост. `'hotel_api'@'127.0.0.1'` и `'hotel_api'@'localhost'` — разные пользователи. Права, выданные на `localhost` (сокет или именованный канал), TCP на `127.0.0.1` не покрывают. Другие программы при этом могут входить, а этот хост получает Access denied. Нужен пользователь именно для `mysql_host`, с правом на базу `mysql_schema`. |
 | 1049 | `unknown_database` | Базы из `mysql_schema` нет. Создать её и применить `next/dbdump/migrations/0002_nx_core.sql`. |
 | 2003 | `cannot_connect` | До порта никто не принял TCP: служба не запущена, слушает только сокет или именованный канал, другой порт, файрвол. |
+| 2026 | `tls_error` | Клиент потребовал TLS, а сервер его не даёт (`SSL is required, but the server does not support it`). Для локальной MariaDB без TLS оставьте `mysql_ssl=preferred` (это значение по умолчанию) или поставьте `off`. Либо включите TLS на сервере и для проверки сертификата укажите `mysql_ssl=verify` и `mysql_ssl_ca`. |
 | 2002 | `cannot_connect` | Клиент не открыл локальный сокет или канал. Для хоста `127.0.0.1` обычно приходит 2003, не 2002. |
 | другой | `connection_failed` в `/health`, `database_unavailable` на входе | Смотреть `native=` и `driver=` в логе. |
 
