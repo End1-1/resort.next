@@ -660,6 +660,23 @@ void LoginSmoke::languageSwitchRetranslatesWithoutRestart()
     HotelLocale::applyCode(QStringLiteral("en"));
     QCOMPARE(login.findChild<QLabel *>(QStringLiteral("errorLabel"))->text(),
              QStringLiteral("Enter your login and password."));
+
+    // The flag button keeps its menu, but it must paint like a plain icon
+    // button: no menu arrow beside or under the flag.
+    QToolButton plain(button->parentWidget());
+    plain.setAutoRaise(true);
+    plain.setIcon(button->icon());
+    plain.setIconSize(button->iconSize());
+    plain.setFixedSize(button->size());
+    plain.setStyleSheet(button->styleSheet());
+    const auto snap = [](QWidget *widget) {
+        widget->ensurePolished();
+        QImage image(widget->size(), QImage::Format_ARGB32_Premultiplied);
+        image.fill(Qt::transparent);
+        widget->render(&image);
+        return image;
+    };
+    QCOMPARE(snap(button), snap(&plain));
 }
 
 void LoginSmoke::armenianTextIsNotBoxes()

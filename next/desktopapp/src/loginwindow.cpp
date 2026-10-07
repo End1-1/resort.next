@@ -36,6 +36,17 @@ LoginWindow::LoginWindow(ApiClient *api, QWidget *parent)
     m_languageButton->setAutoRaise(true);
     m_languageButton->setIconSize(QSize(22, 14));
     m_languageButton->setFixedSize(40, 28);
+    // image: none alone is not a drawable rule, so Qt 6.10 still paints
+    // PE_IndicatorArrowDown. A transparent zero-size indicator suppresses that
+    // arrow on the Windows and Fusion styles and leaves the menu in place.
+    m_languageButton->setStyleSheet(QStringLiteral(
+        "QToolButton#languageButton::menu-indicator {"
+        " image: none;"
+        " border: none;"
+        " background: transparent;"
+        " width: 0px;"
+        " height: 0px;"
+        "}"));
     m_languages = HotelLocale::makeLanguageMenu(this);
     m_languageButton->setMenu(m_languages.menu);
 
