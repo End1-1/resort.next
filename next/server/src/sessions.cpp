@@ -209,6 +209,8 @@ SessionResult createSession(const DatabaseTarget &target, int connectTimeoutSec,
             return fail(503, "unknown_database", "MariaDB database was not found");
         if (failure == QLatin1String("cannot_connect"))
             return fail(503, "cannot_connect", "MariaDB did not accept the connection");
+        if (failure == QLatin1String("tls_error"))
+            return fail(503, "tls_error", "MariaDB TLS was not accepted");
         return fail(503, "database_unavailable", "MariaDB did not accept the connection");
     }
 

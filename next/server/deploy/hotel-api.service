@@ -10,7 +10,7 @@ Group=hotel-api
 EnvironmentFile=-/etc/hotel-api/hotel-api.env
 # hotel-api.ini beside this binary wins. Otherwise the process reads
 # /etc/hotel-api/hotel-api.ini. A non-empty HOTEL_LISTEN, HOTEL_WS_LISTEN, or
-# HOTEL_MYSQL_HOST/PORT/SCHEMA/USER/PASSWORD overrides the matching ini key.
+# HOTEL_MYSQL_HOST/PORT/SCHEMA/USER/PASSWORD/SSL/SSL_CA overrides the matching ini key.
 # An empty value does not.
 ExecStart=/usr/local/bin/hotel-api
 Restart=on-failure

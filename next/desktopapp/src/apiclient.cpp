@@ -50,6 +50,8 @@ QString databaseDownPhrase(const QString &dbError)
         return QCoreApplication::translate("ApiClient", "database not found (down, unknown_database)");
     if (dbError == QLatin1String("cannot_connect"))
         return QCoreApplication::translate("ApiClient", "no connection (down, cannot_connect)");
+    if (dbError == QLatin1String("tls_error"))
+        return QCoreApplication::translate("ApiClient", "TLS error (down, tls_error)");
     if (dbError == QLatin1String("driver_not_loaded"))
         return QCoreApplication::translate("ApiClient", "driver not loaded (down, driver_not_loaded)");
     if (dbError == QLatin1String("connection_failed"))
@@ -226,6 +228,11 @@ QString loginErrorMessage(int httpStatus, const QString &code)
             "ApiClient",
             "The server could not connect to MariaDB (cannot_connect). Check that the service is listening on the port.");
     }
+    if (code == QLatin1String("tls_error")) {
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The server could not negotiate TLS with MariaDB (tls_error). For a local database without TLS set mysql_ssl=preferred or off.");
+    }
     if (code == QLatin1String("connection_failed")) {
         return QCoreApplication::translate("ApiClient", "The database connection failed (connection_failed).");
     }
@@ -276,7 +283,8 @@ QString apiErrorMessage(int httpStatus, const QString &code)
     if (code == QLatin1String("database_not_configured") || code == QLatin1String("session_store_unavailable")
         || code == QLatin1String("driver_not_loaded") || code == QLatin1String("access_denied")
         || code == QLatin1String("unknown_database") || code == QLatin1String("cannot_connect")
-        || code == QLatin1String("connection_failed") || code == QLatin1String("database_unavailable")
+        || code == QLatin1String("tls_error") || code == QLatin1String("connection_failed")
+        || code == QLatin1String("database_unavailable")
         || code == QLatin1String("invalid_request") || code == QLatin1String("not_found")) {
         return loginErrorMessage(httpStatus, code);
     }
