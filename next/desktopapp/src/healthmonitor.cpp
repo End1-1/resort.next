@@ -27,6 +27,8 @@ HealthMonitor::HealthMonitor(ApiClient *api, QObject *parent)
     connect(m_api, &ApiClient::healthFinished, this, &HealthMonitor::onHealth);
     m_timer.setInterval(kPollMs);
     connect(&m_timer, &QTimer::timeout, this, &HealthMonitor::poll);
+    m_reconnect.setSingleShot(true);
+    connect(&m_reconnect, &QTimer::timeout, this, &HealthMonitor::ensureSocket);
 }
 
 HealthMonitor::~HealthMonitor()
@@ -137,6 +139,8 @@ QString HealthMonitor::socketPhrase() const
         return tr("WebSocket: invalid address");
     case SocketPhase::WaitingHello:
         return tr("WebSocket: connected, waiting for hello");
+    case SocketPhase::NotSignedIn:
+        return tr("WebSocket: not signed in");
     case SocketPhase::ConnectedHello:
         return tr("WebSocket: connected (hello)");
     case SocketPhase::Connected:
@@ -163,15 +167,36 @@ void HealthMonitor::markSocketDown()
     if (m_wsUrl.isEmpty())
         return;
     m_helloSeen = false;
-    m_phase = SocketPhase::Down;
+    m_phase = m_api->hasToken() ? SocketPhase::Down : SocketPhase::NotSignedIn;
     m_socketText = socketPhrase();
     emit statusChanged();
+    if (!m_running || !m_api->hasToken())
+        return;
+    if (!m_reconnect.isActive())
+        m_reconnect.start(m_backoffMs);
+    m_backoffMs = qMin(30000, m_backoffMs * 2);
+}
+
+void HealthMonitor::reconnectNow()
+{
+    m_backoffMs = 1000;
+    m_reconnect.stop();
+    closeSocket();
+    if (m_running)
+        ensureSocket();
 }
 
 void HealthMonitor::ensureSocket()
 {
     if (m_wsUrl.isEmpty())
         return;
+    if (!m_api->hasToken()) {
+        closeSocket();
+        m_phase = SocketPhase::NotSignedIn;
+        m_socketText = socketPhrase();
+        emit statusChanged();
+        return;
+    }
     if (m_socket) {
         const QAbstractSocket::SocketState state = m_socket->state();
         if (state == QAbstractSocket::ConnectedState || state == QAbstractSocket::ConnectingState)
@@ -194,15 +219,24 @@ void HealthMonitor::ensureSocket()
         m_phase = SocketPhase::WaitingHello;
         m_socketText = socketPhrase();
         emit statusChanged();
+        QJsonObject auth;
+        auth.insert(QStringLiteral("type"), QStringLiteral("auth"));
+        auth.insert(QStringLiteral("token"), m_api->token());
+        m_socket->sendTextMessage(QString::fromUtf8(QJsonDocument(auth).toJson(QJsonDocument::Compact)));
     });
     connect(m_socket, &QWebSocket::textMessageReceived, this, [this](const QString &message) {
         const QJsonDocument document = QJsonDocument::fromJson(message.toUtf8());
-        const bool hello = document.isObject()
-            && document.object().value(QStringLiteral("type")).toString() == QLatin1String("hello");
-        m_helloSeen = hello;
-        m_phase = hello ? SocketPhase::ConnectedHello : SocketPhase::Connected;
-        m_socketText = socketPhrase();
-        emit statusChanged();
+        const QString type = document.object().value(QStringLiteral("type")).toString();
+        if (type == QLatin1String("hello")) {
+            m_helloSeen = true;
+            m_backoffMs = 1000;
+            m_phase = SocketPhase::ConnectedHello;
+            m_socketText = socketPhrase();
+            emit statusChanged();
+            return;
+        }
+        if (type.startsWith(QLatin1String("reservation.")) || type == QLatin1String("room.status_changed"))
+            emit hotelEvent(type);
     });
     connect(m_socket, &QWebSocket::disconnected, this, &HealthMonitor::markSocketDown);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)

@@ -12,6 +12,9 @@ struct ApiResult {
     QJsonObject body;
 };
 
+// JSON {"error": code, "message": ...}. message may be null (omitted). Never a password.
+ApiResult apiError(int httpStatus, const char *code, const char *message);
+
 // Session: any live bearer. Command: live bearer and commands_allowed.
 // Logout and GET current are Session. Mutating hotel routes are Command.
 enum class RouteAccess {

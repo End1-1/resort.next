@@ -1,6 +1,6 @@
 # next/server
 
-`hotel-api` is the Qt/C++ HTTP service that will own hotel rules and be the only writer to MariaDB. This directory binds a port, serves `/health`, and implements `POST /api/v1/sessions` against `nx_user` / `nx_session`. It does not implement reservations or folios. Those tables exist in `next/dbdump/migrations/0002_nx_core.sql`; no folio route is registered.
+`hotel-api` is the Qt/C++ HTTP service that owns hotel rules and is the only writer to MariaDB. This directory binds a port, serves `/health`, sessions, read-only room dictionaries, the rack chart, and reservation create/update. Folio routes are not registered. After a reservation commit it can publish WebSocket hints on `/api/v1/ws` when `HOTEL_WS_LISTEN` is set. Core tables are `next/dbdump/migrations/0002_nx_core.sql`; labels are `0003_nx_label.sql`; audit columns are `0004_nx_audit.sql`.
 
 It is not the old `Server/` tray program (UDP `"who"`). It does not link Qt Widgets and it does not compile `Resort/` sources.
 
@@ -52,8 +52,15 @@ curl -sS http://127.0.0.1:8080/health
 | `POST /api/v1/sessions` | Login. JSON `login` + `password`. No bearer. No DSN is 503 `database_not_configured`. Wrong password is 401. |
 | `GET /api/v1/sessions/current` | Current user, `commands_allowed`, `expires_at`. No token in the body. |
 | `DELETE /api/v1/sessions` | Logout. Sets `nx_session.revoked_at`. Does not require `commands_allowed`. |
+| `GET /api/v1/rooms`, `/room-types`, `/buildings` | Bearer. Names from `nx_label` (`?lang=` or `Accept-Language`). |
+| `GET /api/v1/room-statuses` | Bearer. Codes only; the client translates them. |
+| `GET /api/v1/rack` | Bearer. `from` and `to` (YYYY-MM-DD, `to` exclusive, max 120 nights). Rooms and overlapping stays. |
+| `GET /api/v1/reservations` | Bearer. Optional `from`+`to`, `guest`, `status`, `room`, `room_id`. |
+| `GET /api/v1/reservations/{id}` | Bearer. One reservation and its stays. |
+| `POST /api/v1/reservations` | Bearer and `commands_allowed`. One stay. `409` `overlap` if the room is taken. |
+| `PATCH /api/v1/reservations/{id}` | Bearer and `commands_allowed`. Dates, room, guest, status. Sends `version`. |
 | anything else under `/api/v1` | `401` without a bearer, otherwise `404` JSON |
-| WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Hello frame, no PMS events. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
+| WebSocket `/api/v1/ws` | Only if `HOTEL_WS_LISTEN` is set. Token in `?token=` or the first text frame `{"type":"auth","token"}`. Then `hello`, and after commit `reservation.created` / `updated` / `cancelled` and `room.status_changed`. See `next/docs/ws-events.md`. A browser `Origin` other than loopback (`127.0.0.1` or `localhost`) is rejected |
 
 ## Sessions
 
@@ -80,7 +87,9 @@ The JSON user object includes `role_id` (`nx_role.id`, or null). `group` is the 
 
 `GET /health` stays unauthenticated. Every other `/api/v1` route reads `Authorization: Bearer <64 hex>`. The lookup key is SHA-256 of those bytes (`nx_session.token_hash`). Unknown or revoked is `401` `unauthorized`. Past `expires_at` (compared with `UTC_TIMESTAMP()`) is `401` `session_expired`. `nx_user.state` other than `active` is `401` `user_disabled`. A well-formed token with no database configured is `503` `database_not_configured`. The token is not logged.
 
-`DELETE /api/v1/sessions` sets `revoked_at` on that row. `GET /api/v1/sessions/current` returns the user, `commands_allowed`, and `expires_at`, and does not repeat the token. Folio and reservation routes are not registered.
+`DELETE /api/v1/sessions` sets `revoked_at` on that row. `GET /api/v1/sessions/current` returns the user, `commands_allowed`, and `expires_at`, and does not repeat the token.
+
+Room, room-type, and building reads are registered. Apply `0003_nx_label.sql` after `0002`. A missing `nx_label` is `503` `schema_outdated`. Example rooms: `next/dbdump/seed/nx_demo_rooms.example.sql`. `GET /api/v1/rack?from=YYYY-MM-DD&to=YYYY-MM-DD` is the occupancy chart. A stay uses nights `[arrival, departure)`. Canceled rows are left out. `POST` and `PATCH /api/v1/reservations` create and change a booking. Apply `0004_nx_audit.sql` before writing. Overlap is a transaction with `SELECT ... FOR UPDATE` on `nx_room`. Folio routes are not registered.
 
 ```bash
 curl -sS -H 'Content-Type: application/json' \

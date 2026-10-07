@@ -8,6 +8,8 @@
 
 #include <QObject>
 
+class WorkspacePage;
+
 class AppController : public QObject {
     Q_OBJECT
 
@@ -35,4 +37,5 @@ private:
     MainWindow m_main;
     quint64 m_logoutId = 0;
     bool m_leaving = false;
+    WorkspacePage *m_workspace = nullptr;
 };

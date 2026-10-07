@@ -275,6 +275,27 @@ QString apiErrorMessage(int httpStatus, const QString &code)
     }
     if (httpStatus == 403 || code == QLatin1String("commands_not_allowed"))
         return sessionEndedMessage(QStringLiteral("commands_not_allowed"));
+    if (code == QLatin1String("overlap"))
+        return QCoreApplication::translate("ApiClient", "That room already has a stay on those nights.");
+    if (code == QLatin1String("invalid_transition"))
+        return QCoreApplication::translate("ApiClient", "That status change is not allowed.");
+    if (code == QLatin1String("version_conflict"))
+        return QCoreApplication::translate("ApiClient", "The reservation was changed. Reload it and try again.");
+    if (code == QLatin1String("stay_in_house"))
+        return QCoreApplication::translate("ApiClient", "Check the guest out before canceling the reservation.");
+    if (code == QLatin1String("stay_locked"))
+        return QCoreApplication::translate("ApiClient", "Dates and room cannot change while the guest is in house or checked out.");
+    if (code == QLatin1String("room_not_found"))
+        return QCoreApplication::translate("ApiClient", "The room was not found.");
+    if (code == QLatin1String("guest_not_found"))
+        return QCoreApplication::translate("ApiClient", "The guest was not found.");
+    if (code == QLatin1String("reservation_not_found"))
+        return QCoreApplication::translate("ApiClient", "The reservation was not found.");
+    if (code == QLatin1String("schema_outdated")) {
+        return QCoreApplication::translate(
+            "ApiClient",
+            "The server schema is missing a table or column (schema_outdated). Apply the nx_ migrations through 0004_nx_audit.sql.");
+    }
     if (code == QLatin1String("database_not_configured") || code == QLatin1String("session_store_unavailable")
         || code == QLatin1String("driver_not_loaded") || code == QLatin1String("access_denied")
         || code == QLatin1String("unknown_database") || code == QLatin1String("cannot_connect")
@@ -387,6 +408,11 @@ void ApiClient::clearToken()
 bool ApiClient::hasToken() const
 {
     return !m_token.isEmpty();
+}
+
+QString ApiClient::token() const
+{
+    return m_token;
 }
 
 QNetworkReply *ApiClient::send(HttpVerb verb,

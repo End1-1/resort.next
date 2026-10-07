@@ -26,6 +26,7 @@
 #include <QPushButton>
 #include <QRawFont>
 #include <QSignalSpy>
+#include <QTableWidget>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
@@ -133,6 +134,20 @@ private:
                     "{\"token_type\":\"Bearer\",\"expires_at\":\"2099-01-01T00:00:00Z\",\"commands_allowed\":true,"
                     "\"user\":{\"id\":1,\"login\":\"ivan\",\"name\":\"Ivan\",\"role_id\":1,\"group\":1}}");
             }
+        } else if (method == "GET" && path == "/api/v1/reservations") {
+            body = QByteArrayLiteral("{\"items\":[]}");
+        } else if (method == "GET" && path == "/api/v1/rack") {
+            body = QByteArrayLiteral(
+                "{\"lang\":\"en\",\"from\":\"2026-10-01\",\"to\":\"2026-10-15\",\"rooms\":[{\"id\":1,\"code\":\"101\","
+                "\"floor\":1,\"status_code\":\"vacant_ready\",\"type_name\":\"Standard\",\"building_name\":\"Main\","
+                "\"blocks\":[{\"stay_id\":7,\"reservation_id\":3,\"guest_name\":\"Petrosyan Ani\","
+                "\"state_code\":\"reserved\",\"reservation_status\":\"confirmed\","
+                "\"arrival\":\"2026-10-02\",\"departure\":\"2026-10-05\"}]}]}");
+        } else if (method == "GET" && path == "/api/v1/rooms") {
+            body = QByteArrayLiteral(
+                "{\"lang\":\"en\",\"items\":[{\"id\":1,\"code\":\"101\",\"floor\":1,\"phone\":null,"
+                "\"status_code\":\"vacant_ready\",\"room_type\":{\"id\":1,\"code\":\"STD\",\"name\":\"Standard\"},"
+                "\"building\":{\"id\":1,\"code\":\"MAIN\",\"name\":\"Main building\"}}]}");
         } else if (method == "DELETE" && path == "/api/v1/sessions") {
             ++sessionDeletes;
             lastDeleteAuthorization = authorization;
@@ -508,17 +523,8 @@ void LoginSmoke::loginShowsDatabaseNotConfigured()
     HealthMonitor monitor(&probe);
     monitor.setWebSocketUrl(QStringLiteral("ws://127.0.0.1:18081/api/v1/ws"));
     monitor.start();
-    const bool hello = QTest::qWaitFor([&monitor]() {
-        return monitor.socketText().contains(QStringLiteral("hello"));
-    }, 5000);
-    if (!hello) {
-        const QByteArray err = server.readAllStandardError();
-        const QString socketText = monitor.socketText();
-        monitor.stop();
-        stopServer();
-        QFAIL(qPrintable(QStringLiteral("WebSocket hello missing (%1): %2")
-                             .arg(socketText, QString::fromUtf8(err))));
-    }
+    QTRY_VERIFY(monitor.socketText().contains(QStringLiteral("not signed in")));
+    QVERIFY(!monitor.socketText().contains(QStringLiteral("hello")));
     monitor.stop();
 
     ConnectionDialog dialog(DesktopConfig{});
@@ -791,6 +797,18 @@ void LoginSmoke::logoutSendsBearerAndReturnsToLogin()
     QTRY_VERIFY_WITH_TIMEOUT(visibleMain() != nullptr, 8000);
     QTRY_VERIFY_WITH_TIMEOUT(api.currentGets >= 1, 8000);
     QVERIFY(visibleLogin() == nullptr);
+    auto *rooms = visibleMain()->findChild<QTableWidget *>(QStringLiteral("roomsTable"));
+    QVERIFY(rooms);
+    QTRY_VERIFY_WITH_TIMEOUT(rooms->rowCount() == 1, 8000);
+    QCOMPARE(rooms->item(0, 0)->text(), QStringLiteral("101"));
+    QCOMPARE(rooms->item(0, 2)->text(), QStringLiteral("Standard"));
+    QCOMPARE(rooms->item(0, 4)->text(), QStringLiteral("Ready"));
+    auto *rackStatus = visibleMain()->findChild<QLabel *>(QStringLiteral("rackStatus"));
+    QVERIFY(rackStatus);
+    QTRY_VERIFY_WITH_TIMEOUT(rackStatus->text().contains(QStringLiteral("1 rooms, 14 nights")), 8000);
+    auto *reservations = visibleMain()->findChild<QLabel *>(QStringLiteral("reservationsStatus"));
+    QVERIFY(reservations);
+    QTRY_VERIFY_WITH_TIMEOUT(reservations->text().contains(QStringLiteral("No reservations")), 8000);
 
     auto *logout = visibleMain()->findChild<QAction *>(QStringLiteral("logoutAction"));
     QVERIFY(logout);
