@@ -243,10 +243,6 @@
         <translation>Մտեք նորից։ Սեսիան այլևս վավեր չէ։</translation>
     </message>
     <message>
-        <source>The server schema is missing a table (schema_outdated). Apply the nx_ migrations, including 0003_nx_label.sql.</source>
-        <translation type="vanished">Սերվերում աղյուսակ չկա (schema_outdated)։ Կիրառեք nx_ միգրացիաները, այդ թվում 0003_nx_label.sql։</translation>
-    </message>
-    <message>
         <location filename="../src/apiclient.cpp" line="309"/>
         <source>Request failed, HTTP %1 (%2).</source>
         <translation>Հարցումը չկատարվեց, HTTP %1 (%2)։</translation>
@@ -611,8 +607,8 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/uilanguage.cpp" line="128"/>
         <location filename="../src/mainwindow.cpp" line="172"/>
+        <location filename="../src/uilanguage.cpp" line="128"/>
         <source>Hotel</source>
         <translation>Հյուրանոց</translation>
     </message>
@@ -708,96 +704,298 @@
     </message>
 </context>
 <context>
-    <name>RackPage</name>
+    <name>RackChart</name>
     <message>
-        <location filename="../src/rackpage.cpp" line="64"/>
-        <source>Reserved</source>
-        <translation>Ամրագրված</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="66"/>
-        <source>In house</source>
-        <translation>Բնակվում է</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="68"/>
-        <source>Checked out</source>
-        <translation>Դուրս է եկել</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="70"/>
-        <source>Out of order</source>
-        <translation>Վերանորոգման</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="72"/>
-        <source>Out of inventory</source>
-        <translation>Դուրս է ֆոնդից</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="145"/>
-        <location filename="../src/rackpage.cpp" line="160"/>
+        <location filename="../src/rackchart.cpp" line="307"/>
+        <location filename="../src/rackchart.cpp" line="679"/>
         <source>No guest</source>
         <translation>Առանց հյուրի</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="161"/>
-        <source>%1
-%2 – %3
-%4</source>
-        <translation>%1
-%2 – %3
-%4</translation>
+        <location filename="../src/rackchart.cpp" line="392"/>
+        <source>Room</source>
+        <translation>Սենյակ</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="256"/>
-        <source>The departure date must be after the arrival date.</source>
-        <translation>Մեկնման ամսաթիվը պետք է լինի ժամանումից հետո։</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="260"/>
-        <source>The rack window is at most 120 nights.</source>
-        <translation>Շախմատի պատուհանը առավելագույնը 120 գիշեր է։</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="264"/>
-        <source>Loading the rack…</source>
-        <translation>Շախմատի բեռնում…</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="284"/>
-        <source>Rack</source>
-        <translation>Շախմատ</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="285"/>
-        <source>From</source>
-        <translation>Սկսած</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="286"/>
-        <source>To</source>
-        <translation>Մինչև</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="287"/>
-        <source>Show</source>
-        <translation>Ցույց տալ</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="289"/>
-        <source>The rack loads after sign-in.</source>
-        <translation>Շախմատը բեռնվում է մուտքից հետո։</translation>
-    </message>
-    <message>
-        <location filename="../src/rackpage.cpp" line="331"/>
+        <location filename="../src/rackchart.cpp" line="396"/>
         <source>No rooms.</source>
         <translation>Սենյակներ չկան։</translation>
     </message>
     <message>
-        <location filename="../src/rackpage.cpp" line="333"/>
-        <source>%1 rooms, %2 nights</source>
-        <translation>%1 սենյակ, %2 գիշեր</translation>
+        <location filename="../src/rackchart.cpp" line="396"/>
+        <source>No rooms match the filter.</source>
+        <translation>Զտիչին համապատասխան սենյակներ չկան։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="641"/>
+        <source>Open reservation</source>
+        <translation>Բացել ամրագրումը</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="645"/>
+        <source>New reservation</source>
+        <translation>Նոր ամրագրում</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="666"/>
+        <source>No building</source>
+        <translation>Առանց շենքի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="667"/>
+        <source>No floor</source>
+        <translation>Առանց հարկի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="668"/>
+        <source>%1
+%2
+%3
+%4
+%5</source>
+        <translation>%1
+%2
+%3
+%4
+%5</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="680"/>
+        <source>%1
+%2 – %3
+%4
+%5</source>
+        <translation>%1
+%2 – %3
+%4
+%5</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="689"/>
+        <source>%1
+%2</source>
+        <translation>%1
+%2</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="695"/>
+        <source>Reserved</source>
+        <translation>Ամրագրված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="697"/>
+        <source>In house</source>
+        <translation>Բնակվում է</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="699"/>
+        <source>Checked out</source>
+        <translation>Դուրս է եկել</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="701"/>
+        <location filename="../src/rackchart.cpp" line="731"/>
+        <source>Out of order</source>
+        <translation>Վերանորոգման</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="703"/>
+        <location filename="../src/rackchart.cpp" line="737"/>
+        <source>Out of inventory</source>
+        <translation>Դուրս է ֆոնդից</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="710"/>
+        <source>Tentative</source>
+        <translation>Նախնական</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="712"/>
+        <source>Confirmed</source>
+        <translation>Հաստատված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="714"/>
+        <source>Guaranteed</source>
+        <translation>Երաշխավորված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="716"/>
+        <source>Blocked</source>
+        <translation>Արգելափակված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="718"/>
+        <source>Canceled</source>
+        <translation>Չեղարկված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="725"/>
+        <source>Ready</source>
+        <translation>Պատրաստ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="727"/>
+        <source>Occupied</source>
+        <translation>Զբաղված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="729"/>
+        <source>Dirty</source>
+        <translation>Կեղտոտ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="733"/>
+        <source>House use</source>
+        <translation>Ծառայողական</translation>
+    </message>
+    <message>
+        <location filename="../src/rackchart.cpp" line="735"/>
+        <source>Complimentary</source>
+        <translation>Կոմպլիմենտար</translation>
+    </message>
+</context>
+<context>
+    <name>RackPage</name>
+    <message>
+        <location filename="../src/rackpage.cpp" line="169"/>
+        <source>Date</source>
+        <translation>Ամսաթիվ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="170"/>
+        <source>Today</source>
+        <translation>Այսօր</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="171"/>
+        <source>Previous day</source>
+        <translation>Նախորդ օրը</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="172"/>
+        <source>Next day</source>
+        <translation>Հաջորդ օրը</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="173"/>
+        <source>Previous rooms</source>
+        <translation>Նախորդ սենյակները</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="174"/>
+        <source>Next rooms</source>
+        <translation>Հաջորդ սենյակները</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="175"/>
+        <source>Room</source>
+        <translation>Սենյակ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="179"/>
+        <source>Any status</source>
+        <translation>Ցանկացած կարգավիճակ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="302"/>
+        <source>No building</source>
+        <translation>Առանց շենքի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="309"/>
+        <source>Floor %1</source>
+        <translation>Հարկ %1</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="309"/>
+        <source>No floor</source>
+        <translation>Առանց հարկի</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="358"/>
+        <source>All</source>
+        <translation>Բոլորը</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="394"/>
+        <source>Type</source>
+        <translation>Տեսակ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="395"/>
+        <source>Building</source>
+        <translation>Շենք</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="396"/>
+        <source>Floor</source>
+        <translation>Հարկ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="441"/>
+        <source>No rooms match the filter.</source>
+        <translation>Զտիչին համապատասխան սենյակներ չկան։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="443"/>
+        <source>%1 rooms, %2 days</source>
+        <translation>Սենյակներ՝ %1, օրեր՝ %2</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="449"/>
+        <source>Ready</source>
+        <translation>Պատրաստ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="451"/>
+        <source>Occupied</source>
+        <translation>Զբաղված</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="453"/>
+        <source>Dirty</source>
+        <translation>Կեղտոտ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="455"/>
+        <source>Out of order</source>
+        <translation>Վերանորոգման</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="457"/>
+        <source>House use</source>
+        <translation>Ծառայողական</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="459"/>
+        <source>Complimentary</source>
+        <translation>Կոմպլիմենտար</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="461"/>
+        <source>Out of inventory</source>
+        <translation>Դուրս է ֆոնդից</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="222"/>
+        <source>Loading the rack…</source>
+        <translation>Շախմատի բեռնում…</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="168"/>
+        <source>Rack</source>
+        <translation>Շախմատ</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="196"/>
+        <source>The rack loads after sign-in.</source>
+        <translation>Շախմատը բեռնվում է մուտքից հետո։</translation>
+    </message>
+    <message>
+        <location filename="../src/rackpage.cpp" line="439"/>
+        <source>No rooms.</source>
+        <translation>Սենյակներ չկան։</translation>
     </message>
 </context>
 <context>
@@ -904,27 +1102,27 @@
         <translation>Արգելափակված</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <location filename="../src/reservationdialog.cpp" line="173"/>
         <source>New reservation</source>
         <translation>Նոր ամրագրում</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="162"/>
+        <location filename="../src/reservationdialog.cpp" line="173"/>
         <source>Reservation %1</source>
         <translation>Ամրագրում %1</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="240"/>
+        <location filename="../src/reservationdialog.cpp" line="261"/>
         <source>Last name is required.</source>
         <translation>Ազգանունը պարտադիր է։</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="244"/>
+        <location filename="../src/reservationdialog.cpp" line="265"/>
         <source>Choose a room.</source>
         <translation>Ընտրեք սենյակ։</translation>
     </message>
     <message>
-        <location filename="../src/reservationdialog.cpp" line="248"/>
+        <location filename="../src/reservationdialog.cpp" line="269"/>
         <source>The departure date must be after the arrival date.</source>
         <translation>Մեկնման ամսաթիվը պետք է լինի ժամանումից հետո։</translation>
     </message>
@@ -942,115 +1140,115 @@
         <translation>Ամրագրումների բեռնում…</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="138"/>
+        <location filename="../src/reservationspage.cpp" line="150"/>
         <source>Reservations</source>
         <translation>Ամրագրումներ</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="139"/>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="151"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Guest</source>
         <translation>Հյուր</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="140"/>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="152"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Room</source>
         <translation>Սենյակ</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="141"/>
+        <location filename="../src/reservationspage.cpp" line="153"/>
         <source>Show</source>
         <translation>Ցույց տալ</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="142"/>
+        <location filename="../src/reservationspage.cpp" line="154"/>
         <source>New reservation</source>
         <translation>Նոր ամրագրում</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Arrival</source>
         <translation>Ժամանում</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Departure</source>
         <translation>Մեկնում</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Status</source>
         <translation>Կարգավիճակ</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="143"/>
+        <location filename="../src/reservationspage.cpp" line="155"/>
         <source>Stay</source>
         <translation>Կեցություն</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="146"/>
+        <location filename="../src/reservationspage.cpp" line="158"/>
         <source>Any status</source>
         <translation>Ցանկացած կարգավիճակ</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="148"/>
-        <location filename="../src/reservationspage.cpp" line="171"/>
+        <location filename="../src/reservationspage.cpp" line="160"/>
+        <location filename="../src/reservationspage.cpp" line="183"/>
         <source>Tentative</source>
         <translation>Նախնական</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="149"/>
-        <location filename="../src/reservationspage.cpp" line="173"/>
+        <location filename="../src/reservationspage.cpp" line="161"/>
+        <location filename="../src/reservationspage.cpp" line="185"/>
         <source>Confirmed</source>
         <translation>Հաստատված</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="150"/>
-        <location filename="../src/reservationspage.cpp" line="175"/>
+        <location filename="../src/reservationspage.cpp" line="162"/>
+        <location filename="../src/reservationspage.cpp" line="187"/>
         <source>Guaranteed</source>
         <translation>Երաշխավորված</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="151"/>
-        <location filename="../src/reservationspage.cpp" line="177"/>
+        <location filename="../src/reservationspage.cpp" line="163"/>
+        <location filename="../src/reservationspage.cpp" line="189"/>
         <source>Blocked</source>
         <translation>Արգելափակված</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="152"/>
-        <location filename="../src/reservationspage.cpp" line="179"/>
-        <location filename="../src/reservationspage.cpp" line="192"/>
+        <location filename="../src/reservationspage.cpp" line="164"/>
+        <location filename="../src/reservationspage.cpp" line="191"/>
+        <location filename="../src/reservationspage.cpp" line="204"/>
         <source>Canceled</source>
         <translation>Չեղարկված</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="159"/>
+        <location filename="../src/reservationspage.cpp" line="171"/>
         <source>Reservations load after sign-in.</source>
         <translation>Ամրագրումները բեռնվում են մուտքից հետո։</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="186"/>
+        <location filename="../src/reservationspage.cpp" line="198"/>
         <source>Reserved</source>
         <translation>Ամրագրված</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="188"/>
+        <location filename="../src/reservationspage.cpp" line="200"/>
         <source>In house</source>
         <translation>Բնակվում է</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="190"/>
+        <location filename="../src/reservationspage.cpp" line="202"/>
         <source>Checked out</source>
         <translation>Դուրս է եկել</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="229"/>
+        <location filename="../src/reservationspage.cpp" line="241"/>
         <source>No reservations.</source>
         <translation>Ամրագրումներ չկան։</translation>
     </message>
     <message>
-        <location filename="../src/reservationspage.cpp" line="231"/>
+        <location filename="../src/reservationspage.cpp" line="243"/>
         <source>%1 reservations</source>
         <translation>%1 ամրագրում</translation>
     </message>
@@ -1121,17 +1319,17 @@
 <context>
     <name>WorkspacePage</name>
     <message>
-        <location filename="../src/workspacepage.cpp" line="44"/>
+        <location filename="../src/workspacepage.cpp" line="45"/>
         <source>Rack</source>
         <translation>Շախմատ</translation>
     </message>
     <message>
-        <location filename="../src/workspacepage.cpp" line="45"/>
+        <location filename="../src/workspacepage.cpp" line="46"/>
         <source>Reservations</source>
         <translation>Ամրագրումներ</translation>
     </message>
     <message>
-        <location filename="../src/workspacepage.cpp" line="46"/>
+        <location filename="../src/workspacepage.cpp" line="47"/>
         <source>Rooms</source>
         <translation>Սենյակներ</translation>
     </message>

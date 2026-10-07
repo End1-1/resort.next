@@ -102,12 +102,12 @@ ApiResult occupancyChart(const DatabaseTarget &target,
         "NULLIF(b.name, ''),"
         "b.code)");
     const QString roomSql = QStringLiteral(
-                                "SELECT r.id, r.code, r.floor, r.status_code, %1, %2 "
+                                "SELECT r.id, r.code, r.floor, r.status_code, t.id, t.code, %1, b.id, b.code, %2 "
                                 "FROM nx_room r "
                                 "INNER JOIN nx_room_type t ON t.id = r.room_type_id "
                                 "LEFT JOIN nx_building b ON b.id = r.building_id "
                                 "WHERE r.property_id = :property "
-                                "ORDER BY r.floor, r.code, r.id")
+                                "ORDER BY COALESCE(b.code, ''), r.code, r.id")
                                 .arg(typeName, buildingExpr);
 
     QSqlQuery rooms(connection.db);
@@ -136,11 +136,18 @@ ApiResult occupancyChart(const DatabaseTarget &target,
         else
             row.insert(QStringLiteral("floor"), rooms.value(2).toInt());
         row.insert(QStringLiteral("status_code"), rooms.value(3).toString());
-        row.insert(QStringLiteral("type_name"), rooms.value(4).toString());
-        if (rooms.value(5).isNull())
+        row.insert(QStringLiteral("type_id"), QJsonValue(rooms.value(4).toLongLong()));
+        row.insert(QStringLiteral("type_code"), rooms.value(5).toString());
+        row.insert(QStringLiteral("type_name"), rooms.value(6).toString());
+        if (rooms.value(7).isNull()) {
+            row.insert(QStringLiteral("building_id"), QJsonValue::Null);
+            row.insert(QStringLiteral("building_code"), QJsonValue::Null);
             row.insert(QStringLiteral("building_name"), QJsonValue::Null);
-        else
-            row.insert(QStringLiteral("building_name"), rooms.value(5).toString());
+        } else {
+            row.insert(QStringLiteral("building_id"), QJsonValue(rooms.value(7).toLongLong()));
+            row.insert(QStringLiteral("building_code"), rooms.value(8).toString());
+            row.insert(QStringLiteral("building_name"), rooms.value(9).toString());
+        }
         row.insert(QStringLiteral("blocks"), QJsonArray());
         indexByRoom.insert(id, roomItems.size());
         roomItems.append(row);

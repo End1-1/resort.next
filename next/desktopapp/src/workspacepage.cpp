@@ -17,6 +17,7 @@ WorkspacePage::WorkspacePage(ApiClient *api, QWidget *parent)
     addTab(m_reservations, QString());
     addTab(m_rooms, QString());
     connect(m_rack, &RackPage::reservationActivated, m_reservations, &ReservationsPage::openReservation);
+    connect(m_rack, &RackPage::createReservationRequested, m_reservations, &ReservationsPage::beginReservation);
     connect(m_reservations, &ReservationsPage::reservationsChanged, m_rack, &RackPage::reload);
     connect(m_rack, &RackPage::reservationActivated, this, &WorkspacePage::reservationActivated);
     retranslateUi();
