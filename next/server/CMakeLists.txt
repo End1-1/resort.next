@@ -239,6 +239,8 @@ add_executable(hotel-api-realtime-test
     src/db.h
     src/dberror.cpp
     src/dberror.h
+    src/mysqlclient.cpp
+    src/mysqlclient.h
     tests/test_realtime.cpp
 )
 target_include_directories(hotel-api-realtime-test PRIVATE src)
